@@ -1,0 +1,7 @@
+{
+  "_comment": "G-MAXのログイン情報。初回だけここに入力してください。",
+  "loginUrl": "https://sslgw.jns-asp.jp/granteones/",
+  "username": "",
+  "password": "",
+  "salonCode": ""
+}

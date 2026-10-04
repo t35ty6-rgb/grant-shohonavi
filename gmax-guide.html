@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>G-MAX 自動入力ツール — 運用ガイド</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap">
+<style>
+:root {
+  --pink:#e2477a; --pink-soft:#fde7ee;
+  --green:#1f7a57; --green-soft:#e3f3ec;
+  --blue:#2f5bd3; --blue-soft:#e8eefc;
+  --ink:#15161a; --muted:#666a73; --sub:#9398a2;
+  --line:#e3e5ea; --bg:#f5f6f8; --surface:#fff;
+  --f-body:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;
+  --f-latin:"Outfit",system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.75}
+
+.page{max-width:820px;margin:0 auto;padding:40px 24px 80px}
+
+/* Header */
+.doc-header{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:32px 32px 28px;margin-bottom:32px}
+.doc-eyebrow{font-family:var(--f-latin);font-weight:600;font-size:12px;letter-spacing:.14em;color:var(--pink);margin-bottom:10px}
+.doc-title{font-weight:900;font-size:28px;line-height:1.3;margin-bottom:10px;text-wrap:balance}
+.doc-sub{color:var(--muted);font-size:14px}
+
+/* Section heading */
+.sec{margin-bottom:40px}
+.sec-label{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.sec-label .num{width:28px;height:28px;border-radius:50%;background:var(--pink);color:#fff;font-family:var(--f-latin);font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sec-label h2{font-weight:700;font-size:19px}
+
+/* Card */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:12px}
+.card-title{font-weight:700;font-size:15px;margin-bottom:6px}
+.card-body{color:var(--muted);font-size:14px}
+
+/* Flow diagram */
+.flow{display:flex;flex-direction:column;gap:0}
+.flow-step{display:flex;gap:16px;align-items:flex-start}
+.flow-track{display:flex;flex-direction:column;align-items:center;flex-shrink:0}
+.flow-dot{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--f-latin);font-weight:700;font-size:14px;flex-shrink:0}
+.flow-dot.pink{background:var(--pink);color:#fff}
+.flow-dot.green{background:var(--green);color:#fff}
+.flow-dot.blue{background:var(--blue);color:#fff}
+.flow-dot.gray{background:var(--bg);border:2px solid var(--line);color:var(--muted)}
+.flow-line{width:2px;flex:1;min-height:16px;background:var(--line);margin:4px 0}
+.flow-body{padding:4px 0 24px;flex:1}
+.flow-body:last-child{padding-bottom:0}
+.flow-title{font-weight:700;font-size:15px;margin-bottom:4px}
+.flow-desc{color:var(--muted);font-size:14px;line-height:1.65}
+.flow-desc code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-family:var(--f-latin);font-size:13px;color:var(--ink)}
+
+/* Actor badge */
+.actor{display:inline-block;font-size:11px;font-weight:700;padding:2px 10px;border-radius:999px;margin-bottom:6px}
+.actor.stylist{background:var(--pink-soft);color:var(--pink)}
+.actor.customer{background:var(--blue-soft);color:var(--blue)}
+.actor.system{background:var(--green-soft);color:var(--green)}
+
+/* Panel mock */
+.panel-mock{background:#0f172a;color:#e2e8f0;border-radius:14px;padding:16px;font-family:var(--f-latin),system-ui;font-size:13px;max-width:280px;line-height:1.5}
+.pm-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.pm-lbl{font-size:10px;color:#64748b}
+.pm-close{color:#64748b;font-size:18px;cursor:pointer}
+.pm-name{font-weight:700;font-size:14px;margin-bottom:8px}
+.pm-box{background:#1e293b;border-radius:8px;padding:10px;margin-bottom:8px}
+.pm-row{font-size:10px;color:#64748b;margin-bottom:2px}
+.pm-val{font-size:20px;font-weight:900;color:#38bdf8;letter-spacing:.1em}
+.pm-val.sm{font-size:14px;color:#e2e8f0}
+.pm-ok{font-size:10px;color:#4ade80;margin-bottom:8px}
+.pm-btn{display:block;background:#0071e3;color:#fff;border:none;border-radius:8px;padding:9px 12px;font-weight:700;font-size:12px;width:100%;text-align:center;cursor:pointer}
+
+/* Two-column layout */
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+@media(max-width:580px){.cols{grid-template-columns:1fr}}
+
+/* Highlight box */
+.hl{border-radius:12px;padding:16px 18px;margin-bottom:12px}
+.hl.pink{background:var(--pink-soft);border-left:3px solid var(--pink)}
+.hl.green{background:var(--green-soft);border-left:3px solid var(--green)}
+.hl.blue{background:var(--blue-soft);border-left:3px solid var(--blue)}
+.hl-title{font-weight:700;font-size:14px;margin-bottom:4px}
+.hl-body{font-size:13px;color:var(--muted);line-height:1.65}
+
+/* Q&A */
+.qa{border-top:1px solid var(--line);padding:16px 0}
+.qa:first-child{border-top:none;padding-top:0}
+.q{font-weight:700;font-size:14px;margin-bottom:6px}
+.a{font-size:14px;color:var(--muted)}
+
+/* Steps list */
+.steps{list-style:none;counter-reset:step}
+.steps li{counter-increment:step;padding:12px 0 12px 46px;position:relative;border-bottom:1px solid var(--line);font-size:14px;color:var(--muted)}
+.steps li:last-child{border-bottom:none}
+.steps li::before{content:counter(step);position:absolute;left:0;top:10px;width:28px;height:28px;border-radius:50%;background:var(--pink);color:#fff;font-family:var(--f-latin);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
+.steps strong{color:var(--ink)}
+
+/* Divider */
+.divider{border:none;border-top:1px solid var(--line);margin:40px 0}
+
+/* Note */
+.note{font-size:12px;color:var(--sub);border:1px dashed var(--line);border-radius:8px;padding:10px 14px;margin-top:12px}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ヘッダー -->
+  <div class="doc-header">
+    <div class="doc-eyebrow">GRANT E-ONE'S STYLIST NAVI</div>
+    <h1 class="doc-title">G-MAX 自動入力ツール<br>運用ガイド</h1>
+    <p class="doc-sub">処方ナビで決めた商品を、G-MAXのカートに自動で入れる仕組みの使い方</p>
+  </div>
+
+  <!-- 1. ざっくり何ができるか -->
+  <div class="sec">
+    <div class="sec-label"><span class="num">1</span><h2>何ができるか</h2></div>
+    <div class="cols">
+      <div>
+        <div class="card">
+          <div class="card-title">Before（今まで）</div>
+          <div class="card-body">お客様がG-MAXで商品を選ぶとき、商品コードを見ながら手動で検索・カラー・サイズ・数量を1点ずつ入力。<br>商品数が多いと<strong style="color:var(--ink)">1点あたり20〜30秒</strong>かかる。</div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="card-title">After（このツール使用後）</div>
+          <div class="card-body">処方ナビで決めた内容をそのままG-MAXに自動入力。商品コード・カラー・サイズが一瞬で入る。<br>スタイリストが<strong style="color:var(--ink)">1回クリックするだけ</strong>で次の商品へ。</div>
+        </div>
+      </div>
+    </div>
+    <div class="hl pink">
+      <div class="hl-title">対象シーン</div>
+      <div class="hl-body">はじめてのお客様がG-MAXに新規登録するとき（登録フローの<strong>⑰番「初回商品購入手続き」</strong>の画面）。既存会員がカートに追加するときにも使える。</div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 2. 事前準備（1回だけ） -->
+  <div class="sec">
+    <div class="sec-label"><span class="num">2</span><h2>事前準備（1回だけ）</h2></div>
+    <p style="font-size:14px;color:var(--muted);margin-bottom:20px">最初にブックマークを登録すれば、次回以降は不要。お客様が変わっても同じブックマークを使い回せる。</p>
+
+    <div class="flow">
+      <div class="flow-step">
+        <div class="flow-track">
+          <div class="flow-dot pink">1</div>
+          <div class="flow-line"></div>
+        </div>
+        <div class="flow-body">
+          <span class="actor stylist">スタイリスト</span>
+          <div class="flow-title">処方ナビで処方を完了する</div>
+          <div class="flow-desc">カウンセリングを進めて「処方を見る」まで到達。商品・カラー・サイズが決まった状態にする。</div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="flow-track">
+          <div class="flow-dot pink">2</div>
+          <div class="flow-line"></div>
+        </div>
+        <div class="flow-body">
+          <span class="actor stylist">スタイリスト</span>
+          <div class="flow-title">「G-MAX 注文リスト」を開く</div>
+          <div class="flow-desc">処方画面の「注文リスト・注文する」ボタンをタップ。商品コード・カラー・サイズの一覧が出る。</div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="flow-track">
+          <div class="flow-dot pink">3</div>
+          <div class="flow-line"></div>
+        </div>
+        <div class="flow-body">
+          <span class="actor stylist">スタイリスト</span>
+          <div class="flow-title">緑の「G-MAX 自動入力ツール」をタップ</div>
+          <div class="flow-desc">「ブックマーク用ボタン」が表示される。</div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="flow-track">
+          <div class="flow-dot pink">4</div>
+        </div>
+        <div class="flow-body">
+          <span class="actor stylist">スタイリスト（PC）</span>
+          <div class="flow-title">「処方ナビ 自動入力」ボタンをブックマークバーにドラッグ</div>
+          <div class="flow-desc">ピンクのボタンをPC画面のブックマークバーにドラッグ&ドロップして登録する。<br><strong>これだけ。次回以降はこの手順不要。</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hl blue" style="margin-top:8px">
+      <div class="hl-title">PCのブラウザで操作してください</div>
+      <div class="hl-body">ブックマークバーへのドラッグはPCブラウザでのみ可能。スマホには「コードをコピー」→ アドレスバーに貼り付け方式で対応（Chrome: 先に <code style="background:rgba(0,0,0,.08);padding:0 4px;border-radius:3px">javascript:</code> と入力してから貼り付け）。</div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 3. 当日の使い方 -->
+  <div class="sec">
+    <div class="sec-label"><span class="num">3</span><h2>当日の使い方（お客様と一緒に）</h2></div>
+    <p style="font-size:14px;color:var(--muted);margin-bottom:20px">はじめてのお客様がG-MAXに新規登録するとき。登録フローの⑰番の画面で使う。</p>
+
+    <div class="flow">
+      <div class="flow-step">
+        <div class="flow-track">
+          <div class="flow-dot pink">1</div>
+          <div class="flow-line"></div>
+        </div>
+        <div class="flow-body">
+          <span class="actor stylist">スタイリスト</span>
+          <div class="flow-title">G-MAXからお客様に招待メールを送る</div>
+          <div class="flow-desc">G-MAX管理画面の「招待」機能でお客様のメールアドレス宛に送信。招待リンクの有効期限は<strong>3時間</strong>。</div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="flow-track">
+          <div class="flow-dot blue">2</div>
+          <div class="flow-line"></div>
+        </div>
+        <div class="flow-body">
+          <span class="actor customer">お客様</span>
+          <div class="flow-title">招待メールのURLから登録を進める</div>
+          <div class="flow-desc">①〜⑯の手順（氏名・住所・支払い情報など）はお客様が入力。スタイリストは隣でサポートする程度。</div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="flow-track">
+          <div class="flow-dot blue">3</div>
+          <div class="flow-line"></div>
+        </div>
+        <div class="flow-body">
+          <span class="actor customer">お客様</span>
+          <div class="flow-title">⑰番「初回商品購入手続き」の画面になる</div>
+          <div class="flow-desc">ここが自動入力の出番。商品を検索・選択・カートに入れる画面。</div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="flow-track">
+          <div class="flow-dot pink">4</div>
+          <div class="flow-line"></div>
+        </div>
+        <div class="flow-body">
+          <span class="actor stylist">スタイリスト</span>
+          <div class="flow-title">ブックマークバーの「処方ナビ 自動入力」をクリック</div>
+          <div class="flow-desc">G-MAXのページ上でクリックする。右下に濃紺のパネルが出て、<strong>商品コード・カラー・サイズを自動入力</strong>。</div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="flow-track">
+          <div class="flow-dot pink">5</div>
+          <div class="flow-line"></div>
+        </div>
+        <div class="flow-body">
+          <span class="actor stylist">スタイリスト</span>
+          <div class="flow-title">「カートに入れた → 次へ」を押す</div>
+          <div class="flow-desc">G-MAXで「カートに追加」ボタンを押した後、パネルの「カートに入れた → 次へ」をクリック。次の商品に自動で移る。<br><strong>ページが変わっても進捗は保持される</strong>ので、再度ブックマークをクリックすれば続きから再開。</div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="flow-track">
+          <div class="flow-dot green">6</div>
+        </div>
+        <div class="flow-body">
+          <span class="actor system">完了</span>
+          <div class="flow-title">全商品のカート追加が終わる</div>
+          <div class="flow-desc">パネルに「全商品カート完了！」と表示。あとはお客様が登録フローの残りの手順を進める。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 4. パネルの見た目 -->
+  <div class="sec">
+    <div class="sec-label"><span class="num">4</span><h2>G-MAX上で出るパネルのイメージ</h2></div>
+    <div class="cols">
+      <div>
+        <p style="font-size:14px;color:var(--muted);margin-bottom:14px">G-MAXのページ右下に出るパネル。商品ごとに商品コード・カラー・サイズが表示され、自動入力の結果も緑で表示される。</p>
+
+        <div class="panel-mock">
+          <div class="pm-hdr">
+            <span class="pm-lbl">処方ナビ &nbsp;2/3 — 進捗はページ遷移でも保持</span>
+            <span class="pm-close">×</span>
+          </div>
+          <div class="pm-name">LALA ハイウエストガードル</div>
+          <div class="pm-box">
+            <div class="pm-row">商品コード</div>
+            <div class="pm-val">201</div>
+            <div class="pm-row" style="margin-top:6px">カラー</div>
+            <div class="pm-val sm">LOVE</div>
+            <div class="pm-row" style="margin-top:4px">サイズ</div>
+            <div class="pm-val sm">70</div>
+            <div class="pm-row" style="margin-top:4px">数量</div>
+            <div class="pm-val sm">1</div>
+          </div>
+          <div class="pm-ok">✓ 検索: 201&nbsp;&nbsp; ✓ カラー: LOVE&nbsp;&nbsp; ✓ サイズ: 70</div>
+          <button class="pm-btn">カートに入れた → 次へ</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="hl pink" style="margin-bottom:12px">
+          <div class="hl-title">緑の表示が出たら自動入力成功</div>
+          <div class="hl-body">「✓ 検索: 101」などが出ていれば、商品コードがG-MAXの検索欄に自動入力された状態。G-MAX側の「検索」ボタンを押して商品を確認後、「カートに追加」。</div>
+        </div>
+        <div class="hl blue">
+          <div class="hl-title">緑の表示が出ない場合</div>
+          <div class="hl-body">G-MAX側の画面構造によって自動入力が効かない場合がある。その場合はパネルに表示された<strong>商品コード・カラー・サイズを見ながら手動で入力</strong>する。パネルは商品を一覧で見やすく表示してくれているので手間は最小限。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 5. よくある質問 -->
+  <div class="sec">
+    <div class="sec-label"><span class="num">5</span><h2>よくある質問</h2></div>
+    <div class="card">
+      <div class="qa">
+        <div class="q">ページが変わったらパネルが消えた</div>
+        <div class="a">ブックマークをもう一度クリックするだけで続きから再開できる。進捗（何番目の商品まで進んだか）はブラウザに自動保存されている。</div>
+      </div>
+      <div class="qa">
+        <div class="q">新しいお客様のときにブックマークの中身が古くならないか</div>
+        <div class="a">処方ナビの「G-MAX 自動入力ツール」ボタンを押すたびに、<strong>そのお客様の処方内容</strong>でブックマークを更新してください（ブックマークを右クリック→編集、またはドラッグし直し）。中身はお客様ごとに変わる。</div>
+      </div>
+      <div class="qa">
+        <div class="q">Chromeでアドレスバーに貼り付けたら先頭の「javascript:」が消えた</div>
+        <div class="a">Chromeはセキュリティ上の理由で <code style="background:var(--bg);padding:0 5px;border-radius:3px">javascript:</code> を自動で消す。先にアドレスバーに <code style="background:var(--bg);padding:0 5px;border-radius:3px">javascript:</code> と手入力してから、コピーしたコードの残りを貼り付けると動く。</div>
+      </div>
+      <div class="qa">
+        <div class="q">税率が違う商品がある場合</div>
+        <div class="a">ビジネス会員の初回登録では、消費税10%の商品（下着）と8%の商品（食品・サプリ）を同じカートに入れることができない。税率ごとに分けて注文する必要がある。</div>
+      </div>
+      <div class="qa">
+        <div class="q">招待URLの有効期限が切れた</div>
+        <div class="a">G-MAXから再度招待メールを送り直す。有効期限は3時間なので、当日中に登録が完了するよう段取りを立てておく。</div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 6. まとめフロー -->
+  <div class="sec">
+    <div class="sec-label"><span class="num">6</span><h2>全体の流れ（1枚で確認）</h2></div>
+    <div class="card">
+      <ol class="steps">
+        <li><strong>処方ナビでカウンセリング完了</strong> — 商品・カラー・サイズが決まる</li>
+        <li><strong>「G-MAX 注文リスト」を確認</strong> — 内容が合っているか最終チェック</li>
+        <li><strong>「G-MAX 自動入力ツール」をタップ</strong> — ブックマーク用のボタンが出る</li>
+        <li><strong>PCブラウザのブックマークバーに登録</strong>（初回1回だけ）</li>
+        <li><strong>G-MAXからお客様に招待メールを送信</strong></li>
+        <li><strong>お客様が①〜⑯の登録を進める</strong>（住所・支払い情報など）</li>
+        <li><strong>⑰番「商品選択」の画面でブックマークをクリック</strong> — パネルが出て自動入力</li>
+        <li><strong>G-MAXで「カートに追加」→ パネルの「次へ」を繰り返す</strong> — 全商品ぶん</li>
+        <li><strong>「全商品カート完了！」でパネルを閉じる</strong> — 登録フローの残りへ</li>
+      </ol>
+    </div>
+
+    <div class="note">
+      処方ナビ本体: 同フォルダの index.html をブラウザで開く（またはスマホのホーム画面に追加）。このガイドはスタッフ向け運用資料です。
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

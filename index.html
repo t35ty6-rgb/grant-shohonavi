@@ -1,0 +1,1366 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>グラント処方ナビ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap">
+<style>
+/* Layout: スマホアプリ型。上にアプリバー、中央がスクロール画面（ホーム／診断チャット／処方／素材）、下にタブバー。PCでは中央にスマホ幅で表示 */
+:root{
+  --bg:#f5f6f8; --surface:#ffffff; --ink:#15161a; --muted:#666a73; --line:#e3e5ea; --desk:#e6e8ec;
+  --accent:#e2477a; --accent-ink:#ffffff; --accent-soft:#fde7ee; --blue:#2f5bd3; --blue-soft:#e8eefc;
+  --green:#1f7a57; --green-soft:#e3f3ec; --me:#15161a; --me-ink:#ffffff;
+  --f-body:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;
+  --f-latin:"Outfit","Zen Kaku Gothic New",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111215; --surface:#1b1d22; --ink:#f2f3f5; --muted:#a3a7b0; --line:#2c2f36; --desk:#08090b;
+  --accent:#ff6f9b; --accent-ink:#1a0b11; --accent-soft:#3a1b26; --blue:#8aa8ff; --blue-soft:#1d2540;
+  --green:#7fd1ab; --green-soft:#15302a; --me:#f2f3f5; --me-ink:#15161a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111215; --surface:#1b1d22; --ink:#f2f3f5; --muted:#a3a7b0; --line:#2c2f36; --desk:#08090b;
+  --accent:#ff6f9b; --accent-ink:#1a0b11; --accent-soft:#3a1b26; --blue:#8aa8ff; --blue-soft:#1d2540;
+  --green:#7fd1ab; --green-soft:#15302a; --me:#f2f3f5; --me-ink:#15161a; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--desk);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7;overflow:hidden}
+.app{height:100%;max-width:440px;margin:0 auto;background:var(--bg);display:flex;flex-direction:column;position:relative}
+@media (min-width:600px){body{padding-block:20px}.app{border-radius:28px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.18);border:1px solid var(--line)}}
+.appbar{flex:none;display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--line)}
+.appbar .back{font:inherit;border:none;background:none;color:var(--ink);font-size:22px;line-height:1;padding:2px 6px;cursor:pointer;border-radius:8px}
+.appbar .ttl{font-weight:900;font-size:16px}
+.appbar .meta{margin-left:auto;font-family:var(--f-latin);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{flex:none;height:3px;background:var(--line)}.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
+.view{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.pad{padding:18px 16px 24px}
+.tabs{flex:none;display:grid;grid-template-columns:repeat(5,1fr);background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabs button{font:inherit;font-size:10.5px;font-weight:700;border:none;background:none;color:var(--muted);padding:8px 0 10px;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
+.tabs button[aria-current="page"]{color:var(--accent)}
+.tabs svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tabs button:disabled{opacity:.35;cursor:default}
+/* home */
+.eyebrow{font-family:var(--f-latin);font-weight:700;font-size:11px;letter-spacing:.18em;color:var(--accent)}
+.home h1{font-weight:900;font-size:30px;line-height:1.25;margin:8px 0 10px;text-wrap:balance}
+.home h1 em{font-style:normal;background:linear-gradient(transparent 62%,var(--accent-soft) 62%)}
+.home p{color:var(--muted);margin:0 0 16px;font-size:14px}
+.trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:4px 0 20px}
+.trio figure{margin:0;background:var(--surface);border-radius:16px;overflow:hidden;border:1px solid var(--line)}
+.trio figure:nth-child(2){transform:translateY(12px)}
+.trio img{display:block;width:100%;aspect-ratio:3/4;object-fit:cover;background:#fff}
+.trio figcaption{font-family:var(--f-latin);font-weight:700;font-size:12px;padding:6px 8px;line-height:1.3}
+.trio figcaption span{display:block;font-family:var(--f-body);font-weight:500;font-size:10.5px;color:var(--muted)}
+.btn{font:inherit;font-weight:700;border:none;background:var(--accent);color:var(--accent-ink);border-radius:16px;padding:14px 20px;cursor:pointer;width:100%;font-size:16px}
+.btn.dark{background:var(--ink);color:var(--bg)}
+.btn.ghost{background:var(--surface);color:var(--ink);border:1.5px solid var(--line);font-weight:500}
+.btn.sm{padding:9px 16px;font-size:14px;border-radius:12px;width:auto}
+.stack{display:flex;flex-direction:column;gap:10px}
+.tips{margin-top:22px;display:flex;flex-direction:column;gap:8px}
+.tip{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 14px;font-size:13.5px}
+.tip b{display:block;font-size:12px;color:var(--accent)}
+/* chat */
+.chatv{display:flex;flex-direction:column;overflow:hidden}
+.chatv[hidden]{display:none}
+.log{flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:84%;padding:10px 14px;border-radius:18px;font-size:14.5px;line-height:1.6}
+.bot{align-self:flex-start;background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:6px}
+.me{align-self:flex-end;background:var(--me);color:var(--me-ink);border-bottom-right-radius:6px}
+.hint{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+.choices{flex:none;display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px 14px;border-top:1px solid var(--line);background:var(--surface);max-height:46%;overflow-y:auto}
+.chip{font:inherit;font-size:14px;border:1.5px solid var(--line);color:var(--ink);background:var(--surface);border-radius:999px;padding:8px 14px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);font-weight:700}
+.choices .btn{margin-top:4px}
+.chip:focus-visible,.btn:focus-visible,input:focus-visible,.tabs button:focus-visible,.back:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;width:100%}
+.meas{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:100%}
+.meas label{display:flex;flex-direction:column;font-size:12px;font-weight:700;color:var(--muted);gap:2px}
+.meas span{display:flex;align-items:center;gap:4px;font-weight:400}
+.meas input{font:inherit;font-size:16px;width:100%;min-width:0;padding:7px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
+.row label{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.row input{font:inherit;font-size:16px;width:84px;padding:7px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
+/* knowledge */
+.sec-t{font-size:15px;font-weight:900;margin:4px 0 10px}
+.fibers{display:flex;flex-direction:column;gap:10px;margin-bottom:22px}
+.fiber{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.fiber b{display:flex;align-items:center;gap:8px;font-size:14px}
+.dot{width:10px;height:10px;border-radius:50%;flex:none}
+.fiber p{margin:4px 0 0;font-size:13px;color:var(--muted);line-height:1.65}
+.types{list-style:none;margin:0 0 18px;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.types li{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.types img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;background:#fff}
+.types div{padding:6px 10px 8px}
+.types b{display:block;font-size:13px}
+.types small{display:block;color:var(--muted);font-size:11.5px;line-height:1.5}
+.note{font-size:12.5px;color:var(--muted);border-left:3px solid var(--accent);padding:2px 0 2px 12px}
+/* result */
+.empty{background:var(--surface);border:1.5px dashed var(--line);border-radius:18px;padding:26px 18px;color:var(--muted);text-align:center;display:flex;flex-direction:column;gap:12px}
+.res-head h2{font-weight:900;font-size:24px;line-height:1.3;margin:6px 0 6px;text-wrap:balance}
+.res-sum{color:var(--muted);margin:0 0 12px;font-size:14px}
+.stats{display:flex;flex-wrap:wrap;gap:8px}
+.stat{font-size:13px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px 12px;font-variant-numeric:tabular-nums}
+.stat b{color:var(--accent)}
+.mitate{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin:16px 0 4px}
+.mitate h3{font-size:14px;margin:0 0 8px}
+.chain{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin:0 0 10px;font-size:12.5px}
+.chain span{background:var(--bg);border-radius:8px;padding:2px 8px}
+.chain span.hit{background:var(--accent-soft);font-weight:700}
+.chain i{font-style:normal;color:var(--muted);font-size:11px}
+.mitate ul{margin:0;padding-left:1.1em;font-size:13.5px}
+.mitate li{margin:4px 0}
+.gt{font-family:var(--f-latin);font-weight:700;font-size:12px;letter-spacing:.16em;color:var(--accent);margin:24px 0 10px}
+.cards{display:flex;flex-direction:column;gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:20px;overflow:hidden}
+.card.main{border:2px solid var(--ink)}
+.card-top{display:grid;grid-template-columns:96px minmax(0,1fr);gap:12px;padding:12px;align-items:start}
+.card-top img{width:96px;height:96px;object-fit:contain;border-radius:12px;background:#fff;border:1px solid var(--line)}
+.tag{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:1px 8px;background:var(--bg);color:var(--muted)}
+.tag.med{background:var(--green-soft);color:var(--green)}
+.card h3{margin:4px 0 6px;font-size:15.5px;line-height:1.4}
+.fix{display:flex;flex-wrap:wrap;gap:4px}
+.fix span{font-size:11px;background:var(--accent-soft);border-radius:6px;padding:1px 7px}
+.you{margin:0 12px;background:var(--blue-soft);border-radius:12px;padding:10px 12px;font-size:13.5px}
+.you b{color:var(--blue);display:block;font-size:12px;margin-bottom:2px}
+.you p{margin:0 0 6px}
+.you .heard{font-weight:700;color:var(--blue)}
+.you .cause{color:var(--ink)}
+.you .eff,.you .res{background:var(--surface);border-radius:10px;padding:8px 10px;margin-top:6px}
+.you .eff span,.you .res span{display:block;font-size:11.5px;font-weight:700;color:var(--accent)}
+.pitch{background:var(--ink);color:var(--bg);border-radius:18px;padding:14px 16px;margin:6px 0 4px}
+.pitch b{font-size:12px;color:var(--accent);display:block;margin-bottom:4px}
+.pitch p{margin:0 0 10px;font-size:14px;line-height:1.8}
+.pitch .btn.ghost{background:transparent;color:var(--bg);border-color:var(--muted)}
+details.more{padding:4px 14px 12px}
+details.more summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--muted);padding:8px 0;list-style:none}
+details.more summary::-webkit-details-marker{display:none}
+details.more summary::after{content:"＋";float:right}
+details.more[open] summary::after{content:"－"}
+.detail{display:flex;flex-direction:column;gap:8px;font-size:13.5px;margin:0}
+.detail dt{font-size:12px;font-weight:700;color:var(--muted)}
+.detail dd{margin:0}
+.mat{display:flex;gap:8px;align-items:flex-start;margin-bottom:4px}
+.mat .dot{margin-top:6px}
+.say{margin:0 12px 12px;border-top:1px dashed var(--line);padding-top:8px;font-size:13.5px}
+.say b{font-size:12px;color:var(--muted);display:block}
+.memo{display:flex;flex-direction:column;gap:10px;margin-top:22px}
+.memo div{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:13.5px}
+.memo b{display:block;font-size:12px;color:var(--accent)}
+.memo ul{margin:4px 0 0;padding-left:1.1em}
+/* figures */
+.figs{display:flex;flex-direction:column;gap:12px;margin-top:12px}
+.fig{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:10px;overflow-x:auto}
+.fig b{display:block;font-size:13px;margin:2px 4px 8px}
+.fig p{margin:8px 4px 2px;font-size:12.5px;color:var(--muted)}
+.fig svg{min-width:280px}
+/* forms */
+.form{display:flex;flex-direction:column;gap:14px}
+.fs{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px}
+.fs h3{margin:0 0 10px;font-size:14px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.fl{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted);font-weight:700}
+.fl input,.fl select,.fl textarea,.it input,.it select{font:inherit;font-size:16px;font-weight:400;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px;width:100%;min-width:0}
+.fl textarea{min-height:70px;resize:vertical}
+.unit{font-weight:400}
+.items{display:flex;flex-direction:column;gap:10px}
+.it{display:grid;grid-template-columns:48px minmax(0,1fr);gap:10px;align-items:start;border:1px solid var(--line);border-radius:14px;padding:10px;background:var(--bg)}
+.it img{width:48px;height:48px;object-fit:contain;border-radius:8px;background:#fff}
+.it .nm{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700}
+.it .nm input{width:20px;height:20px;accent-color:var(--accent)}
+.it .row2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-top:8px}
+.it.off .row2,.it.off .ev{display:none}
+.ev{font-size:12px;color:var(--blue);margin-top:6px}
+.ev b{font-weight:700}
+.msgline{font-size:13px;padding:10px 12px;border-radius:12px;background:var(--green-soft);color:var(--green)}
+.msgline.err{background:var(--accent-soft);color:var(--accent)}
+/* data */
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:14px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.kpi b{display:block;font-family:var(--f-latin);font-size:24px;font-variant-numeric:tabular-nums;line-height:1.2}
+.kpi span{font-size:11.5px;color:var(--muted)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:14px}
+.panel h3{margin:0 0 4px;font-size:15px}
+.panel>p{margin:0 0 10px;font-size:12.5px;color:var(--muted)}
+.dist{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.dr{display:grid;grid-template-columns:4.5em minmax(0,1fr) 7.5em;gap:8px;align-items:center;font-size:13px;font-variant-numeric:tabular-nums}
+.dr .bg{height:12px;background:var(--bg);border-radius:6px;overflow:hidden}
+.dr .bg i{display:block;height:100%;background:var(--accent);border-radius:6px}
+.dr.top .bg i{background:var(--blue)}
+.dr small{color:var(--muted);text-align:right;font-size:11.5px;white-space:nowrap}
+.tbl{overflow-x:auto}
+.tbl table{border-collapse:collapse;width:100%;font-size:12.5px;font-variant-numeric:tabular-nums;min-width:420px}
+.tbl th,.tbl td{border-bottom:1px solid var(--line);padding:6px 6px;text-align:right;white-space:nowrap}
+.tbl th:first-child,.tbl td:first-child,.tbl td.l{text-align:left}
+.tbl th{font-size:11px;color:var(--muted);font-weight:700}
+.rec{border-bottom:1px solid var(--line);padding:10px 0;font-size:13px}
+.rec:last-child{border-bottom:none}
+.rec b{font-size:13.5px}
+.rec .meta2{color:var(--muted);font-size:12px}
+.rec .del{float:right;font:inherit;font-size:12px;border:none;background:none;color:var(--muted);text-decoration:underline;cursor:pointer}
+.wh{display:flex;flex-direction:column;gap:6px}
+.wh div{font-size:13px}
+.wh b{display:inline-block;min-width:8em}
+/* series sheet */
+.tbtn{font:inherit;color:inherit;text-align:left;border:none;background:none;padding:0;width:100%;cursor:pointer;display:block}
+.tbtn em{display:block;font-style:normal;font-size:11px;font-weight:700;color:var(--accent);margin-top:2px}
+.tap{cursor:pointer}
+.tagbtn{font:inherit;font-size:11px;font-weight:700;border:none;cursor:pointer}
+.home .hint2{font-size:12px;color:var(--muted);margin:-12px 0 16px;text-align:right}
+.sheet-bg[hidden]{display:none}
+.sheet-bg{position:absolute;inset:0;background:rgba(10,10,14,.45);z-index:50;display:flex;align-items:flex-end}
+.sheet{background:var(--bg);width:100%;max-height:88%;overflow-y:auto;border-radius:22px 22px 0 0;padding:0 16px calc(20px + env(safe-area-inset-bottom,0px))}
+.sheet-h{position:sticky;top:0;background:var(--bg);display:flex;align-items:center;gap:10px;padding:14px 0 10px;z-index:1}
+.sheet-h b{font-size:18px;font-weight:900}
+.sheet-h .x{margin-left:auto;font:inherit;font-size:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 14px;cursor:pointer}
+.grab{position:absolute;left:50%;top:6px;width:40px;height:4px;border-radius:2px;background:var(--line);transform:translateX(-50%)}
+.s-lead{font-size:15px;font-weight:700;margin:0 0 10px}
+.s-hero{display:flex;gap:6px;overflow-x:auto;margin:0 0 14px;padding-bottom:4px}
+.s-hero img{width:96px;height:96px;flex:none;object-fit:contain;background:#fff;border-radius:12px;border:1px solid var(--line)}
+.sheet .fig{margin-bottom:10px}
+.s-sec{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:10px;font-size:13.5px}
+.s-sec h4{margin:0 0 6px;font-size:12px;color:var(--accent);letter-spacing:.06em}
+.s-sec ul{margin:0;padding-left:1.1em}.s-sec li{margin:3px 0}
+.s-sec p{margin:0}
+.s-sec.warn{background:var(--green-soft);border-color:transparent}
+.s-sec.warn h4{color:var(--green)}
+.s-line{display:grid;grid-template-columns:52px minmax(0,1fr);gap:10px;align-items:center;padding:6px 0;border-top:1px solid var(--line)}
+.s-line:first-of-type{border-top:none}
+.s-line img{width:52px;height:52px;object-fit:contain;background:#fff;border-radius:10px}
+.s-line b{font-size:13.5px;display:block}
+.s-line span{font-size:12px;color:var(--muted)}
+.s-say{background:var(--ink);color:var(--bg);border-radius:16px;padding:12px 14px;font-size:14px;margin-bottom:10px}
+.s-say h4{margin:0 0 4px;font-size:12px;color:var(--accent)}
+/* pick (one-flow selection) */
+.pick{margin:10px 12px 0;border:1.5px dashed var(--line);border-radius:12px;padding:10px}
+.pick.on{border-style:solid;border-color:var(--accent);background:var(--accent-soft)}
+.pick .btn{width:100%}
+.pk{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.pk label{display:flex;flex-direction:column;font-size:11px;font-weight:700;color:var(--muted);gap:2px}
+.pk select{font:inherit;font-size:15px;padding:6px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);min-width:0}
+.sw{display:flex;gap:6px;overflow-x:auto;margin:0 0 8px;padding-bottom:2px}
+.swb{flex:none;width:68px;border:2px solid var(--line);border-radius:10px;background:var(--surface);padding:0;font:inherit;font-size:10.5px;cursor:pointer;color:var(--ink);overflow:hidden}
+.swb img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;background:#fff}
+.swb i{display:block;width:100%;aspect-ratio:1/1;background:var(--bg)}
+.swb span{display:block;padding:3px 2px;line-height:1.25}
+.sw-big{display:flex;gap:10px;align-items:center;margin:0 0 10px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px}.sw-big:empty{display:none}.sw-big img{width:140px;height:140px;object-fit:cover;border-radius:10px;background:#fff;cursor:zoom-in;flex:none}.sw-big b{display:block;font-size:15px}.sw-big small{color:var(--sub,#888);font-size:12px}
+.lb{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;gap:12px}.lb img{width:min(92vw,520px);max-height:70vh;object-fit:contain;background:#fff;border-radius:14px}.lb b{color:#fff;font-size:17px}.lb .lbn{display:flex;gap:8px;overflow-x:auto;max-width:92vw}.lb .lbn img{width:56px;height:56px;border-radius:8px;object-fit:cover;opacity:.55;border:2px solid transparent;cursor:pointer}.lb .lbn img.on{opacity:1;border-color:#fff}.lb small{color:#ccc}.zoomable{cursor:zoom-in}
+.swb.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.sw-l{font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px}
+.pv{border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin:8px 0;background:var(--bg)}.pv-h{display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-bottom:4px}.pv-h button{font:inherit;font-size:12px;border:0;background:none;color:var(--sub,#888);text-decoration:underline}.pv-add{margin-top:4px}
+.pk-h{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;margin-bottom:6px}
+.pk-h button{font:inherit;font-size:12px;border:none;background:none;color:var(--muted);text-decoration:underline;cursor:pointer}
+.pk-ev{font-size:11.5px;color:var(--blue);margin-top:6px}
+.selbar{position:sticky;bottom:0;margin:20px -16px -24px;padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px));background:var(--surface);border-top:1px solid var(--line);display:flex;gap:10px;align-items:center;z-index:5}
+.selbar b{font-size:14px;white-space:nowrap}
+.selbar .btn{flex:1;padding:12px}
+.cf{display:grid;grid-template-columns:56px minmax(0,1fr);gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px;margin-bottom:8px}.cf img.pi{width:56px;height:56px;object-fit:cover;border-radius:10px}.cf b{font-size:14px}.cf .spec{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;font-size:13px;align-items:center}.cf .spec span{background:var(--bg);border-radius:8px;padding:2px 8px}.cf .spec img{width:22px;height:22px;object-fit:cover;border-radius:5px;vertical-align:middle;margin-right:4px}.cf .spec .ng{background:#fde8ec;color:#c0284f;font-weight:700}.cf .acts{display:flex;gap:12px;margin-top:6px}.cf .acts button{font:inherit;font-size:12px;border:0;background:none;color:var(--accent,#d6457a);text-decoration:underline;padding:0}.cf-tot{display:flex;justify-content:space-between;font-weight:700;margin:12px 2px}.selbtn{font:inherit;font-weight:700;border:0;background:none;color:var(--ink);text-align:left;padding:0;text-decoration:underline;text-underline-offset:3px}.recsum{border:2px solid var(--accent,#d6457a);border-radius:16px;padding:12px;margin:14px 0}.recsum h3{margin:0 0 8px;font-size:15px}
+.it.miss{border:2px solid #e0234e!important;background:#fff5f7;border-radius:14px}.needmsg{color:#e0234e;font-weight:700;font-size:14px;margin:4px 0}.sw.need{outline:2px solid #e0234e;outline-offset:2px;border-radius:10px}select.need{border:2px solid #e0234e!important;background:#fff0f3!important}.jump{font:inherit;font-weight:700;border:0;background:none;color:#e0234e;text-decoration:underline;padding:0 4px}.miss-p{outline:3px solid #e0234e;outline-offset:2px}
+label[hidden],.fl[hidden]{display:none!important}.sw-big>div{min-width:0;flex:1}
+.flash{animation:fl 1.6s ease}@keyframes fl{0%,40%{box-shadow:0 0 0 3px var(--accent,#d6457a)}100%{box-shadow:0 0 0 0 transparent}}.toast{position:fixed;left:50%;top:64px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transform:translateX(-50%);background:#222;color:#fff;font-size:14px;padding:10px 16px;border-radius:999px;z-index:99;pointer-events:none;max-width:90vw;text-align:center}
+.prow{display:grid;grid-template-columns:64px minmax(0,1fr);gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:10px;margin-bottom:10px}
+.prow img{width:64px;height:64px;object-fit:contain;background:#fff;border-radius:10px}
+.prow .pick{margin:6px 0 0}
+.cat-g{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:14px}
+.cat-t{font:inherit;text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:0;overflow:hidden;cursor:pointer}
+.cat-t img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;background:#fff}
+.cat-t span{display:block;font-size:11.5px;line-height:1.4;padding:5px 6px 7px}
+.cat-t.sel{border:2px solid var(--accent)}
+.cat-h{font-size:13px;font-weight:900;margin:10px 0 6px}
+@media (prefers-reduced-motion:no-preference){.msg{animation:in .22s ease-out both}@keyframes in{from{transform:translateY(5px)}to{transform:none}}}
+</style>
+
+<div class="app">
+  <header class="appbar">
+    <button class="back" id="back" type="button" aria-label="ホームへ戻る" hidden>‹</button>
+    <span class="ttl" id="ttl">グラント処方ナビ</span>
+    <span class="meta" id="count"></span>
+  </header>
+  <div class="bar" id="barwrap" hidden><i id="bar"></i></div>
+
+  <main class="view" id="v-home">
+    <div class="pad home">
+      <div class="eyebrow">GRANT E-ONE'S STYLIST NAVI</div>
+      <h1>その悩み、<em>どの1着</em>で整える？</h1>
+      <p>お客様と一緒に答えていくと、直したいところ・効くしくみ・使われている繊維まで、写真つきで出ます。</p>
+      <div class="trio">
+        <figure class="tap" data-ser="lala" role="button" tabindex="0"><img src="img/p03.jpg" alt=""><figcaption>LALA<span>骨格と姿勢</span></figcaption></figure>
+        <figure class="tap" data-ser="emma" role="button" tabindex="0"><img src="img/p14.jpg" alt=""><figcaption>Emm∀ Pump<span>迷ったらこれ</span></figcaption></figure>
+        <figure class="tap" data-ser="taikan" role="button" tabindex="0"><img src="img/p12.jpg" alt=""><figcaption>TAI-KAN<span>重心を整える</span></figcaption></figure>
+      </div>
+      <p class="hint2">写真を押すと特徴が見られます</p>
+      <div class="stack">
+        <button class="btn" id="start" type="button">カウンセリングをはじめる</button>
+        <button class="btn ghost" id="sample" type="button">サンプル結果を見る（40代女性）</button>
+      </div>
+      <div class="tips">
+        <div class="tip"><b>まず着てもらう</b>サイズや商品で迷って止まるより、試着が先。着れば本人が違いに気づきます。</div>
+        <div class="tip"><b>整えるのは2つ</b>姿勢と温かさ。基本セットは LALA ＋ ホルミー。</div>
+        <div class="tip"><b>必ず聞く4つ</b>痛み・平熱・お通じ・生理。質問の中に入っています。</div>
+      </div>
+    </div>
+  </main>
+
+  <main class="view chatv" id="v-chat" hidden>
+    <div class="log" id="log" aria-live="polite"></div>
+    <div class="choices" id="choices"></div>
+  </main>
+
+  <main class="view" id="v-result" hidden>
+    <div class="pad" id="result"></div>
+  </main>
+
+  <main class="view" id="v-know" hidden>
+    <div class="pad">
+      <h2 class="sec-t">お客様に見せる からだの図</h2>
+      <div class="figs" id="allfigs"></div>
+      <h2 class="sec-t" style="margin-top:22px">素材とカッティングのしくみ</h2>
+      <div class="figs" id="matfigs"></div>
+      <h2 class="sec-t" style="margin-top:22px">使われている素材は3つ</h2>
+      <div class="fibers" id="fibers"></div>
+      <h2 class="sec-t">6種類の早見</h2>
+      <ul class="types" id="types"></ul>
+      <p class="note">マグ（X-mag）以外は医療機器ではありません。「痩せる」「体温が上がる」「治る」とは言わず、「姿勢が整ってラインがすっきり見える」「着ていて温かい」と伝えます。</p>
+    </div>
+  </main>
+
+  <main class="view" id="v-rec" hidden>
+    <div class="pad"><form class="form" id="recform" novalidate></form></div>
+  </main>
+
+  <main class="view" id="v-data" hidden>
+    <div class="pad" id="datapane"></div>
+  </main>
+
+  <div class="sheet-bg" id="sheet" hidden><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-t"><span class="grab"></span><div class="sheet-h"><b id="sheet-t"></b><button type="button" class="x" id="sheet-x">閉じる</button></div><div id="sheet-b"></div></div></div>
+
+  <nav class="tabs" aria-label="画面切り替え">
+    <button type="button" data-v="home" aria-current="page"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>ホーム</button>
+    <button type="button" data-v="chat"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z"/></svg>質問</button>
+    <button type="button" data-v="result"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h5"/></svg>処方</button>
+    <button type="button" data-v="data"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>記録・データ</button>
+    <button type="button" data-v="know"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v5M12 16h.01"/></svg>素材・商品</button>
+  </nav>
+</div>
+
+<script>
+/* からだの図（Lune風の線画イラストをSVGで描く） */
+const FIG=(()=>{
+const C={skin:"#F4DCC8",line:"#3B2F2C",suit:"#D9788F",suitD:"#B9566F",hair:"#5A3A2E",guide:"#E2477A",ok:"#2F9E6E",ng:"#E2477A",paper:"#FFF8F5",mute:"#9B8F8A"};
+const NF=[["nf",107,62],["th",110,84],["cl",114,92],["uc",120,100],["bu",127,108],["br",132,116],["bl",130,124],["ub",122,131],["rb",117,143],["wf",114,158],["bt",116,173],["be",119,189],["lb",118,204],["pu",116,218],["tt",119,232],["tf",119,252],["ak",114,285],["kn",113,302],["sh",112,325],["s2",109,355],["an",106,382]];
+const NB=[["na",93,60],["nb",90,80],["ubk",86,94],["bla",84,112],["mb",86,132],["wb",90,156],["lu",88,172],["btp",83,187],["brd",76,200],["bpk",73,212],["blw",76,224],["gf",84,238],["tb",88,256],["akb",92,290],["knb",95,305],["ca",91,330],["c2",93,355],["ac",96,378],["he",95,392]];
+const V={ideal:{},
+ sway:{d:{be:[10,0],lb:[9,0],bt:[6,0],pu:[5,0],rb:[2,0],wf:[3,0],wb:[8,0],lu:[9,0],btp:[-2,0],brd:[-6,-2],bpk:[-6,-3],blw:[-2,-1],nf:[-4,0],th:[-4,0],cl:[-4,0],uc:[-4,0],bu:[-3,0],br:[-3,0],bl:[-3,0],na:[-5,0],nb:[-5,0],ubk:[-5,0],bla:[-4,0]},head:[-6,0],arm:[-4,0]},
+ hunch:{d:{na:[8,5],nb:[7,4],ubk:[-6,2],bla:[-9,0],mb:[-4,0],nf:[8,5],th:[7,4],cl:[4,3],uc:[-2,3],bu:[-2,5],br:[-3,7],bl:[-3,8],ub:[-3,6]},head:[12,6],arm:[7,4]},
+ sag:{d:{bu:[-1,8],br:[-4,16],bl:[-6,18],ub:[-6,16],rb:[-3,6],bla:[-5,2],mb:[-8,0],wb:[-2,0],btp:[3,8],brd:[3,16],bpk:[3,18],blw:[2,18],gf:[1,14],be:[4,0],lb:[3,0]}}
+};
+function pts(k){const v=V[k]||{},d=v.d||{},mv=([n,x,y])=>{const o=d[n]||[0,0];return [x+o[0],y+o[1]]};
+ const h=v.head||[0,0],ar=v.arm||[0,0];
+ return {f:NF.map(mv),b:NB.map(mv),head:[100+h[0],45+h[1]],arm:[[97+ar[0],94+ar[1]],[97+ar[0],150+ar[1]],[101+ar[0],196+ar[1]]]}}
+function cr(P,closed){let d="";const n=P.length;const g=i=>closed?P[(i+n)%n]:P[Math.max(0,Math.min(n-1,i))];
+ d+=`M${P[0][0]},${P[0][1]}`;for(let i=0;i<(closed?n:n-1);i++){const p0=g(i-1),p1=g(i),p2=g(i+1),p3=g(i+2);
+ const c1=[p1[0]+(p2[0]-p0[0])/6,p1[1]+(p2[1]-p0[1])/6],c2=[p2[0]-(p3[0]-p1[0])/6,p2[1]-(p3[1]-p1[1])/6];
+ d+=`C${c1[0].toFixed(1)},${c1[1].toFixed(1)} ${c2[0].toFixed(1)},${c2[1].toFixed(1)} ${p2[0]},${p2[1]}`}return d+(closed?"Z":"")}
+let uid=0;
+function person(k,ox=0){const p=pts(k),id="c"+(uid++);
+ const an=p.f[p.f.length-1],he=p.b[p.b.length-1];
+ const outline=[...p.f,[an[0]+10,389],[126,394],[127,400],[112,402],[97,402],[he[0]-2,398],...p.b.slice().reverse()];
+ const body=cr(outline,true);const [hx,hy]=p.head;
+ const [s0,e0,w0]=p.arm;const arm=`M${s0[0]},${s0[1]} Q${e0[0]-3},${e0[1]-20} ${e0[0]},${e0[1]} T${w0[0]},${w0[1]}`;
+ return `<g transform="translate(${ox},0)">
+ <clipPath id="${id}"><path d="${body}"/></clipPath>
+ <path d="${body}" fill="${C.skin}"/>
+ <g clip-path="url(#${id})"><path d="M0,88 L200,88 L200,232 Q150,242 122,236 Q100,246 70,240 L0,244 Z" fill="${C.suit}"/></g>
+ <path d="${body}" fill="none" stroke="${C.line}" stroke-width="2" stroke-linejoin="round"/>
+ <circle cx="${hx}" cy="${hy}" r="22" fill="${C.skin}" stroke="${C.line}" stroke-width="2"/>
+ <path d="M${hx-22},${hy+4} C${hx-25},${hy-22} ${hx+4},${hy-32} ${hx+19},${hy-11} C${hx+7},${hy-14} ${hx-1},${hy-10} ${hx-5},${hy+2} C${hx-7},${hy+18} ${hx-14},${hy+28} ${hx-20},${hy+36} C${hx-28},${hy+22} ${hx-27},${hy+12} ${hx-22},${hy+4}Z" fill="${C.hair}" stroke="${C.line}" stroke-width="1.8"/>
+ <circle cx="${hx+12}" cy="${hy+1}" r="1.7" fill="${C.line}"/><path d="M${hx+13},${hy+11} q3,1.5 5,0" stroke="${C.line}" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+ <path d="${arm}" stroke="${C.line}" stroke-width="15" fill="none" stroke-linecap="round"/><path d="${arm}" stroke="${C.skin}" stroke-width="11" fill="none" stroke-linecap="round"/>
+ <ellipse cx="${w0[0]+1}" cy="${w0[1]+9}" rx="6.5" ry="10" fill="${C.skin}" stroke="${C.line}" stroke-width="1.8"/>
+ </g>`}
+const mk=()=>`<defs><marker id="a" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10z" fill="${C.ok}"/></marker><marker id="a2" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10z" fill="${C.ng}"/></marker><marker id="a3" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10z" fill="#E8833A"/></marker><marker id="a4" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10z" fill="${C.line}"/></marker></defs>`;
+const svg=(w,inner)=>`<svg viewBox="0 0 ${w} 440" role="img" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block">${mk()}<rect width="${w}" height="440" rx="18" fill="${C.paper}"/>${inner}</svg>`;
+const T=(x,y,t,c=C.line,s=11,a="middle",w=700)=>`<text x="${x}" y="${y}" font-size="${s}" font-weight="${w}" fill="${c}" text-anchor="${a}" font-family="Zen Kaku Gothic New,sans-serif">${t}</text>`;
+function plumb(x,c){return `<line x1="${x}" y1="14" x2="${x}" y2="404" stroke="${c}" stroke-width="1.6" stroke-dasharray="5 5"/>`}
+function balance(){const ys=[67,116,158,210];const lab=["あご","バストトップ","ウエスト","ヒップトップ"];
+ let g=person("ideal",40);
+ ys.forEach((y,i)=>{g+=`<line x1="52" y1="${y}" x2="252" y2="${y}" stroke="${C.guide}" stroke-width="1.4" stroke-dasharray="4 4"/>`+T(258,y+4,lab[i],C.line,11,"start")});
+ for(let i=0;i<3;i++){const y1=ys[i]+3,y2=ys[i+1]-3;g+=`<line x1="56" y1="${y1}" x2="56" y2="${y2}" stroke="${C.guide}" stroke-width="2"/>`+T(50,(y1+y2)/2+4,"顔1つ分",C.guide,10,"end")}
+ g+=`<path d="M176,116 h20" stroke="${C.ok}" stroke-width="3" marker-end="url(#a)"/><path d="M110,212 h-20" stroke="${C.ok}" stroke-width="3" marker-end="url(#a)"/>`;
+ g+=T(196,262,"バスト：ヒップ",C.ok,11,"start")+T(196,284,"＝ 1 : 1",C.ok,16,"start",900);
+ g+=T(196,314,"顔4つ分で体の半分",C.mute,10,"start",500)+T(196,328,"→ 全身で8頭身",C.mute,10,"start",500);
+ return svg(340,g)}
+function compare(){let g="";const L=[["ideal","理想",C.ok],["hunch","猫背・巻き肩",C.ng],["sway","反り腰",C.ng]];
+ L.forEach(([k,t,c],i)=>{const ox=i*190;g+=person(k,ox)+`<g opacity=".8">${plumb(ox+100,c)}</g>`+T(ox+100,428,t,c,13)});
+ g+=T(285,14,"点線＝耳・肩・骨盤・くるぶしを結ぶ線（理想は一直線）",C.mute,10,"middle",500);
+ return svg(570,g)}
+function sag(){let g=person("ideal",10)+person("sag",210);
+ g+=T(110,428,"お尻を支えると",C.ok,13)+T(310,428,"お尻が下がると",C.ng,13);
+ g+=`<path d="M70,250 q42,24 86,0" stroke="${C.ok}" stroke-width="3.5" fill="none"/>`+T(112,290,"ガードルで持ち上げる",C.ok,10.5);
+ g+=`<path d="M278,214 v28" stroke="${C.ng}" stroke-width="3" marker-end="url(#a2)"/>`+T(270,268,"お尻が下がる",C.ng,11,"end");
+ g+=`<path d="M352,112 v24" stroke="${C.ng}" stroke-width="3" marker-end="url(#a2)"/>`+T(360,124,"バストが",C.ng,11,"start")+T(360,138,"引っぱられる",C.ng,11,"start");
+ g+=`<path d="M282,112 h-24" stroke="${C.ng}" stroke-width="3" marker-end="url(#a2)"/>`+T(254,98,"お肉が背中へ",C.ng,11,"end");
+ return svg(440,g)}
+function footprint(x,y,good,sc=1,dots=true){const S=v=>v*sc;
+ const inner=good?`C${x-S(26)},${y-S(8)} ${x-S(6)},${y-S(2)} ${x-S(6)},${y+S(14)} C${x-S(6)},${y+S(28)} ${x-S(18)},${y+S(30)} ${x-S(17)},${y+S(44)}`:`C${x-S(28)},${y-S(6)} ${x-S(26)},${y+S(14)} ${x-S(22)},${y+S(26)} C${x-S(20)},${y+S(34)} ${x-S(18)},${y+S(38)} ${x-S(17)},${y+S(44)}`;
+ let g=`<path d="M${x-S(20)},${y-S(30)} ${inner} C${x-S(16)},${y+S(58)} ${x+S(14)},${y+S(60)} ${x+S(16)},${y+S(44)} C${x+S(20)},${y+S(20)} ${x+S(24)},${y-S(10)} ${x+S(22)},${y-S(30)} C${x+S(18)},${y-S(44)} ${x-S(16)},${y-S(46)} ${x-S(20)},${y-S(30)}Z" fill="${good?C.skin:"#F7D3C6"}" stroke="${C.line}" stroke-width="1.8"/>`;
+ [[-15,-52,7],[-3,-56,5],[6,-55,4.5],[14,-51,4],[20,-45,3.6]].forEach(([dx,dy,r])=>g+=`<circle cx="${x+S(dx)}" cy="${y+S(dy)}" r="${S(r)}" fill="${C.skin}" stroke="${C.line}" stroke-width="1.5"/>`);
+ if(dots){const P3=[[x,y+S(44)],[x-S(14),y-S(28)],[x+S(16),y-S(22)]],c=good?C.ok:C.ng;
+  g+=`<path d="M${P3[0]}L${P3[1]}L${P3[2]}Z" fill="none" stroke="${c}" stroke-width="${good?2:1.6}" ${good?"":'stroke-dasharray="4 4"'}/>`;
+  P3.forEach(p=>g+=`<circle cx="${p[0]}" cy="${p[1]}" r="${S(4.5)}" fill="${c}"/>`)}
+ return g}
+function skel(cx,good){const c=good?C.ok:C.ng;let g="";
+ const sh=good?[0,0]:[-9,7],kn=good?[0,0]:[9,-9],pel=good?0:9,hd=good?0:8;
+ g+=`<circle cx="${cx+hd}" cy="52" r="18" fill="${C.skin}" stroke="${C.line}" stroke-width="2"/>`;
+ g+=`<path d="M${cx+hd*.6},72 ${good?`L${cx},188`:`C${cx+14},110 ${cx-14},150 ${cx},188`}" stroke="${C.line}" stroke-width="5" fill="none" stroke-linecap="round"/>`;
+ g+=`<path d="M${cx-42},${94+sh[0]} L${cx+42},${94+sh[1]}" stroke="${C.line}" stroke-width="5" stroke-linecap="round"/>`;
+ g+=`<ellipse cx="${cx}" cy="200" rx="34" ry="13" transform="rotate(${pel} ${cx} 200)" fill="${good?"#E6F4ED":"#FDE7EE"}" stroke="${C.line}" stroke-width="2.2"/>`;
+ const hipL=[cx-20,206+(good?0:-4)],hipR=[cx+20,206+(good?0:4)],knL=[cx-20+kn[0],290],knR=[cx+20+kn[1],290],anL=[cx-22,366],anR=[cx+22,366];
+ g+=`<path d="M${hipL}L${knL}L${anL}M${hipR}L${knR}L${anR}" stroke="${C.line}" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+ [hipL,hipR,knL,knR,anL,anR].forEach(p=>g+=`<circle cx="${p[0]}" cy="${p[1]}" r="6" fill="#fff" stroke="${C.line}" stroke-width="2"/>`);
+ if(!good){g+=`<path d="M${cx-56},86 l14,-6 M${cx+56},101 l-14,6" stroke="${c}" stroke-width="2.5"/>`;}
+ g+=`<line x1="${cx}" y1="28" x2="${cx}" y2="372" stroke="${c}" stroke-width="1.4" stroke-dasharray="4 5" opacity=".7"/>`;
+ return g}
+function stack(){let g="";
+ g+=T(110,22,"アーチで3点に立てている",C.ok,12.5)+T(330,22,"アーチがなく足元が不安定",C.ng,12.5);
+ g+=`<g transform="translate(16.5,26) scale(.85)">${skel(110,true)}</g><g transform="translate(49.5,26) scale(.85)">${skel(330,false)}</g>`;
+ g+=footprint(90,380,true,.5)+footprint(130,380,true,.5,false)+footprint(310,380,false,.5)+footprint(350,380,false,.5,false);
+ g+=T(110,432,"ひざ・骨盤・肩がまっすぐ積み上がる",C.ok,10,"middle",700)+T(330,432,"ひざが内に入り、骨盤・肩が傾く",C.ng,10,"middle",700);
+ return svg(440,g)}
+function arches(){let g="";
+ g+=T(110,24,"アーチがある足",C.ok,13)+T(330,24,"アーチがない足（偏平足）",C.ng,13);
+ g+=footprint(110,150,true,1.9)+footprint(330,150,false,1.9);
+ g+=T(110,52,"",C.mute);
+ g+=T(40,214,"内側の",C.ok,10,"middle")+T(40,227,"縦アーチ",C.ok,10,"middle")+T(178,190,"外側の",C.ok,10,"middle")+T(178,203,"縦アーチ",C.ok,10,"middle")+T(110,132,"横アーチ",C.ok,10,"middle");
+ g+=T(110,268,"かかと・親指の付け根・小指の付け根の",C.line,10.5,"middle",500)+T(110,282,"3点で体を支える",C.line,10.5);
+ g+=T(330,268,"土踏まずがつぶれて足裏全体がべったり",C.line,10.5,"middle",500)+T(330,282,"3点で支えられず、足首が内に倒れる",C.line,10.5,"middle",500);
+ // side views
+ const side=(x,good)=>{const c=good?C.ok:C.ng;return `<path d="M${x-70},392 C${x-74},368 ${x-58},352 ${x-40},350 C${x-20},346 ${x},340 ${x+18},350 C${x+40},360 ${x+66},372 ${x+74},386 C${x+76},392 ${x+70},394 ${x+60},394 ${good?`C${x+30},394 ${x+20},378 ${x-10},376 C${x-36},374 ${x-46},392 ${x-60},394`:`L${x-60},394`} C${x-66},394 ${x-70},394 ${x-70},392Z" fill="${C.skin}" stroke="${C.line}" stroke-width="2"/><line x1="${x-90}" y1="395" x2="${x+90}" y2="395" stroke="${C.mute}" stroke-width="1.5"/>`+(good?`<path d="M${x-44},388 Q${x+5},360 ${x+56},390" stroke="${c}" stroke-width="2.5" fill="none" stroke-dasharray="5 4"/>`+T(x,420,"アーチがバネになる",c,10.5):T(x,420,"足裏が床にべったり",c,10.5))};
+ g+=side(110,true)+side(330,false);
+ g+=T(110,318,"横から見ると",C.mute,10,"middle",500)+T(330,318,"横から見ると",C.mute,10,"middle",500);
+ return svg(440,g)}
+/* 素材のしくみ */
+function kodenshi(){let g="";const col=(x,ko)=>{let s="";
+  s+=`<rect x="${x-90}" y="300" width="180" height="56" rx="10" fill="${C.skin}" stroke="${C.line}" stroke-width="2"/>`+T(x,333,"からだ（体温）",C.line,12);
+  s+=`<rect x="${x-90}" y="150" width="180" height="50" rx="10" fill="${ko?C.suit:"#E7E2E0"}" stroke="${C.line}" stroke-width="2"/>`;
+  if(ko)for(let i=0;i<14;i++)s+=`<circle cx="${x-80+i*12.3}" cy="${i%2?192:158}" r="3" fill="#fff" stroke="${C.line}" stroke-width="1"/>`;
+  s+=T(x,180,ko?"光電子の生地":"ふつうの生地",ko?"#fff":C.mute,12.5);
+  for(let i=-1;i<=1;i++){const ax=x+i*50;s+=`<path d="M${ax},296 q-6,-12 0,-24 q6,-12 0,-24 q-6,-12 0,-24 q6,-10 0,-16" stroke="#E8833A" stroke-width="2.4" fill="none" marker-end="url(#a3)"/>`}
+  if(ko){for(let i=-1;i<=1;i++){const ax=x+i*50+20;s+=`<path d="M${ax},206 q6,12 0,24 q-6,12 0,24 q6,12 0,24 q-6,8 0,14" stroke="${C.ng}" stroke-width="2.4" fill="none" marker-end="url(#a2)"/>`}
+   s+=T(x,384,"熱を受けとめて、体へ返す",C.ng,12)+T(x,402,"着ているだけで温かさが続く",C.line,10.5,"middle",500)}
+  else{for(let i=-1;i<=1;i++){const ax=x+i*50;s+=`<path d="M${ax},144 q-6,-14 0,-28 q6,-14 0,-26" stroke="#E8833A" stroke-width="2.4" fill="none" opacity=".6" marker-end="url(#a3)"/>`}
+   s+=T(x,384,"熱が外へ逃げていく",C.mute,12)}
+  return s};
+ g+=col(110,false)+col(330,true);
+ g+=T(220,32,"体から出る熱（遠赤外線）のゆくえ",C.line,13)+T(220,52,"光電子＝セラミックを練り込んだ繊維",C.mute,10.5,"middle",500);
+  g+=T(36,430,"",C.mute)+`<path d="M150,425 h18" stroke="#E8833A" stroke-width="2.4"/>`+T(172,429,"体から出る熱",C.line,10,"start",500)+`<path d="M256,425 h18" stroke="${C.ng}" stroke-width="2.4"/>`+T(278,429,"体へ返る熱",C.line,10,"start",500);
+ return svg(440,g)}
+function hormesis(){let g="<g transform=\"translate(0,-90)\">";
+ g+=`<path d="M30,300 Q60,262 120,264 Q178,262 200,300 Z" fill="#CFE3EC" stroke="${C.line}" stroke-width="2"/>`;
+ g+=`<path d="M70,286 q14,-30 40,-28 q26,-6 34,26 Z" fill="#8C8A84" stroke="${C.line}" stroke-width="2"/>`+T(108,282,"北投石",C.surface||"#fff",11);
+ for(let i=0;i<3;i++)g+=`<path d="M${80+i*28},250 q-8,-14 0,-28 q8,-14 0,-28" stroke="${C.mute}" stroke-width="2" fill="none" opacity=".6"/>`;
+ g+=T(115,326,"ラジウム温泉の鉱石",C.line,11.5)+T(115,342,"（玉川温泉などで知られる）",C.mute,10,"middle",500);
+ g+=`<path d="M210,250 h34" stroke="${C.line}" stroke-width="3" marker-end="url(#a4)"/>`;
+ // fabric swatch
+ g+=`<rect x="262" y="190" width="150" height="120" rx="12" fill="#3A3540" stroke="${C.line}" stroke-width="2"/>`;
+ for(let r=0;r<4;r++)for(let c=0;c<5;c++)g+=`<path d="M${276+c*28},${206+r*28} l8,-6 l8,6 l-8,6z" fill="#7FA8D9" opacity=".9"/>`;
+ g+=T(337,330,"鉱石を生地にプリント",C.blue||"#2f5bd3",11.5)+T(337,346,"（Emm∀ Pump は柄の部分）",C.mute,10,"middle",500);
+ g+="</g>"+T(220,36,"ホルミシス素材ができるまで",C.line,13);
+ g+=T(220,320,"使われている商品：ホルミー（Re.B5）・Emm∀ Pump",C.line,10.5,"middle",500);
+ g+=T(220,340,"お客様へは「ラジウム温泉の鉱石を使った生地です」まで",C.mute,10,"middle",500);
+ return svg(440,g)}
+function magnet(){let g="";
+ const x=150;g+=`<path d="M${x-50},90 C${x-70},120 ${x-58},170 ${x-48},200 C${x-58},240 ${x-62},280 ${x-50},320 L${x+50},320 C${x+62},280 ${x+58},240 ${x+48},200 C${x+58},170 ${x+70},120 ${x+50},90 C${x+30},80 ${x-30},80 ${x-50},90Z" fill="${C.suit}" stroke="${C.line}" stroke-width="2"/>`;
+ g+=`<circle cx="${x}" cy="60" r="24" fill="${C.hair}" stroke="${C.line}" stroke-width="2"/><line x1="${x}" y1="96" x2="${x}" y2="300" stroke="${C.suitD}" stroke-width="2" stroke-dasharray="3 4"/>`;
+ [[-22,150],[22,150],[-22,205],[22,205],[-22,260],[22,260]].forEach(([dx,y])=>{g+=`<circle cx="${x+dx}" cy="${y}" r="15" fill="none" stroke="${C.ok}" stroke-width="1.2" opacity=".6"/><circle cx="${x+dx}" cy="${y}" r="24" fill="none" stroke="${C.ok}" stroke-width="1" opacity=".35"/><circle cx="${x+dx}" cy="${y}" r="7" fill="#9AA3AA" stroke="${C.line}" stroke-width="1.6"/>`});
+ g+=T(x,350,"背中から腰に磁石6個",C.line,12)+T(x,366,"（スムースボディ・レーシーボディ）",C.mute,10,"middle",500)+T(x,30,"後ろから見たところ",C.mute,10,"middle",500);
+ g+=`<circle cx="300" cy="140" r="7" fill="#9AA3AA" stroke="${C.line}" stroke-width="1.6"/>`+T(314,144,"＝ ネオジム磁石",C.line,11,"start");
+ g+=`<circle cx="300" cy="170" r="16" fill="none" stroke="${C.ok}" stroke-width="1.2" opacity=".6"/>`+T(324,174,"＝ 磁気がとどく範囲",C.line,11,"start");
+ g+=T(286,214,"ブラ：ホックの両サイド",C.line,10.5,"start",500)+T(286,232,"ガードル：腰の位置",C.line,10.5,"start",500);
+ g+=`<rect x="276" y="262" width="156" height="72" rx="12" fill="${C.ok}" opacity=".12"/>`+T(354,286,"管理医療機器",C.ok,12)+T(354,304,"装着部位のこりをほぐし",C.line,10.5,"middle",500)+T(354,320,"血行を改善",C.line,10.5,"middle",500);
+ return svg(440,g)}
+function cutting(){let g="";const L=[["Fantasy","お腹と背中を",0],["Gracy","高さをそろえる",190],["Fairy","バストとヒップを1:1",380]];
+ L.forEach(([n,t,ox])=>{g+=person("ideal",ox);g+=T(ox+100,428,n,C.ng,13)+T(ox+100,412,t,C.line,10.5,"middle",500)});
+ // Fantasy zones
+ g+=`<path d="M128,160 C140,180 140,214 128,228" stroke="${C.ok}" stroke-width="10" opacity=".35" fill="none" stroke-linecap="round"/><path d="M78,100 C70,130 74,160 84,172" stroke="${C.ok}" stroke-width="10" opacity=".35" fill="none" stroke-linecap="round"/>`;
+ g+=`<path d="M156,196 h-18" stroke="${C.ok}" stroke-width="3" marker-end="url(#a)"/><path d="M52,134 h18" stroke="${C.ok}" stroke-width="3" marker-end="url(#a)"/>`+T(160,200,"前ばり",C.ok,10,"start")+T(48,124,"背中",C.ok,10,"end");
+ // Gracy: guides + up arrows
+ [116,158,210].forEach(y=>g+=`<line x1="250" y1="${y}" x2="340" y2="${y}" stroke="${C.guide}" stroke-width="1.2" stroke-dasharray="4 4"/>`);
+ g+=`<path d="M346,136 v-16" stroke="${C.ok}" stroke-width="3" marker-end="url(#a)"/><path d="M252,232 v-16" stroke="${C.ok}" stroke-width="3" marker-end="url(#a)"/>`;
+ // Fairy: equal arrows
+ g+=`<path d="M536,136 v-18" stroke="${C.ok}" stroke-width="3" marker-end="url(#a)"/><path d="M448,236 v-18" stroke="${C.ok}" stroke-width="3" marker-end="url(#a)"/>`+T(560,124,"1",C.ok,14,"middle",900)+T(436,226,"1",C.ok,14,"middle",900);
+ return svg(570,g)}
+const defs=`<svg width="0" height="0" style="position:absolute"><defs><marker id="a" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10z" fill="${C.ok}"/></marker><marker id="a2" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10z" fill="${C.ng}"/></marker></defs></svg>`;
+return {balance,compare,sag,stack,arches,kodenshi,hormesis,magnet,cutting,defs};
+})();
+
+
+/* ---------- 素材 ---------- */
+const F={
+  ko:{n:"光電子®",c:"var(--accent)",d:"体から出る熱（遠赤外線）を受けとめて、また体へ返す繊維。着ているだけで温かさが続く。LALA・BiBi・TAI-KANに使用。",say:"体の熱を返してくれる繊維なので、着ていて温かいです"},
+  ho:{n:"ホルミシス（北投石）",c:"var(--blue)",d:"玉川温泉などラジウム温泉の鉱石「北投石」を生地に使用。メーカーは細胞レベルのケア（ホルミシス）をうたう。光電子とは別の鉱石。ホルミー・Emm∀ Pumpに使用。",say:"ラジウム温泉の鉱石を使った生地です"},
+  mg:{n:"ネオジム磁石",c:"var(--green)",d:"強力な永久磁石を下着に配置した管理医療機器。認められた効果は「装着部位のこりをほぐし、血行を改善」。マグ（X-mag）に使用。",say:"装着した部分のこりをほぐし、血行を改善する医療機器です"}
+};
+/* ---------- 商品 ---------- */
+const P={
+  p01:{s:"LALA Fantasy",n:"ニッパービスチェ",fix:["反り腰","猫背","ウエストの位置"],f:["ko"],act:"お腹側と背中側を同時に支えるカッティング。前ばり（みぞおち〜お腹の前）を押さえて反りを戻しながら、背中を起こす。本来のウエスト位置（肋骨のすぐ下）にくびれを作る。ハイウエストガードルとセットで着る。",say:"反ったところを戻して、背中を起こしてくれる上下セットです"},
+  p02:{s:"LALA Fantasy",n:"ハイウエストガードル",fix:["お腹ぽっこり","太もも","骨盤の傾き"],f:["ko"],act:"みぞおち近くからひざ近くまで一続きで支える超ハイウエスト。前に倒れた骨盤を起こし、前にせり出した内臓を正しい位置へ戻す。お腹側に光電子が多い。",say:"太ったのではなく、内臓が前に出ているだけ。位置を戻すガードルです"},
+  p03:{s:"LALA Gracy",n:"ララドール（袖なしボディスーツ）",fix:["全身のバランス","バストの位置","背中のお肉"],f:["ko"],act:"バスト・ウエスト・ヒップを「顔1つ分ずつ」の高さにそろえる、8頭身バランスのカッティング。上下がつながっているので、背中に流れたお肉をバストへ戻しやすい。ガードルかスパッツと合わせる。",say:"体の高さのバランスを、理想の位置にそろえる1着です"},
+  p04:{s:"LALA Gracy",n:"ブラジャー",fix:["背中・わきのお肉","巻き肩","バストの位置"],f:["ko"],act:"背中とわきに光電子が多い設計。わき・背中に流れたお肉をカップに集め、バストトップを上げる。バストが上がると胸が開き、前に入った肩が後ろへ戻る。",say:"背中とわきのお肉を、本来の場所に戻すブラです"},
+  p05:{s:"LALA Gracy",n:"レギュラーガードル",fix:["お尻の下がり","お尻の広がり"],f:["ko"],act:"体で2番目に重いお尻を下から持ち上げて包む。お尻が下がると胸が引っ張られ、お肉が背中へ回る。お尻を支えると、胸と背中も戻る（重力ケア）。",say:"重いお尻を支えると、胸も背中も戻ってきます"},
+  p06:{s:"LALA Fairy",n:"Tバックボディスーツ",fix:["バストとヒップの差","S字ライン"],f:["ko"],act:"バストとヒップを同時に引き上げ、1対1のS字バランスを作るカッティング。Tバックなのでお尻の丸みをつぶさない。",say:"胸とお尻を同じだけ上げて、S字のバランスを作ります"},
+  p07:{s:"LALA Drainage",n:"ドレナージュスパッツⅡ",fix:["脚のむくみ","太もも"],f:["ko"],act:"光電子のスパイラルテープが脚にらせん状に沿う。立ちっぱなし・座りっぱなしで重くなりがちな脚を支え、脚のラインをすっきり見せる。",say:"らせん状のテープで脚を支えるスパッツです"},
+  p08:{s:"BiBi",n:"レディースパンプ 半袖",fix:["猫背","疲れ","締め付けが苦手"],f:["ko"],act:"やわらかい生地なのに、背中にバツ印の引き上げ構造。肩甲骨を寄せて背すじを起こす。マッサージや酸素カプセルのような「リカバリー」の感覚で着られる。",say:"やわらかくて楽なのに、背中はしっかり起こしてくれます"},
+  p09:{s:"BiBi",n:"レディースメッシュガードル",fix:["お腹","お尻","締め付けが苦手"],f:["ko"],act:"メッシュでやわらかく、お腹からお尻までをやさしく支える。LALAの前の1枚目に。",say:"締め付けが苦手な方でも履きやすいガードルです"},
+  p10:{s:"BiBi",n:"メンズパンプ 半袖",fix:["猫背","姿勢"],f:["ko"],act:"背中のバツ印構造で肩甲骨を寄せ、背すじを起こす。やわらかいので仕事中も着やすい。",say:"着るだけで背すじが起きるシャツです"},
+  p11:{s:"BiBi",n:"メンズビビガードル",fix:["お腹まわり","腰"],f:["ko"],act:"お腹から腰を支えて、前に倒れやすい骨盤を起こす。",say:"お腹と腰を支えて、姿勢をキープします"},
+  p12:{s:"TAI-KAN",n:"TAI-KAN ブラジャー",fix:["胸が閉じる","姿勢"],f:["ko"],act:"パチンと留めるだけで、バストトップが「あごから顔1つ分下」の位置へ。胸が開き、肩が後ろへ戻る。締め付けが少ない。",say:"留めるだけで胸が開くブラです"},
+  p13:{s:"TAI-KAN",n:"TAI-KAN ボクサーガードル",fix:["重心","体幹","バランス"],f:["ko"],act:"カッティングで、丹田（おへその下）に力が入った立ち方を作る。重心が体の真ん中に来るので、バランスよく立てる。姿勢が整う＝運動しやすい。",say:"着るだけで重心が整って、動きやすくなります"},
+  p14:{s:"Emm∀ Pump",n:"Emm∀ Pump（レディース）",fix:["姿勢","疲れ","迷ったとき"],f:["ko","ho"],act:"メッシュ部分に光電子、柄の部分にホルミシス。カッティングで、どんな体型の人が着てもシャキッと決まる。鉱石の量が一番多いリカバリーウェア。補整力はLALAよりやさしい。",say:"着た瞬間に背すじが決まる、リカバリー用のシャツです"},
+  p15:{s:"Emm∀ Pump",n:"Emm∀ Pump（メンズ）",fix:["姿勢","疲れ","はじめての1枚"],f:["ko","ho"],act:"メッシュ部分に光電子、柄の部分にホルミシス。誰が着てもシャキッと決まるカッティングで、男性でも変化がすぐわかる。",say:"着た瞬間に背すじが決まる、リカバリー用のシャツです"},
+  p16:{s:"ホルミー（Re.B5）",n:"ダイヤモンドホルミー Vブラトップ",fix:["めぐり","疲れ","LALAの相棒"],f:["ho"],act:"薄く軽い生地に北投石。LALAが骨格を整え、ホルミーが中身（めぐり・水分）を整える役割。年齢とともに減る水分と、重力で下がる体をセットでケア。",say:"LALAで形を、ホルミーで中身を整えるセットです"},
+  p17:{s:"ホルミー（Re.B5）",n:"ホルミーレギンス",fix:["下半身の冷え","夜のケア"],f:["ho"],act:"下半身を北投石の生地で包む。冷えが強い人は昼だけでなく夜も着て、寝ている間もケアする。",say:"寝るときにも履ける、温泉の鉱石の生地です"},
+  p18:{s:"ホルミー（Re.B5）",n:"ホルミーサポートショーツ",fix:["お腹の冷え","お通じ","生理前"],f:["ho"],act:"お腹と腰まわりを北投石の生地で包む。お腹が冷えやすい人の毎日の1枚に。",say:"お腹まわりを温かく包むショーツです"},
+  p19:{s:"ホルミー（Re.B5）",n:"ホルミーメンズボクサーパンツ 10分丈",fix:["冷え","疲れ","夜のケア"],f:["ho"],act:"下半身を北投石の生地で包む。夜に着てリカバリー用に。",say:"夜に履くリカバリー用のパンツです"},
+  p20:{s:"ホルミー（Re.B5）",n:"ホルミープレミアムシングルケット",fix:["眠り","全身の冷え"],f:["ho"],act:"寝ている間に全身を北投石の生地で包む。着るものを増やしたくない人にも。",say:"寝ている間にケアできるケットです"},
+  p21:{s:"マグ（X-mag）",n:"レーシーブラジャー",fix:["首・肩こり"],f:["mg","ko"],med:1,act:"ホックの両サイドにネオジム磁石。肩甲骨まわりに磁気があたる。管理医療機器（家庭用永久磁石磁気治療器）。",say:"肩まわりのこりをほぐし、血行を改善する医療機器のブラです"},
+  p22:{s:"マグ（X-mag）",n:"ショーツガードル",fix:["腰のこり","生理まわり"],f:["mg","ko"],med:1,act:"腰の位置にネオジム磁石。1枚履きできる。管理医療機器（家庭用永久磁石磁気治療器）。",say:"腰のこりをほぐし、血行を改善する医療機器のガードルです"},
+  p23:{s:"マグ（X-mag）",n:"スムースボディ",fix:["背中〜腰のこり"],f:["mg","ko"],med:1,act:"背中から腰にかけて磁石を6個配置。広い範囲をカバー。管理医療機器（家庭用永久磁石磁気治療器）。",say:"背中から腰までのこりをほぐす医療機器のボディです"},
+  p24:{s:"マグ（X-mag）",n:"メンズニッパー",fix:["腰のこり"],f:["mg","ko"],med:1,act:"腰まわりにネオジム磁石。管理医療機器（家庭用永久磁石磁気治療器）。",say:"腰のこりをほぐす医療機器のニッパーです"},
+  p25:{s:"BiBi",n:"骨盤ベルト",fix:["骨盤の開き","出産後"],f:["ko"],act:"骨盤まわりを外から支える。骨盤が開くと内臓の受け皿が下がり、お腹が前に出やすい。受け皿を支える1本。",say:"開いた骨盤を支えるベルトです"},
+  p26:{s:"TAI-KAN",n:"TAI-KAN 5本指ソックス",fix:["土踏まず","足元のバランス"],f:["ko"],act:"指が1本ずつ使える5本指。かかと・親指の付け根・小指の付け根の3点で立ちやすくなり、足首→ひざ→骨盤と上に積み上がる姿勢の土台を作る。",say:"足の指が使えると、立ち方の土台から変わります"},
+  p27:{s:"BiBi",n:"エナジック・ハイソックス",fix:["足のむくみ","足先の冷え"],f:["ko"],act:"ふくらはぎまでを包むハイソックス。立ち仕事や足先の冷えが気になる人に。",say:"ふくらはぎまで温かく包むソックスです"},
+  p28:{s:"LALA Gracy",n:"袖付きボディスーツ",fix:["二の腕","バストの位置"],f:["ko"],act:"ボディスーツに袖がついたタイプ。バストを上げながら二の腕までまとめて整える。",say:"二の腕まで一緒に整えるボディスーツです"},
+  p29:{s:"LALA Drainage",n:"アームガードルⅡ",fix:["二の腕"],f:["ko"],act:"二の腕を包むアームカバー型。UVカット率99%。",say:"二の腕を包むアームガードルです"}
+};
+document.getElementById("fibers").innerHTML=Object.values(F).map(f=>`<div class="fiber"><b><span class="dot" style="background:${f.c}"></span>${f.n}</b><p>${f.d}</p></div>`).join("")+`<div class="fiber"><b><span class="dot" style="background:var(--ink)"></span>カッティング</b><p>同じ素材でも、どこを支えるかは型の切り方で決まる。LALAは型ごとに効かせる場所が違う。</p></div>`;
+document.getElementById("types").innerHTML=[["p03","LALA","骨格と姿勢。補整力No.1","lala"],["p23","マグ","磁石でこりをほぐす医療機器","mag"],["p08","BiBi","やわらかいのに支える","bibi"],["p14","Emm∀ Pump","最強のリカバリーウェア","emma"],["p16","ホルミー","めぐりと疲れ。LALAの相棒","hormee"],["p13","TAI-KAN","重心を整える。運動する人に","taikan"]].map(t=>`<li><button type="button" class="tbtn" data-ser="${t[3]}"><img src="img/${t[0]}.jpg" alt=""><div><b>${t[1]}</b><small>${t[2]}</small><em>くわしく見る ›</em></div></button></li>`).join("");
+
+/* ---------- 質問 ---------- */
+const W=a=>a.sex==="女性",has=(a,k,v)=>(a[k]||[]).includes(v);
+const Q=[
+  {k:"sex",q:"まず、お客様は？",o:["女性","男性"]},
+  {k:"age",q:"年代を教えてください。",o:["20代","30代","40代","50代","60代以上"]},
+  {k:"birth",q:"出産の経験はありますか？",hint:"骨盤の開きと、お腹の出方に関わります",o:["なし","1人","2人以上"],when:W},
+  {k:"work",q:"1日の中で多いのは？",o:["座り仕事","立ち仕事","動き回る・家事育児"]},
+  {k:"sport",q:"運動はしていますか？",o:["しっかりしている（トレーナー含む）","たまにする","ほとんどしない"]},
+  {k:"fit",q:"締め付けはどう感じますか？",o:["しっかり整えたい","ほどほどがいい","締め付けは苦手"]},
+  {k:"body",q:"見た目で気になるところは？",hint:"いくつでも",multi:1,o:a=>W(a)?["猫背・姿勢","お腹","背中・わきのお肉","バストの位置","お尻","二の腕","脚のむくみ・太もも"]:["猫背・姿勢","お腹","脚のむくみ"]},
+  {k:"posture",q:"横から見て、近いのはどちら？",hint:"耳・肩・骨盤・くるぶしが一直線かを見ます",o:["猫背・巻き肩","反り腰","両方","わからない"],when:a=>has(a,"body","猫背・姿勢")},
+  {k:"belly",q:"お腹はどう出ますか？",o:["下腹だけ出る","お腹全体","夕方や食後に張る"],when:a=>has(a,"body","お腹")},
+  {k:"hip",q:"お尻で一番気になるのは？",o:["下がって脚が短く見える","横に広がる","太ももとの境目がない"],when:a=>has(a,"body","お尻")},
+  {k:"feet",q:"足元はどうですか？",hint:"姿勢は足から積み上がります。靴の減り方も見てみましょう",multi:1,o:["土踏まずがない・偏平足","外反母趾","O脚・X脚","靴のかかとが片減り","特になし・わからない"]},
+  {k:"health",q:"体のことで気になることは？",hint:"痛み・平熱・お通じ・生理は必ず聞きましょう",multi:1,o:a=>W(a)?["痛み・こり","冷え","生理","お通じ","疲れ・眠り","特になし"]:["痛み・こり","冷え","疲れ・眠り","特になし"]},
+  {k:"painWhere",q:"痛みやこりがあるのはどこ？",multi:1,o:["首・肩","背中","腰","ひざ","頭痛"],when:a=>has(a,"health","痛み・こり")},
+  {k:"painLevel",q:"どのくらいの頻度ですか？",o:["たまに","ほぼ毎日","治療院・整体に通っている"],when:a=>has(a,"health","痛み・こり")},
+  {k:"temp",q:"平熱は何度くらい？",o:["35度台","36.0〜36.4度","36.5度以上","測ったことがない"],when:a=>has(a,"health","冷え")},
+  {k:"coldWhere",q:"どこが冷えますか？",o:["手足の先","お腹・腰","全身"],when:a=>has(a,"health","冷え")},
+  {k:"period",q:"生理のことで近いのは？",o:["生理痛が強い","周期が乱れる","生理前に不調が出る","更年期かも"],when:a=>has(a,"health","生理")},
+  {k:"bowel",q:"お通じはどうですか？",o:["便秘気味","お腹が張りやすい","ゆるくなりやすい"],when:a=>has(a,"health","お通じ")},
+  {k:"tired",q:"疲れ方で近いのは？",o:["眠りが浅い","朝起きられない","疲れが抜けない"],when:a=>has(a,"health","疲れ・眠り")},
+  {k:"goal",q:"いちばん変えたいことは？",hint:"本音が出たら、それをメモに残しましょう",o:["見た目を整えたい","体の不調を整えたい","運動のパフォーマンス","自分を変えたい・自信をつけたい"]},
+  {k:"hw",q:"最後に、採寸をお願いします。",hint:"わかる項目だけでOK。サイズの目安と健康体重を出します",input:1}
+];
+let A={},idx=0,asked=0;
+const $=id=>document.getElementById(id),log=$("log"),ch=$("choices");
+const live=()=>Q.filter(q=>!q.when||q.when(A));
+function say(t,who,h){const d=document.createElement("div");d.className="msg "+who;d.textContent=t;if(h){const s=document.createElement("span");s.className="hint";s.textContent=h;d.appendChild(s)}log.appendChild(d);log.scrollTop=log.scrollHeight}
+function next(){while(idx<Q.length&&Q[idx].when&&!Q[idx].when(A))idx++;
+  const total=live().length;$("count").textContent=Math.min(asked+1,total)+" / "+total;$("bar").style.width=(asked/total*100)+"%";
+  ch.innerHTML="";if(idx>=Q.length){$("bar").style.width="100%";$("count").textContent="完了";done();return}
+  const q=Q[idx];say(q.q,"bot",q.hint);
+  if(q.input){const F=[["h","身長","cm","160"],["wt","体重","kg","55"],["top","トップバスト","cm","85"],["under","アンダーバスト","cm","70"],["waist","ウエスト","cm","66"],["hip","ヒップ","cm","92"]];
+    ch.innerHTML=`<div class="meas">${F.map(([k,l,u,ph])=>`<label for="m-${k}">${l}<span><input id="m-${k}" type="number" inputmode="decimal" placeholder="${ph}">${u}</span></label>`).join("")}</div><button class="btn sm" id="go" type="button" style="width:100%;margin-top:8px">処方を見る</button>`;
+    $("go").onclick=()=>{F.forEach(([k])=>{A[k]=num($("m-"+k).value)||0});const t=F.filter(([k])=>A[k]).map(([k,l,u])=>`${l} ${A[k]}${u}`).join(" / ");say(t||"スキップ","me");idx++;asked++;next()};return}
+  const list=typeof q.o==="function"?q.o(A):q.o,sel=new Set();
+  list.forEach(o=>{const b=document.createElement("button");b.type="button";b.className="chip";b.textContent=o;b.setAttribute("aria-pressed","false");
+    b.onclick=()=>{if(!q.multi){A[q.k]=o;say(o,"me");idx++;asked++;next();return}
+      const none=/^特になし/.test(o);
+      [...ch.querySelectorAll(".chip")].forEach(c=>{const cn=/^特になし/.test(c.textContent);if(none!==cn){c.setAttribute("aria-pressed","false");sel.delete(c.textContent)}});
+      sel.has(o)?sel.delete(o):sel.add(o);b.setAttribute("aria-pressed",sel.has(o))};
+    ch.appendChild(b)});
+  if(q.multi){const n=document.createElement("button");n.type="button";n.className="btn sm dark";n.textContent="次へ";n.onclick=()=>{A[q.k]=[...sel].filter(x=>!/^特になし/.test(x));say(sel.size?[...sel].join("、"):"特になし","me");idx++;asked++;next()};ch.appendChild(n)}
+}
+function start(){A={};idx=0;asked=0;if(typeof SEL!=="undefined")SEL.clear();log.innerHTML="";hasResult=false;emptyResult();say("こんにちは。お客様に合う1着を一緒に選びましょう。答えに合わせて、もう少し深く聞いていきます。","bot");next()}
+
+/* ---------- 処方ロジック（アンケートの言葉を使った提案文） ---------- */
+const J=x=>Array.isArray(x)?x.join("・"):x;
+function plan(a){
+  const man=a.sex==="男性",body=a.body||[],hl=a.health||[],feet=a.feet||[],pw=a.painWhere||[];
+  const older=/50|60/.test(a.age||""),sporty=(a.sport||"").startsWith("しっかり")||a.goal==="運動のパフォーマンス",soft=a.fit==="締め付けは苦手";
+  const b=v=>body.includes(v),h=v=>hl.includes(v);
+  const sway=a.posture==="反り腰"||a.posture==="両方",hunch=a.posture==="猫背・巻き肩"||a.posture==="両方";
+  const birth=a.birth&&a.birth!=="なし",footIssue=feet.length>0;
+  const main=[],plus=[],why={};
+  const add=(arr,id,o)=>{if(main.includes(id)||plus.includes(id)){why[id].push(o);return}arr.push(id);why[id]=[o]};
+  const lvl=a.painLevel?`（頻度は「${a.painLevel}」）`:"";
+  let head,sum;
+  if(man){
+    head="メンズは Emm∀ Pump から";sum="男性は着た瞬間に変化がわかる Emm∀ Pump が入り口。お悩みに合わせて足していきます。";
+    add(main,"p15",{q:body.length?`「${J(body)}」が気になる`:"はじめての1枚",c:"男性は姿勢の崩れが肩や腰の重さにつながりやすく、まず変化を実感してもらうことが続けるコツです。",e:"メッシュに光電子、柄にホルミシス。どんな体型でも背すじが決まるカッティングで、着た瞬間に姿勢が起きます。",r:"鏡の前で背すじの変化がすぐわかり、毎日のリカバリーウェアとして続けやすくなります。"});
+    if(!soft&&(b("猫背・姿勢")||b("お腹"))){
+      add(main,"p10",{q:hunch?"横から見ると「猫背・巻き肩」":"「猫背・姿勢」が気になる",c:"肩が前に入って胸が閉じ、背中が丸まった状態です。",e:"背中のバツ印構造が肩甲骨を寄せて、背すじを起こします。",r:"胸が開いて、肩まわりが楽な姿勢をキープしやすくなります。"});
+      if(b("お腹"))add(plus,"p11",{q:`お腹は「${a.belly||"気になる"}」`,c:"骨盤が前に倒れると、お腹が前に押し出されます。",e:"お腹から腰を支え、骨盤を起こします。",r:"お腹まわりがすっきり見える姿勢に整えます。"});
+    }
+    if(h("痛み・こり")&&(pw.includes("腰")||pw.includes("背中")))add(a.painLevel==="たまに"?plus:main,"p24",{q:`「${J(pw)}」にこり${lvl}`,c:"姿勢の崩れで、腰まわりの筋肉に負担がかかり続けています。",e:"腰まわりのネオジム磁石が装着部位に磁気をあてます（管理医療機器）。",r:"腰のこりをほぐし、血行を改善します。"});
+    if(pw.includes("腰"))add(plus,"p25",{q:"「腰」がつらい",c:"骨盤が安定しないと、腰に負担が集まります。",e:"骨盤を外から支えます。",r:"腰まわりが安定し、負担を軽くします。"});
+    if(h("冷え")||h("疲れ・眠り")||older)add(plus,"p19",{q:h("冷え")?`平熱は「${a.temp||"低め"}」`:h("疲れ・眠り")?`疲れは「${a.tired||"抜けにくい"}」`:`年代は「${a.age}」`,c:"昼だけのケアでは、疲れや冷えが翌日に残りやすくなります。",e:"北投石の生地で下半身を包み、夜も着られます。",r:"寝ている間も温かく、翌朝に疲れを残しにくくします。"});
+  } else if(sporty){
+    head="運動する人は TAI-KAN から";sum="運動を頑張っている人には「姿勢」より「動きやすさ」で入ります。LALAから勧めると「もうやってる」と思われやすい。";
+    add(main,"p13",{q:`運動は「${a.sport}」${a.goal==="運動のパフォーマンス"?"、変えたいのは「運動のパフォーマンス」":""}`,c:"体幹が安定していないと、同じトレーニングでも力が分散して効きにくくなります。",e:"カッティングで丹田（おへその下）に力が入った立ち方を作り、重心を体の真ん中に置きます。",r:"バランスよく立てて、動きやすくなります。"});
+    add(main,"p12",{q:hunch?"横から見ると「猫背・巻き肩」":"運動中も着るブラ",c:"胸が閉じると呼吸が浅くなり、肩が前に入ります。",e:"パチンと留めるだけで、バストトップが上がり胸が開きます。締め付けが少ないタイプです。",r:"運動中も呼吸しやすい姿勢を保てます。"});
+    add(plus,"p14",{q:"運動後のケア",c:"運動の疲れを翌日に残さないことも、パフォーマンスの一部です。",e:"光電子とホルミシスの両方が入ったリカバリーウェアです。",r:"運動後や移動中に着て、体を休める時間を作れます。"});
+  } else if(soft){
+    head="締め付けが苦手なら、やわらかい黒物から";sum="まずは毎日着る習慣を作るのが先。やわらかい Emm∀ Pump・BiBi から入り、慣れたら LALA へステップアップ。";
+    add(main,"p14",{q:"締め付けは「苦手」",c:"苦しいと続きません。補整下着は、毎日着る習慣にすることが一番大事です。",e:"やわらかい生地なのに、どんな体型でもシャキッと決まるカッティング。光電子とホルミシスの両方入り。",r:"楽に着られて、毎日の習慣にしやすくなります。"});
+    add(main,"p08",{q:hunch?"横から見ると「猫背・巻き肩」":b("猫背・姿勢")?"「猫背・姿勢」が気になる":"楽に着られる1枚",c:"肩甲骨が外に開くと、背中が丸まって見えます。",e:"やわらかい生地に、背中のバツ印の引き上げ構造。肩甲骨を寄せて背すじを起こします。",r:"締め付けなく、背すじが起きた姿勢になります。"});
+    if(b("お腹")||b("お尻"))add(plus,"p09",{q:`「${body.filter(x=>x==="お腹"||x==="お尻").join("・")}」が気になる`,c:"いきなり強いガードルだと続きにくいので、まずはやさしく支えるところから。",e:"メッシュでやわらかく、お腹からお尻までを支えます。",r:"お腹・お尻のラインを整える第一歩になります。"});
+  } else {
+    head="基本セット LALA ＋ ホルミー";sum="LALAで骨格と姿勢を整え、ホルミーで中身（めぐり）を整える。型の違うLALAを毎日着回すと、体全体が整っていきます。";
+    const R={
+      p01:()=>({q:sway?`横から見ると「${a.posture}」`:`お腹は「${a.belly||"気になる"}」`,c:"骨盤が前に倒れて腰が反り、お腹が前に押し出されている状態です。太ったのではなく、位置の問題です。",e:"お腹側と背中側を同時に支えるカッティング。前ばりを押さえて反りを戻し、背中を起こします。光電子で温かさも保ちます。",r:"反りが戻るとお腹が引っ込んで見え、本来のウエスト位置にくびれが出ます。"}),
+      p02:()=>({q:`お腹は「${a.belly||"気になる"}」${birth?`、出産は「${a.birth}」`:""}`,c:(a.belly==="下腹だけ出る"?"下腹だけ出るのは、骨盤が前に倒れて内臓が下・前に出ているサインです。":a.belly==="夕方や食後に張る"?"夕方に張るのは、重力で内臓が下がってくるからです。":"お腹全体の支えが弱く、内臓が前に出ている状態です。")+(birth?"出産で骨盤が開き、内臓の受け皿が下がっていることも関係しています。":""),e:"みぞおち近くからひざ上まで一続きで支える超ハイウエスト。お腹側に光電子が多く入っています。",r:"内臓を正しい位置に戻し、ぽっこりが気にならないラインに整えます。"}),
+      p04:()=>({q:[b("背中・わきのお肉")&&"「背中・わきのお肉」",hunch&&`「${a.posture==="両方"?"猫背・巻き肩":a.posture}」`,b("バストの位置")&&"「バストの位置」"].filter(Boolean).join("と")+"が気になる",c:"お尻が下がるとバストが引っ張られ、お肉が背中・わきへ流れます。"+(hunch?"巻き肩だと胸が閉じて、さらにバストが下がって見えます。":""),e:"背中・わきに光電子が多いブラで、流れたお肉をカップに集め、バストトップを上げます。",r:"胸が開いて肩が後ろに戻り、背中・わきがすっきり見えます。"}),
+      p03:()=>({q:"全身のバランス",c:"バスト・ウエスト・ヒップの高さがずれると、体全体が下がって見えます。",e:"顔1つ分ずつの理想の高さにそろえる、8頭身バランスのカッティング。上下がつながっているので、背中のお肉もバストへ戻しやすい。",r:"全身のバランスが整い、スタイルアップして見えます。"}),
+      p05:()=>({q:a.hip?`お尻は「${a.hip}」`:a.work==="座り仕事"?"1日の中で多いのは「座り仕事」":"お尻を支える",c:a.hip==="横に広がる"?"お尻の筋肉が使えず、重さで横に広がっています。":a.work==="座り仕事"?"座っている時間が長いと、お尻がつぶれて広がりやすくなります。":"お尻は体で2番目に重く、下がると胸や背中まで引っ張ります。",e:"重いお尻を下から持ち上げて包みます。",r:"お尻が上がると、引っ張られていた胸と背中も戻ります。"}),
+      p06:()=>({q:`お尻は「${a.hip||"気になる"}」`,c:"お尻が下がると脚が短く見え、バストとのバランスも崩れます。",e:"バストとヒップを同時に引き上げて、1対1のS字バランスを作ります。Tバックなのでお尻の丸みをつぶしません。",r:"脚が長く見え、メリハリのあるS字ラインになります。"})
+    };
+    const sets=[];
+    if(sway||b("お腹"))sets.push(["p01","p02"]);
+    if(hunch||b("背中・わきのお肉")||b("バストの位置"))sets.push(["p04","p03","p05"]);
+    if(b("お尻"))sets.push(["p06","p05"]);
+    if(!sets.length)sets.push(["p03","p05"]);
+    sets.forEach((s,i)=>s.forEach(id=>{const o=R[id]();if(i>0)o.r+="（型の違うLALAとして毎日着回します）";add(i===0?main:plus,id,o)}));
+    if(a.hip==="太ももとの境目がない")add(plus,"p02",{q:"お尻は「太ももとの境目がない」",c:"お尻が下がって、太ももとの境目がなくなっています。",e:"ひざ近くまであるガードルで、お尻から太ももまで支えます。",r:"お尻と太ももの境目ができ、脚がすっきり見えます。"});
+    add(main,"p16",{q:older?`年代は「${a.age}」`:"LALAの相棒",c:"形を整えても、年齢とともに体の水分・めぐりは減り、重力で下がってきます。",e:"LALAが骨格を整え、北投石のホルミーが中身を整えます。薄く軽いのでLALAの下や夜にも着られます。",r:"形と中身を両方整えるので、整った状態を保ちやすくなります。"});
+    if(b("二の腕"))add(plus,main.includes("p03")?"p28":"p29",{q:"「二の腕」が気になる",c:"二の腕は脂肪がつきやすく、下着でケアしにくい場所です。",e:main.includes("p03")?"ボディスーツに袖がつき、バストと二の腕をまとめて整えます。":"二の腕を包むアームガードル。UVカット率99%。",r:"二の腕までラインが整います。"});
+  }
+  if(!man){
+    if(footIssue)add(plus,"p26",{q:`足元は「${J(feet)}」`+(pw.includes("ひざ")?"、ひざにも痛み":""),c:"足元が崩れると、足首→ひざ→骨盤→背骨と上に積み上がる姿勢が全部ずれます。"+(pw.includes("ひざ")?"ひざの痛みも、そのずれの負担が集まった結果のことが多いです。":""),e:"指が1本ずつ使える5本指で、かかと・親指の付け根・小指の付け根の3点で立ちやすくします。",r:"姿勢の土台から整い、上に着る下着の効果も出やすくなります。"});
+    if(birth)add(plus,"p25",{q:`出産は「${a.birth}」`,c:"出産で骨盤が開くと、内臓の受け皿が下がり、お腹が前に出やすくなります。",e:"骨盤を外から支えるベルトです。",r:"受け皿を安定させ、お腹まわりと腰の負担を軽くします。"});
+    if(h("痛み・こり")){
+      const strong=a.painLevel!=="たまに",tgt=strong?main:plus,clinic=a.painLevel==="治療院・整体に通っている"?"治療院に通うほどなら、毎日着るものでの日常のケアが大事です。":"";
+      if(pw.includes("首・肩")||pw.includes("頭痛"))add(tgt,"p21",{q:`「${pw.filter(x=>x==="首・肩"||x==="頭痛").join("・")}」がつらい${lvl}`,c:(hunch?"猫背・巻き肩で頭が前に出ると、":"姿勢が崩れて頭が前に出ると、")+"首・肩に負担が集中します。"+clinic,e:"ホックの両サイドのネオジム磁石が、肩甲骨まわりに磁気をあてます（管理医療機器）。",r:"首・肩のこりをほぐし、血行を改善します。"});
+      if(pw.includes("腰")&&pw.includes("背中"))add(tgt,"p23",{q:`「背中・腰」にこり${lvl}`,c:"背中から腰まで広い範囲に負担がかかっています。"+clinic,e:"背中から腰にかけて磁石を6個配置したボディです（管理医療機器）。",r:"背中から腰のこりをほぐし、血行を改善します。"});
+      else if(pw.includes("腰"))add(tgt,"p22",{q:`「腰」にこり${lvl}`,c:(sway?"反り腰で腰の筋肉が縮んだまま、":birth?"出産後の骨盤の開きで、":"")+"腰まわりに負担がかかり続けています。"+clinic,e:"腰の位置にネオジム磁石を配置したガードル。1枚で履けます（管理医療機器）。",r:"腰のこりをほぐし、血行を改善します。"});
+      else if(pw.includes("背中"))add(tgt,"p23",{q:`「背中」にこり${lvl}`,c:"背中が丸まった姿勢で、背中の筋肉に負担がかかっています。"+clinic,e:"背中から腰にかけて磁石を6個配置したボディです（管理医療機器）。",r:"背中のこりをほぐし、血行を改善します。"});
+    }
+    if(h("冷え")){
+      const deep=a.temp==="35度台"||older||a.coldWhere==="全身";
+      if(deep){add(plus,"p17",{q:`平熱は「${a.temp||"低め"}」、冷えるのは「${a.coldWhere||"全身"}」`,c:"体温が低めの人は、昼の下着だけでは温かさが足りません。",e:"北投石のレギンスを夜も履いて、寝ている間も下半身を包みます。",r:"1日中、温かさを保てます。"});add(plus,"p20",{q:"夜のケア",c:"着るものを増やしたくない人は、寝具で補います。",e:"寝ている間に全身を北投石の生地で包むケットです。",r:"眠っている時間をケアの時間にできます。"})}
+      if(a.coldWhere==="お腹・腰")add(plus,"p18",{q:"冷えるのは「お腹・腰」",c:"お腹が冷えると、お腹まわりの不調につながりやすくなります。",e:"お腹と腰まわりを北投石の生地で包むショーツです。",r:"毎日の1枚で、お腹まわりを温かく保ちます。"});
+      if(a.coldWhere==="手足の先")add(plus,"p27",{q:"冷えるのは「手足の先」",c:"足先は心臓から遠く、冷えやすい場所です。",e:"光電子でふくらはぎまで包むハイソックスです。",r:"足先まで温かさを保ちます。"});
+    }
+    if(h("生理")){
+      if(a.period==="生理痛が強い")add(plus,"p22",{q:"生理は「生理痛が強い」",c:"生理の時期は、腰まわりがこわばりやすくなります。",e:"腰の位置のネオジム磁石が磁気をあてます（管理医療機器）。",r:"腰のこりをほぐし、血行を改善します。"});
+      else if(a.period==="更年期かも")add(plus,"p20",{q:"生理は「更年期かも」",c:"ゆらぎの時期は、眠りや冷えにも変化が出やすくなります。",e:"寝ている間に北投石の生地で全身を包みます。",r:"夜の時間を、体を休めるケアに変えられます。"});
+      else add(plus,"p18",{q:`生理は「${a.period}」`,c:"お腹まわりが冷えると、生理前後がつらくなりやすいです。",e:"お腹と腰まわりを北投石の生地で包むショーツです。",r:"生理前後もお腹まわりを温かく保ちます。"});
+    }
+    if(h("お通じ"))add(plus,main.includes("p02")?"p18":"p02",main.includes("p02")?{q:`お通じは「${a.bowel}」`,c:"お腹が冷えると、お腹まわりの動きも鈍くなりがちです。",e:"お腹まわりを北投石の生地で包むショーツです。",r:"お腹まわりを温かく保ちます。"}:{q:`お通じは「${a.bowel}」`,c:"内臓が下がって前に出ると、お腹が張りやすくなります。",e:"みぞおちからひざ上まで支えるハイウエストガードルで、内臓を正しい位置へ。",r:"お腹まわりがすっきりした姿勢に整えます。"});
+    if(h("疲れ・眠り"))add(plus,a.tired==="眠りが浅い"?"p20":"p14",a.tired==="眠りが浅い"?{q:"疲れ方は「眠りが浅い」",c:"眠りが浅いと、疲れが翌日に残ります。",e:"寝ている間に北投石の生地で全身を包むケットです。",r:"眠る時間をケアの時間にできます。"}:{q:`疲れ方は「${a.tired}」`,c:"疲れを抜く時間が足りていません。",e:"光電子とホルミシスの両方入りのリカバリーウェアです。",r:"仕事中や家で着て、体を休める時間を増やせます。"});
+    if(a.work==="立ち仕事"||b("脚のむくみ・太もも"))add(plus,"p07",{q:a.work==="立ち仕事"?"1日の中で多いのは「立ち仕事」":"「脚のむくみ・太もも」が気になる",c:"立ちっぱなし・座りっぱなしだと、脚が重くなりやすくなります。",e:"光電子のスパイラルテープが脚にらせん状に沿うスパッツです。",r:"脚を支えて、脚のラインをすっきり見せます。"});
+  }
+  /* 見立て */
+  const notes=[],hit=new Set();
+  if(footIssue){hit.add("足");notes.push("足元が崩れると、足首→ひざ→骨盤→背骨と、上に積み上がるものが全部ずれます。まず足元から。")}
+  if(pw.includes("ひざ")){hit.add("ひざ");notes.push("ひざの痛みは、足元と骨盤のずれの負担がひざに集まった結果のことが多い。")}
+  if(birth){hit.add("骨盤");notes.push("出産で骨盤が開くと、内臓の受け皿が下がり、お腹が前に出やすくなります。")}
+  if(sway||a.belly){hit.add("骨盤");hit.add("内臓");notes.push("お腹が出るのは太ったのではなく、骨盤が前に倒れて内臓が前にせり出しているから。位置を戻せば変わります。")}
+  if(b("お尻")||a.work==="座り仕事"){hit.add("骨盤");notes.push("お尻は体で2番目に重い。下がるとバストが引っ張られ、お肉が背中へ回ります。")}
+  if(hunch||b("背中・わきのお肉")){hit.add("背骨");hit.add("肩・首");notes.push("猫背・巻き肩は胸が閉じて呼吸が浅くなりやすい。バストを上げると胸が開き、肩が戻ります。")}
+  if(pw.includes("首・肩")||pw.includes("頭痛"))hit.add("肩・首");
+  if(pw.includes("腰"))hit.add("骨盤");
+  if(h("冷え"))notes.push(a.temp==="35度台"?"平熱が35度台。昼の下着だけでなく、寝ている間のケアも必要です。":"冷えがある人は、整えるのと同時に温かさを保つ素材を。");
+  if(!notes.length)notes.push("大きな崩れはなさそう。理想のバランス（バストとヒップが1対1、顔1つ分ずつの高さ）に近づけるのが目標。");
+  /* 提案トーク（まとめ） */
+  const worries=[...body.filter(x=>x!=="猫背・姿勢"),...(a.posture&&a.posture!=="わからない"?[a.posture==="両方"?"猫背と反り腰":a.posture]:body.includes("猫背・姿勢")?["姿勢"]:[]),...pw.map(x=>x+"のこり"),...(h("冷え")?["冷え"]:[]),...(a.period?[a.period]:[])];
+  const m0=why[main[0]][0];
+  let pitch=worries.length?`「${worries.slice(0,4).join("」「")}」が気になるとのことでした。`:"今の体の状態をお聞きしました。";
+  pitch+=(footIssue?"お話を聞くと、足元から姿勢が崩れていて、":sway||a.belly?"お話を聞くと、骨盤が前に倒れて内臓が前に出ていて、":hunch?"お話を聞くと、肩が前に入って胸が閉じていて、":"お話を聞くと、")+"それが見た目や体の重さにつながっているように思います。";
+  pitch+=`そこでまず「${P[main[0]].n}」をご提案します。${m0.e}${m0.r}`;
+  if(main[1])pitch+=`あわせて「${P[main[1]].n}」で、${why[main[1]][0].r.replace(/。$/,"")}。`;
+  if(a.goal)pitch+=`いちばん変えたいとおっしゃっていた「${a.goal}」に向けて、毎日着ることを習慣にしていきましょう。`;
+  let stats="";if(a.h>100){const ideal=(a.h-100)*.9;stats+=`<span class="stat">健康体重の目安 <b>${ideal.toFixed(1)}kg</b></span>`;if(a.wt)stats+=`<span class="stat">今との差 <b>${(a.wt-ideal>0?"+":"")+(a.wt-ideal).toFixed(1)}kg</b></span>`}
+  return {main,plus,why,head,sum,notes,hit,stats,pitch};
+}
+/* ---------- 商品選択（カウンセリング→提案→選択を一気通貫） ---------- */
+const SEL=new Map();
+const bodyA=()=>({h:A.h||null,wt:A.wt||null,top:A.top||null,under:A.under||null,waist:A.waist||null,hip:A.hip||null});
+function suggestSize(id){const ev=similar(id,bodyA(),10);return ev.n?ev.list[0].size:""}
+function swHTML(id,cur,attr,vi){const g=GM[id]||{col:[]};if(!g.col.length)return "";const ci=(typeof COLIMG!=="undefined"&&COLIMG[g.c])||{};
+  return `<div class="sw-l">カラー（写真を押して選ぶ）</div><div class="sw">${g.col.map(cn=>`<button type="button" class="swb${cur===cn?" on":""}" ${attr}="${id}"${vi!=null?` data-vi="${vi}"`:""} data-col="${esc(cn)}">${ci[cn]?`<img src="img/${ci[cn]}" alt="" loading="lazy">`:`<i></i>`}<span>${esc(cn)}</span></button>`).join("")}</div><div class="sw-big">${bigHTML(id,cur)}</div>`}
+function bigHTML(id,cn){const g=GM[id]||{},ci=(typeof COLIMG!=="undefined"&&COLIMG[g.c])||{};if(!cn)return "";return ci[cn]?`<img src="img/${ci[cn]}" alt="${esc(cn)}" data-zoom="${id}" data-col="${esc(cn)}"><div><b>${esc(cn)}</b><small>写真を押すと大きく見られます</small></div>`:`<div><b>${esc(cn)}</b></div>`}
+function pickHTML(id){const g=GM[id]||{col:[],sz:[]};if(!SEL.has(id))return `<button class="btn sm ghost" type="button" data-pick-on="${id}">＋ この商品を選ぶ</button>`;
+  const vs=SEL.get(id),op=(arr,cur)=>`<option value="">選ぶ</option>`+arr.map(x=>`<option${x===cur?" selected":""}>${esc(x)}</option>`).join("");
+  const ev=similar(id,bodyA(),10),tot=vs.reduce((t,v)=>t+v.qty,0);
+  return `<div class="pk-h"><span>選択中 ${tot}着</span><button type="button" data-pick-off="${id}">すべて外す</button></div>
+  ${vs.map((v,i)=>`<div class="pv">${vs.length>1?`<div class="pv-h"><b>${i+1}つ目${v.color?"："+esc(v.color):""}${v.size?" / "+esc(v.size):""}</b><button type="button" data-vdel="${id}" data-vi="${i}">この行を消す</button></div>`:""}${swHTML(id,v.color,"data-sw",i)}<div class="pk">
+  ${g.sz.length?`<label>サイズ<select data-pk="size" data-id="${id}" data-vi="${i}">${op(g.sz,v.size)}</select></label>`:""}
+  <label>数量<select data-pk="qty" data-id="${id}" data-vi="${i}">${[1,2,3,4,5].map(n=>`<option${n===v.qty?" selected":""}>${n}</option>`).join("")}</select></label></div></div>`).join("")}
+  ${(g.col.length>1||g.sz.length>1)?`<button type="button" class="btn sm ghost pv-add" data-vadd="${id}">＋ 別の色・サイズも追加</button>`:""}
+  ${ev.n?`<div class="pk-ev">似た体型 ${ev.n}件では ${esc(ev.list[0].size)} が最多</div>`:""}`}
+const newV=id=>({color:"",size:suggestSize(id),qty:1});
+const selCount=()=>[...SEL.values()].reduce((t,vs)=>t+vs.reduce((u,v)=>u+v.qty,0),0);
+function refreshPicks(){document.querySelectorAll(".pick[data-pid]").forEach(el=>{const id=el.dataset.pid;el.classList.toggle("on",SEL.has(id));el.innerHTML=pickHTML(id)})}
+function updSel(){if($("selcount"))$("selcount").textContent=`選んだ商品 ${selCount()}着 ›`}
+function renderPicked(){const el=$("picked");if(!el)return;const shown=new Set([...document.querySelectorAll(".card .pick[data-pid]")].map(e=>e.dataset.pid));
+  const extra=[...SEL.keys()].filter(id=>!shown.has(id));
+  el.innerHTML=extra.map(id=>`<div class="prow"><img src="img/${id}.jpg" alt=""><div><b style="font-size:14px">${esc(P[id].n)}</b><div class="meta2">${esc(P[id].s)}</div><div class="pick on" data-pid="${id}">${pickHTML(id)}</div></div></div>`).join("")}
+document.addEventListener("click",e=>{const sw=e.target.closest("[data-sw]");if(sw){const vs=SEL.get(sw.dataset.sw),v=vs&&vs[+sw.dataset.vi||0];if(v){v.color=sw.dataset.col;refreshPicks()}return}
+  const va=e.target.closest("[data-vadd]");if(va){const vs=SEL.get(va.dataset.vadd);if(vs){const last=vs[vs.length-1];vs.push({color:"",size:last?last.size:suggestSize(va.dataset.vadd),qty:1});refreshPicks();updSel()}return}
+  const vd=e.target.closest("[data-vdel]");if(vd){const id=vd.dataset.vdel,vs=SEL.get(id);if(vs){vs.splice(+vd.dataset.vi,1);if(!vs.length)SEL.delete(id);refreshPicks();renderPicked();updSel()}return}
+  const rs=e.target.closest("[data-rsw]");if(rs){const it=rs.closest(".it");const cl=it&&it.querySelector(".cl");if(cl){cl.value=rs.dataset.col;it.querySelectorAll("[data-rsw]").forEach(b=>b.classList.toggle("on",b===rs));const bg=it.querySelector(".sw-big");if(bg)bg.innerHTML=bigHTML(it.dataset.id,rs.dataset.col)}return}
+  const on=e.target.closest("[data-pick-on]"),off=e.target.closest("[data-pick-off]");
+  if(on){const id=on.dataset.pickOn;SEL.set(id,[newV(id)]);refreshPicks();updSel()}
+  if(off){SEL.delete(off.dataset.pickOff);refreshPicks();renderPicked();updSel()}});
+document.addEventListener("change",e=>{const t=e.target;if(t.dataset&&t.dataset.pk){const vs=SEL.get(t.dataset.id),v=vs&&vs[+t.dataset.vi||0];if(v){v[t.dataset.pk]=t.dataset.pk==="qty"?+t.value:t.value;if(t.dataset.pk==="qty")updSel();refreshPicks()}}});
+function openZoom(id,cn){const g=GM[id]||{col:[]},ci=(typeof COLIMG!=="undefined"&&COLIMG[g.c])||{};const list=g.col.filter(c=>ci[c]);
+  const lb=document.createElement("div");lb.className="lb";lb.setAttribute("role","dialog");
+  const draw=c=>{lb.innerHTML=`<b>${esc(P[id]?P[id].n:"")}${c?"　"+esc(c):""}</b><img src="img/${c&&ci[c]?ci[c]:id+".jpg"}" alt="">${list.length>1?`<div class="lbn">${list.map(x=>`<img src="img/${ci[x]}" data-lbc="${esc(x)}" class="${x===c?"on":""}" alt="${esc(x)}">`).join("")}</div>`:""}<small>画面を押すと閉じます</small>`};
+  draw(cn);lb.onclick=e=>{const t=e.target.closest("[data-lbc]");if(t){draw(t.dataset.lbc);return}lb.remove()};document.body.appendChild(lb)}
+document.addEventListener("click",e=>{const z=e.target.closest("[data-zoom]");if(z){e.stopPropagation();openZoom(z.dataset.zoom,z.dataset.col||"")}},true);
+function toast(m){const t=document.createElement("div");t.className="toast";t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),1800)}
+function openCatalog(onPick){$("sheet-t").textContent="商品を写真から選ぶ";const groups={};Object.entries(P).forEach(([id,p])=>{(groups[p.s]=groups[p.s]||[]).push(id)});
+  $("sheet-b").innerHTML=Object.entries(groups).map(([s,ids])=>`<div class="cat-h">${esc(s)}</div><div class="cat-g">${ids.map(id=>`<button type="button" class="cat-t${SEL.has(id)?" sel":""}" data-cat="${id}"><img src="img/${id}.jpg" alt="" loading="lazy"><span>${esc(P[id].n)}</span></button>`).join("")}</div>`).join("");
+  $("sheet-b").querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{const id=b.dataset.cat;onPick(id);closeSheet();
+    requestAnimationFrame(()=>{const inRec=!$("v-rec").hidden,els=document.querySelectorAll(`#r-items .it[data-id="${id}"]`);const t=inRec?els[els.length-1]:(document.querySelector(`#picked .pick[data-pid="${id}"]`)||document.querySelector(`.pick[data-pid="${id}"]`));
+      if(t){const box=t.closest(".prow,.card,.it")||t;box.scrollIntoView({block:"center",behavior:"smooth"});box.classList.add("flash");setTimeout(()=>box.classList.remove("flash"),1600)}
+      toast(`${P[id].n} を追加しました`)})});
+  $("sheet").hidden=false;$("sheet").querySelector(".sheet").scrollTop=0}
+function card(id,why,isMain){const p=P[id];
+  return `<article class="card${isMain?" main":""}"><div class="card-top"><img src="img/${id}.jpg" alt="${p.n}" loading="lazy"><div>${serOf(p)?`<button type="button" class="tag tagbtn${p.med?" med":""}" data-ser="${serOf(p)}">${p.s}${p.med?"・医療機器":""} ›</button>`:`<span class="tag${p.med?" med":""}">${p.s}${p.med?"・医療機器":""}</span>`}<h3>${p.n}</h3><div class="fix">${p.fix.map(f=>`<span>${f}</span>`).join("")}</div></div></div>
+  <div class="you"><b>ご提案</b>${why.map(o=>`<p class="heard">お客様の言葉：${o.q}</p><p class="cause">${o.c}</p>`).join("")}<p class="eff"><span>この1着を着ると</span>${why[0].e}</p><p class="res"><span>だから</span>${why.map(o=>o.r).filter((v,i,ar)=>ar.indexOf(v)===i).join("")}</p></div>
+  <details class="more"${isMain?" open":""}><summary>素材としくみをくわしく</summary><dl class="detail"><div><dt>どう効くか</dt><dd>${p.act}</dd></div>
+  <div><dt>使われている素材</dt><dd>${p.f.map(k=>`<div class="mat"><span class="dot" style="background:${F[k].c}"></span><span><b>${F[k].n}</b>　${F[k].d}</span></div>`).join("")}</dd></div></dl></details>
+  <div class="pick${SEL.has(id)?" on":""}" data-pid="${id}">${pickHTML(id)}</div>
+  <div class="say"><b>お客様への伝え方</b>「${p.say}」</div></article>`}
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+/* ---------- 図 ---------- */
+const FIGS={
+  balance:["理想のバランス","あごからバストトップ、ウエスト、ヒップトップまでが顔1つ分ずつ。バストとヒップは1対1のS字。",()=>FIG.balance()],
+  compare:["横から見た姿勢","理想は耳・肩・骨盤・くるぶしが一直線。猫背は頭と肩が前へ、反り腰は骨盤が前に倒れてお腹とお尻が出ます。",()=>FIG.compare()],
+  sag:["お尻が下がると上半身まで崩れる","お尻は体で2番目に重い。下がるとバストが引っぱられ、お肉が背中へ流れます。お尻を支えると胸と背中も戻ります。",()=>FIG.sag()],
+  stack:["姿勢は足から積み上がる","足のアーチで3点に立てていれば、ひざ・骨盤・肩がまっすぐ積み上がります。アーチがなく足元が不安定だと、ひざが内に入り、骨盤や肩まで傾いていきます。",()=>FIG.stack()],
+  arches:["足の3つのアーチ","内側・外側の縦アーチと横アーチが、かかと・親指の付け根・小指の付け根の3点を結ぶ三角形を作り、バネのように体を支えます。",()=>FIG.arches()],
+  kodenshi:["光電子のしくみ","体から出る熱（遠赤外線）を、セラミックを練り込んだ繊維が受けとめて体へ返します。ふつうの生地は熱が外へ逃げていきます。",()=>FIG.kodenshi()],
+  hormesis:["ホルミシス素材","ラジウム温泉の鉱石「北投石」を生地にプリント。光電子とは別の鉱石です。",()=>FIG.hormesis()],
+  magnet:["マグの磁石の位置","ネオジム磁石を、こりやすい背中〜腰やホックの両サイドに配置した管理医療機器です。",()=>FIG.magnet()],
+  cutting:["LALAのカッティング","同じ光電子でも、型の切り方で効かせる場所が変わります。Fantasyはお腹と背中、Gracyは高さ、Fairyはバストとヒップの1対1。",()=>FIG.cutting()]
+};
+const CUT_TABLE=`<div class="fig"><b>LALA 型ごとの違い</b><div class="tbl"><table><thead><tr><th>型</th><th>支える場所</th><th>光電子が多い場所</th><th>こんな悩みに</th></tr></thead><tbody>
+<tr><td class="l"><b>Fantasy</b></td><td class="l">お腹と背中を同時に。前ばりを押さえる</td><td class="l">お腹側（ハイウエストガードル）</td><td class="l">反り腰・猫背・ぽっこりお腹</td></tr>
+<tr><td class="l"><b>Gracy</b></td><td class="l">バスト・ウエスト・ヒップの高さをそろえる</td><td class="l">背中・わき（ブラ）</td><td class="l">バスト位置・背中のお肉・全身のバランス</td></tr>
+<tr><td class="l"><b>Fairy</b></td><td class="l">バストとヒップを同時に引き上げて1対1に</td><td class="l">—</td><td class="l">お尻の下がり・メリハリ</td></tr>
+<tr><td class="l"><b>Drainage</b></td><td class="l">脚・腕にらせん状に沿って支える</td><td class="l">スパイラルテープ</td><td class="l">脚のむくみ・太もも・二の腕</td></tr></tbody></table></div><p>光電子の位置は商品の教科書で確認。</p></div>`;
+const figHTML=k=>`<div class="fig"><b>${FIGS[k][0]}</b>${FIGS[k][2]()}<p>${FIGS[k][1]}</p></div>`;
+$("allfigs").innerHTML=["balance","compare","sag","stack","arches"].map(figHTML).join("");$("matfigs").innerHTML=["kodenshi","hormesis","magnet","cutting"].map(figHTML).join("")+CUT_TABLE;
+function figsFor(a){const k=["balance"],body=a.body||[];
+  if(a.posture||body.includes("猫背・姿勢")||body.includes("お腹"))k.push("compare");
+  if(body.includes("お尻")||body.includes("背中・わきのお肉")||body.includes("バストの位置")||a.work==="座り仕事")k.push("sag");
+  if((a.feet||[]).length||(a.painWhere||[]).includes("ひざ"))k.push("stack","arches");
+  return k}
+/* ---------- 画面 ---------- */
+const titles={home:"グラント処方ナビ",chat:"質問",result:"処方",rec:"処方を記録",data:"記録・データ",know:"素材・商品"};
+const VIEWS=["home","chat","result","rec","data","know"];
+function show(v){VIEWS.forEach(x=>$("v-"+x).hidden=x!==v);
+  const tabv=v==="rec"?"data":v;document.querySelectorAll(".tabs button").forEach(b=>{if(b.dataset.v===tabv)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
+  $("ttl").textContent=titles[v];$("back").hidden=v==="home";$("barwrap").hidden=v!=="chat";$("count").hidden=v!=="chat";
+  if(v!=="chat")$("v-"+v).scrollTop=0;if(v==="data")renderData()}
+let hasResult=false,lastPlan=null;
+function emptyResult(){$("result").innerHTML='<div class="empty">カウンセリングに答えると、ここに処方が出ます。<button class="btn sm" type="button" id="e-start">カウンセリングをはじめる</button></div>';$("e-start").onclick=()=>{show("chat");start()}}
+function done(){
+  const r=plan(A);lastPlan=r;say("ありがとうございます。処方が出ました。","bot");hasResult=true;
+  ch.innerHTML='<div class="row"><button class="btn sm" type="button" id="see">処方を見る</button><button class="btn sm ghost" type="button" id="again">最初からやり直す</button></div>';$("see").onclick=()=>show("result");$("again").onclick=start;scrollLog();
+  const chain=["足","ひざ","骨盤","内臓","背骨","肩・首"].map(x=>`<span class="${r.hit.has(x)?"hit":""}">${x}</span>`).join("<i>→</i>");
+  const ans=Q.filter(q=>A[q.k]!==undefined&&q.k!=="hw").map(q=>`<li>${q.q.replace(/[？。]$/,"")}：${Array.isArray(A[q.k])?(A[q.k].join("、")||"特になし"):A[q.k]}</li>`).join("");
+  $("result").innerHTML=`<div class="res-head"><div class="eyebrow">PRESCRIPTION</div><h2>${r.head}</h2></div><p class="res-sum">${r.sum}</p><div class="pitch"><b>ご提案トーク（そのまま読めます）</b><p>${r.pitch}</p><button class="btn sm ghost" type="button" id="copy">コピー</button></div><div class="stats">${r.stats}</div>
+  <div class="mitate"><h3>体の見立て（崩れは下から積み上がる）</h3><div class="chain">${chain}</div><ul>${r.notes.map(n=>`<li>${n}</li>`).join("")}</ul></div>
+  <div class="gt">お客様に見せる図</div><div class="figs">${figsFor(A).map(figHTML).join("")}</div>
+  <div class="gt">まず着てもらう</div><div class="cards">${r.main.map(i=>card(i,r.why[i],1)).join("")}</div>
+  ${r.plus.length?`<div class="gt">お悩みに合わせて足す</div><div class="cards">${r.plus.map(i=>card(i,r.why[i],0)).join("")}</div>`:""}
+  <div class="memo"><div><b>カウンセリングメモ</b><ul>${ans}</ul></div><div><b>サイズは</b>今の位置ではなく骨格を測る。迷ったら大きめでもいいので、まず着てもらう。「記録・データ」で似た体型の人のサイズを確認できます。</div><div><b>言わない言葉</b>痩せる・体温が上がる・治る・細胞が元気になる。マグは「こりをほぐし、血行を改善」まで。</div></div>
+  <div class="gt">ほかの商品も選ぶ</div><div id="picked"></div><button class="btn ghost" type="button" id="addmore">＋ 写真から商品を追加</button>
+  <div class="stack" style="margin-top:14px"><button class="btn ghost" type="button" id="again2">別のお客様でやり直す</button></div>
+  <div class="selbar"><button type="button" class="selbtn" id="selcount">選んだ商品 0着 ›</button><button class="btn" type="button" id="torec">記録して注文リストへ</button></div>`;
+  renderPicked();updSel();$("addmore").onclick=()=>openCatalog(id=>{if(!SEL.has(id))SEL.set(id,[newV(id)]);renderPicked();refreshPicks();updSel()});
+  $("copy").onclick=async()=>{try{await navigator.clipboard.writeText(r.pitch);$("copy").textContent="コピーしました"}catch(e){const sel=getSelection(),rg=document.createRange();rg.selectNodeContents(document.querySelector(".pitch p"));sel.removeAllRanges();sel.addRange(rg);$("copy").textContent="選択しました"}};
+  $("again2").onclick=()=>{show("chat");start()};$("torec").onclick=()=>SEL.size?openConfirm():openRec();$("selcount").onclick=openConfirm;
+  setTimeout(()=>show("result"),600);
+}
+/* 次の質問が必ず見えるように */
+function scrollLog(){requestAnimationFrame(()=>{log.scrollTop=log.scrollHeight;const last=log.lastElementChild;if(last)last.scrollIntoView({block:"end"})})}
+const _say=say;say=function(t,w,h){_say(t,w,h);scrollLog()};
+const _next=next;next=function(){_next();scrollLog()};
+new ResizeObserver(()=>scrollLog()).observe(ch);
+
+/* ---------- データ（db） ---------- */
+let db=null,me=null,canWrite=null,RECS=[],DBRECS=[],dbState="loading",dbErr="";
+/* 端末内の一時保存（保存先につながらないときの控え） */
+const PKEY="grant_navi_pending";
+const CAN_LOCAL=(()=>{try{localStorage.setItem("__t","1");localStorage.removeItem("__t");return true}catch(e){return false}})();
+const APP_URL="https://claude.ai/artifact/AejHrTv1nuFsvWkb4bBZL8";
+const noSaveBanner=()=>`<div class="msgline err" style="margin-bottom:12px"><b>この画面では記録を保存できません。</b><br>ブラウザ（Safari・Chrome）で次のアドレスを開いて使ってください。<br><span style="user-select:all;word-break:break-all;font-weight:700">${APP_URL}</span></div>`;
+const getPend=()=>{try{return JSON.parse(localStorage.getItem(PKEY)||"[]")}catch(e){return []}};
+const setPend=a=>{try{localStorage.setItem(PKEY,JSON.stringify(a))}catch(e){}};
+function mergeRecs(){RECS=[...getPend().map((r,i)=>({...r,id:"local-"+i,_local:true})),...DBRECS]}
+async function flushPend(){if(!db)return;const p=getPend();if(!p.length)return;const left=[];for(const r of p){try{await db.collection("records").add(r)}catch(e){left.push(r);dbErr=e.code||"error"}}setPend(left);mergeRecs();if(!$("v-data").hidden)renderData()}
+(async()=>{try{
+  for(let i=0;i<30&&!window.claude?.use;i++)await new Promise(r=>setTimeout(r,100));
+  if(!window.claude?.use){dbState="none";mergeRecs();renderData();return}
+  const [d,u]=await Promise.all([claude.use("db"),claude.use("user")]);db=d;
+  if(u){try{canWrite=await u.can("data.write")}catch(e){} }
+  if(!db){dbState="none";mergeRecs();renderData();return}
+  db.collection("records").orderBy("createdAt","desc").limit(1000).onSnapshot(s=>{DBRECS=s.docs.map(d=>({id:d.id,...d.data()}));dbState="ok";mergeRecs();if(!$("v-data").hidden)renderData();refreshEvidence()},e=>{dbState="err";dbErr=e.code||"";mergeRecs();renderData()});
+  flushPend();setInterval(()=>{if(getPend().length)flushPend()},30000);
+}catch(e){dbState="none";dbErr=String(e&&e.code||e);mergeRecs();renderData()}})();
+mergeRecs();
+const num=v=>{const n=parseFloat(v);return isFinite(n)&&n>0?n:null};
+const FEAT=[["h",8],["wt",6],["top",6],["under",5],["waist",6],["hip",6]];
+function similar(pid,body,k=12){
+  const rows=[];RECS.forEach(r=>(r.items||[]).forEach(it=>{if(it.id!==pid||!it.size)return;let d=0,n=0;FEAT.forEach(([f,s])=>{if(body[f]&&r[f]){d+=((body[f]-r[f])/s)**2;n++}});if(n>=2)rows.push({d:Math.sqrt(d/n),size:String(it.size).trim(),feel:it.feel||""})}));
+  rows.sort((a,b)=>a.d-b.d);const near=rows.filter(x=>x.d<=2).slice(0,k);
+  const t={};near.forEach(x=>{t[x.size]=t[x.size]||{n:0,ok:0,tight:0,loose:0};t[x.size].n++;if(x.feel==="ぴったり")t[x.size].ok++;if(x.feel==="きつめ")t[x.size].tight++;if(x.feel==="ゆるめ")t[x.size].loose++});
+  const list=Object.entries(t).map(([size,v])=>({size,...v,score:v.ok*2+v.n-v.tight-v.loose})).sort((a,b)=>b.score-a.score);
+  return {n:near.length,list}}
+function distHTML(ev){if(!ev.n)return '<p class="ev">似た体型の記録はまだありません。記録が増えるとここにサイズの目安が出ます。</p>';
+  const max=Math.max(...ev.list.map(x=>x.n));
+  return `<div class="dist">${ev.list.map((x,i)=>`<div class="dr${i===0?" top":""}"><b>${esc(x.size)}</b><div class="bg"><i style="width:${x.n/max*100}%"></i></div><small>${x.n}件・ぴったり${x.ok}</small></div>`).join("")}</div>`}
+const pastSizes=pid=>[...new Set(RECS.flatMap(r=>(r.items||[]).filter(i=>i.id===pid&&i.size).map(i=>String(i.size).trim())))];
+
+/* ---------- G-MAX の商品コード・カラー・サイズ（2026-10-04 時点のG-MAX表示から） ---------- */
+const BRA=s=>s.split(" ");
+const GM={
+ p01:{c:"101",col:["LOVE","ミスティブラック","オリーヴ"],sz:BRA("65A 65B 65C 65D 65E 65F 70A 70B 70C 70D 70E 70F 70G 75A 75B 75C 75D 75E 75F 75G 80A 80B 80C 80D 80E 80F 80G 85C 85D 85E 85F 85G 90B 90C 90D 90E 90F 90G 95B 95C 95D 95E 95F 100E 105D")},
+ p02:{c:"201",col:["LOVE","ミスティブラック","オリーヴ"],sz:BRA("58 64 70 76 82 90 98 106")},
+ p03:{c:"104",col:["ブラック","ブルームーン","チェリー","LOVE","ラピス","モカ","シェル"],sz:BRA("65 70 75 80 85 90 95")},
+ p04:{c:"109",col:["アプリコット","ブラック","ブルームーン","チェリー","LOVE","ラピス","モカ","シェル"],sz:BRA("65B 65C 65D 65E 65F 70B 70C 70D 70E 70F 70G 75B 75C 75D 75E 75F 75G 80A 80B 80C 80D 80E 80F 80G 85B 85C 85D 85E 85F 85G 90B 90C 90D 90E 90F 90G 95B 95C 95D 95E 95F 95G")},
+ p05:{c:"202",col:["ブルームーン","ホワイト×ブラック","ブラック","チェリー","LOVE(4分丈)","ラピス(4分丈)","モカ(4分丈)","シェル(4分丈)"],sz:BRA("58 64 70 76 82 90 98")},
+ p06:{c:"102",col:["ブルームーン","ホワイト×ブラック"],sz:BRA("65A 65B 65C 65D 65F 70A 70B 70C 70D 70E 70F 75A 75B 75C 75D 75E 75F 80A 80C 80D 80E 80F 85B 85C 85D 85E 85F 100F 105D 105E")},
+ p07:{c:"225",col:[],sz:BRA("58 64 70 76 82 90 98")},
+ p08:{c:"116",col:[],sz:BRA("S M L LL")},
+ p09:{c:"256",col:[],sz:BRA("SS S M L LL 3L")},
+ p10:{c:"119",col:[],sz:BRA("M L LL 3L 4L")},
+ p11:{c:"254",col:[],sz:BRA("M L LL 3L 4L")},
+ p12:{c:"161",col:["ブルー","グレー","カーキ","ピンク"],sz:BRA("65B 65C 65D 65E 70B 70C 70D 70E 70F 75B 75C 75D 75E 75F 80C 80D 80E 85D")},
+ p13:{c:"262",col:["ブルー","グレー","カーキ","ピンク"],sz:BRA("S M L LL")},
+ p14:{c:"163",col:[],sz:BRA("S M L LL 3L 4L")},
+ p15:{c:"162",col:[],sz:BRA("S M L LL 3L 4L")},
+ p16:{c:"538",col:[],sz:BRA("S M L LL O")},
+ p17:{c:"516",col:["ブラック杢","ネイビー杢"],sz:BRA("SS S M L LL")},
+ p18:{c:"529",col:[],sz:BRA("M L LL O")},
+ p19:{c:"521",col:[],sz:BRA("M L")},
+ p20:{c:"512",col:[],sz:[]},
+ p21:{c:"181",col:["ブラック","ライトグレー","パープル","ターコイズ"],sz:BRA("65B 65C 65D 65E 65F 70B 70C 70D 70E 70F 75B 75C 75D 75E 75F 80B 80C 80D 80E 85C 85D")},
+ p22:{c:"281",col:["ブラック","ライトグレー","パープル","ターコイズ"],sz:BRA("S M L LL")},
+ p23:{c:"184",col:["アプリコット","バイオレット"],sz:BRA("70B 70C 70D 70E 70F 75B 75C 75D 75E 75F 80C 80D 80E")},
+ p24:{c:"185",col:["ブラック","ライトグレー"],sz:BRA("M L LL 3L 4L")},
+ p25:{c:"255",col:[],sz:["S・M","L・LL","3L"]},
+ p26:{c:"264",col:[],sz:BRA("S M L LL 3L")},
+ p27:{c:"220",col:["ブラック","ホワイト"],sz:BRA("S M L LL 3L")},
+ p28:{c:"103",col:[],sz:BRA("65 70 75 80 85 90 95")},
+ p29:{c:"114",col:[],sz:BRA("M L LL")}
+};
+/* ---------- 記録フォーム ---------- */
+const sel=(id,opts,v)=>`<select id="${id}"><option value="">—</option>${opts.map(o=>`<option${o===v?" selected":""}>${o}</option>`).join("")}</select>`;
+
+function colThumb(id,cn){const g=GM[id]||{},ci=(typeof COLIMG!=="undefined"&&COLIMG[g.c])||{};return ci[cn]?`<img class="zoomable" src="img/${ci[cn]}" alt="" data-zoom="${id}" data-col="${esc(cn)}">`:""}
+function specHTML(id,v){const g=GM[id]||{col:[],sz:[]},ng=t=>`<span class="ng" data-ngj="${id}" style="cursor:pointer">${t}未選択 ›</span>`;
+  return `<div class="spec">${g.col.length?(v.color?`<span>${colThumb(id,v.color)}${esc(v.color)}</span>`:ng("カラー")):""}${g.sz.length?(v.size?`<span>サイズ ${esc(v.size)}</span>`:ng("サイズ")):""}<span>×${v.qty||1}</span></div>`}
+function openConfirm(){$("sheet-t").textContent="選んだ商品の確認";const rows=[];SEL.forEach((vs,id)=>vs.forEach((v,i)=>rows.push({id,v,i})));
+  const ng=rows.filter(r=>{const g=GM[r.id]||{col:[],sz:[]};return (g.col.length&&!r.v.color)||(g.sz.length&&!r.v.size)}).length;
+  $("sheet-b").innerHTML=rows.length?`${rows.map((r,n)=>`<div class="cf"><img class="pi zoomable" src="img/${r.id}.jpg" alt="" data-zoom="${r.id}" data-col="${esc(r.v.color)}"><div><div class="meta2">${n+1}. ${esc(P[r.id].s)}${GM[r.id]?.c?" ・ "+GM[r.id].c:""}</div><b>${esc(P[r.id].n)}</b>${specHTML(r.id,r.v)}<div class="acts"><button type="button" data-cf-edit="${r.id}">変更する</button><button type="button" data-cf-del="${r.id}" data-vi="${r.i}">外す</button></div></div></div>`).join("")}
+  <div class="cf-tot"><span>合計</span><span>${rows.length}点・${selCount()}着</span></div>
+  ${ng?`<div class="msgline err">カラー・サイズが未選択のものが ${ng}件 あります（記録画面でも選べます）</div>`:""}
+  <button class="btn" type="button" id="cf-go" style="margin-top:10px">この内容で記録へ進む</button><button class="btn ghost" type="button" id="cf-back" style="margin-top:8px">戻って商品を追加する</button>`
+  :`<p>まだ商品が選ばれていません。</p><button class="btn ghost" type="button" id="cf-back">戻る</button>`;
+  $("sheet-b").querySelectorAll("[data-ngj]").forEach(b=>b.onclick=()=>{closeSheet();const el=document.querySelector(`.pick[data-pid="${b.dataset.ngj}"]`);if(el){const box=el.closest(".prow,.card")||el;box.classList.add("miss-p");setTimeout(()=>box.classList.remove("miss-p"),3000);jumpTo(box)}});
+  $("sheet-b").querySelectorAll("[data-cf-edit]").forEach(b=>b.onclick=()=>{closeSheet();const el=document.querySelector(`.pick[data-pid="${b.dataset.cfEdit}"]`);if(el)el.scrollIntoView({block:"center",behavior:"smooth"})});
+  $("sheet-b").querySelectorAll("[data-cf-del]").forEach(b=>b.onclick=()=>{const vs=SEL.get(b.dataset.cfDel);if(vs){vs.splice(+b.dataset.vi,1);if(!vs.length)SEL.delete(b.dataset.cfDel)}refreshPicks();renderPicked();updSel();openConfirm()});
+  if($("cf-go"))$("cf-go").onclick=()=>{closeSheet();openRec()};$("cf-back").onclick=closeSheet;
+  $("sheet").hidden=false;$("sheet").querySelector(".sheet").scrollTop=0}
+function recItemsNow(){return [...document.querySelectorAll(".it")].filter(d=>d.querySelector("input[type=checkbox]").checked).map(d=>({id:d.dataset.id,v:{color:d.querySelector(".cl")?.value||"",size:d.querySelector(".sz").value.trim(),qty:+(d.querySelector(".qt")?.value||1)},feel:d.querySelector(".fe")?.value||""}))}
+function renderRecSum(){const el=$("r-sum");if(!el)return;const its=recItemsNow(),tot=its.reduce((t,x)=>t+x.v.qty,0);
+  el.innerHTML=`<h3>記録する内容の確認（${its.length}点・${tot}着）</h3>${its.length?its.map((x,n)=>`<div class="cf"><img class="pi zoomable" src="img/${x.id}.jpg" alt="" data-zoom="${x.id}" data-col="${esc(x.v.color)}"><div><div class="meta2">${n+1}. ${esc(P[x.id].s)}${GM[x.id]?.c?" ・ "+GM[x.id].c:""}</div><b>${esc(P[x.id].n)}</b>${specHTML(x.id,x.v)}${x.feel?`<div class="meta2" style="margin-top:4px">着てみて：${esc(x.feel)}</div>`:""}</div></div>`).join(""):'<p class="meta2">チェックの入った商品がありません</p>'}`}
+function openRec(){
+  const a=hasResult?A:{},ids=hasResult&&lastPlan&&!SEL.size?[...lastPlan.main]:[];
+  const today=new Date();const code="匿名-"+String(today.getFullYear()).slice(2)+String(today.getMonth()+1).padStart(2,"0")+String(today.getDate()).padStart(2,"0")+"-"+Math.random().toString(36).slice(2,5).toUpperCase();
+  const worries=[...(a.body||[]),...(a.posture&&a.posture!=="わからない"?[a.posture]:[]),...(a.health||[]),...(a.painWhere||[]).map(x=>x+"の痛み")];
+  $("recform").innerHTML=`
+  ${dbState==="ok"?'<div class="msgline">保存先：つながっています</div>':dbState==="loading"?'<div class="msgline">保存先：確認中…</div>':CAN_LOCAL?'<div class="msgline err">保存先につながっていません。記録はこの端末に控えておき、つながったときに自動で送ります。</div>':noSaveBanner()}
+  <div class="fs"><h3>お客様（匿名でOK）</h3><div class="grid2">
+   <label class="fl">お客様コード<input id="r-code" value="${code}" autocomplete="off"></label>
+   <label class="fl">性別${sel("r-sex",["女性","男性"],a.sex)}</label>
+   <label class="fl">年代${sel("r-age",["20代","30代","40代","50代","60代以上"],a.age)}</label>
+   <label class="fl">体型${sel("r-type",["細め","標準","ぽっちゃり","がっしり"],"")}</label></div>
+   ${worries.length?`<p class="ev" style="margin-top:10px">お悩み：${esc(worries.join("、"))}</p>`:""}</div>
+  <div class="fs"><h3>採寸（わかる項目だけ）</h3><div class="grid2">
+   <label class="fl">身長 <span class="unit">cm</span><input id="r-h" type="number" inputmode="decimal" value="${a.h||""}"></label>
+   <label class="fl">体重 <span class="unit">kg</span><input id="r-wt" type="number" inputmode="decimal" value="${a.wt||""}"></label>
+   <label class="fl">トップバスト <span class="unit">cm</span><input id="r-top" type="number" inputmode="decimal" value="${a.top||""}"></label>
+   <label class="fl">アンダーバスト <span class="unit">cm</span><input id="r-under" type="number" inputmode="decimal" value="${a.under||""}"></label>
+   <label class="fl">ウエスト <span class="unit">cm</span><input id="r-waist" type="number" inputmode="decimal" value="${a.waist||""}"></label>
+   <label class="fl">ヒップ <span class="unit">cm</span><input id="r-hip" type="number" inputmode="decimal" value="${a.hip||""}"></label></div></div>
+  <div class="fs"><h3>処方したもの・サイズ</h3><div class="items" id="r-items"></div>
+   <button class="btn ghost" type="button" id="r-cat" style="margin-top:10px">＋ 写真から商品を追加</button><div class="row" style="margin-top:10px"><select id="r-add" style="flex:1;font:inherit;font-size:15px;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)"><option value="">商品を追加…</option>${Object.entries(P).map(([k,p])=>`<option value="${k}">${p.s}｜${p.n}</option>`).join("")}</select></div></div>
+  <div class="fs"><label class="fl">メモ（試着して気づいたこと）<textarea id="r-memo"></textarea></label></div>
+  <div class="recsum" id="r-sum"></div><div id="r-msg"></div>
+  <button class="btn" type="submit" id="r-save">この内容で記録する</button>`;
+  if(SEL.size)[...SEL.entries()].forEach(([id,vs])=>vs.forEach(v=>addItem(id,true,v)));else ids.forEach(id=>addItem(id,true));
+  $("r-cat").onclick=()=>openCatalog(id=>addItem(id,true));
+  $("r-add").onchange=e=>{if(e.target.value){addItem(e.target.value,true);e.target.value=""}};
+  ["r-h","r-wt","r-top","r-under","r-waist","r-hip"].forEach(id=>$(id).addEventListener("input",refreshEvidence));
+  $("r-items").addEventListener("change",()=>{renderRecSum();if(document.querySelector("#r-items .miss"))markMissing(true)});$("r-items").addEventListener("click",e=>{if(e.target.closest("[data-rsw]"))setTimeout(()=>{renderRecSum();if(document.querySelector("#r-items .miss"))markMissing(true)},0)});renderRecSum();$("r-sum").onclick=e=>{if(e.target.closest("[data-ngj]"))markMissing()};$("recform").onsubmit=saveRec;$("recform").dataset.a=JSON.stringify(a);show("rec")}
+function addItem(id,on,pre,force){if(!pre&&!force&&document.querySelector(`.it[data-id="${id}"]`))return;const p=P[id],g=GM[id]||{c:"",col:[],sz:[]},d=document.createElement("div");d.className="it"+(on?"":" off");d.dataset.id=id;
+  const opt=(arr,ph)=>`<option value="">${ph}</option>`+arr.map(x=>`<option>${esc(x)}</option>`).join("");
+  d.innerHTML=`<img src="img/${id}.jpg" alt=""><div><label class="nm"><input type="checkbox"${on?" checked":""}>${p.n}</label><div class="meta2">商品コード ${g.c}</div>
+  <div style="margin-top:8px">${swHTML(id,pre&&pre.color||"","data-rsw")}</div>
+  <div class="row2">${g.col.length?`<label class="fl" hidden>カラー<select class="cl">${opt(g.col,"選ぶ")}</select></label>`:""}
+  ${g.sz.length?`<label class="fl">サイズ<select class="sz">${opt(g.sz,"選ぶ")}</select></label>`:`<input class="sz" type="hidden" value="">`}
+  <label class="fl">数量<select class="qt">${[1,2,3,4,5].map(n=>`<option>${n}</option>`).join("")}</select></label>
+  <label class="fl">着てみて<select class="fe"><option value="">—</option>${["ぴったり","きつめ","ゆるめ","未試着"].map(o=>`<option>${o}</option>`).join("")}</select></label></div>
+  ${(g.col.length>1||g.sz.length>1)?`<button type="button" class="btn sm ghost it-dup" style="margin-top:8px">＋ 同じ商品を色・サイズ違いで追加</button>`:""}<div class="ev"></div></div>`;
+  d.querySelector("input[type=checkbox]").onchange=e=>d.classList.toggle("off",!e.target.checked);
+  const dup=d.querySelector(".it-dup");if(dup)dup.onclick=()=>{const sz=d.querySelector("select.sz");addItem(id,true,{color:"",size:sz?sz.value:"",qty:1},true)};
+  if(pre){if(pre.color&&d.querySelector(".cl"))d.querySelector(".cl").value=pre.color;if(pre.size&&d.querySelector("select.sz"))d.querySelector("select.sz").value=pre.size;if(pre.qty&&d.querySelector(".qt"))d.querySelector(".qt").value=String(pre.qty)}
+  if(force){const rows=[...document.querySelectorAll(`.it[data-id="${id}"]`)];const last=rows[rows.length-1];last?last.after(d):$("r-items").appendChild(d)}else $("r-items").appendChild(d);refreshEvidence();renderRecSum()}
+function bodyFromForm(){const g=id=>$(id)?num($(id).value):null;return {h:g("r-h"),wt:g("r-wt"),top:g("r-top"),under:g("r-under"),waist:g("r-waist"),hip:g("r-hip")}}
+function refreshEvidence(){if(!$("r-items"))return;const b=bodyFromForm();document.querySelectorAll(".it").forEach(d=>{const ev=similar(d.dataset.id,b,10),el=d.querySelector(".ev");
+  if(ev.n){const sz=d.querySelector("select.sz");if(sz&&!sz.value&&[...sz.options].some(o=>o.value===ev.list[0].size))sz.value=ev.list[0].size}
+  el.innerHTML=ev.n?`似た体型 ${ev.n}件では <b>${esc(ev.list[0].size)}</b> が最多（${ev.list.map(x=>esc(x.size)+" "+x.n+"件").join("・")}）`:(Object.values(b).filter(Boolean).length>=2?"似た体型の記録はまだありません":"身長・体重など2つ以上入れると、似た体型の人のサイズが出ます")})}
+
+function markMissing(quiet){const rows=[...document.querySelectorAll("#r-items .it")].filter(d=>d.querySelector("input[type=checkbox]").checked);let first=null;const names=[];
+  document.querySelectorAll("#r-items .it").forEach(d=>{d.classList.remove("miss");d.querySelectorAll(".need").forEach(x=>x.classList.remove("need"));d.querySelectorAll(".needmsg").forEach(x=>x.remove())});
+  rows.forEach(d=>{const g=GM[d.dataset.id]||{col:[],sz:[]},cl=d.querySelector(".cl"),sz=d.querySelector("select.sz");const lack=[];
+    if(g.col.length&&cl&&!cl.value){lack.push("カラー");const w=d.querySelector(".sw");if(w)w.classList.add("need")}
+    if(g.sz.length&&sz&&!sz.value){lack.push("サイズ");sz.classList.add("need")}
+    if(lack.length){d.classList.add("miss");const n=document.createElement("div");n.className="needmsg";n.textContent=`ここ → ${lack.join("と")}を選んでください`;d.querySelector(".meta2").after(n);names.push({d,t:P[d.dataset.id].n});if(!first)first=d}});
+  const m=$("r-msg");if(!first){m.innerHTML="";return false}
+  m.innerHTML=`<div class="msgline err">未選択があります（赤い枠のところ）：${names.map((x,i)=>`<button type="button" class="jump" data-jump="${i}">${esc(x.t)} ›</button>`).join(" ")}</div>`;
+  m.querySelectorAll("[data-jump]").forEach(b=>b.onclick=()=>jumpTo(names[+b.dataset.jump].d));if(!quiet)jumpTo(first);return true}
+function jumpTo(d){d.scrollIntoView({block:"center",behavior:"smooth"});d.classList.remove("flash");void d.offsetWidth;d.classList.add("flash")}
+async function saveRec(e){e.preventDefault();const m=$("r-msg");
+  const items=[...document.querySelectorAll(".it")].filter(d=>d.querySelector("input[type=checkbox]").checked).map(d=>({id:d.dataset.id,gm:(GM[d.dataset.id]||{}).c||"",name:P[d.dataset.id].n,series:P[d.dataset.id].s,color:d.querySelector(".cl")?.value||"",size:d.querySelector(".sz").value.trim(),qty:+(d.querySelector(".qt")?.value||1),feel:d.querySelector(".fe").value}));
+  if(markMissing())return;
+  if(!items.length){m.innerHTML='<div class="msgline err">処方した商品に1つ以上チェックを入れてください。</div>';m.scrollIntoView({block:"center"});return}
+  const a=JSON.parse($("recform").dataset.a||"{}"),b=bodyFromForm();
+  const doc={createdAt:new Date().toISOString(),code:$("r-code").value.trim().slice(0,40)||"匿名",sex:$("r-sex").value,age:$("r-age").value,type:$("r-type").value,...b,
+    body:a.body||[],posture:a.posture||"",health:a.health||[],painWhere:a.painWhere||[],birth:a.birth||"",work:a.work||"",sport:a.sport||"",fit:a.fit||"",goal:a.goal||"",items,memo:$("r-memo").value.slice(0,1000)};
+  Object.keys(doc).forEach(k=>{if(doc[k]===null)delete doc[k]});
+  $("r-save").disabled=true;
+  if(!db&&!CAN_LOCAL){$("r-save").disabled=false;m.innerHTML=noSaveBanner();m.scrollIntoView({block:"center"});return}
+  if(!db){const p=getPend();p.unshift(doc);setPend(p);mergeRecs();m.innerHTML='<div class="msgline err">共有の保存先につながっていないため、この端末に保存しました。Claudeのアプリ（claude.ai）の中でこのページを開くと、自動で保存先に送られます。</div>';show("data");openOrder(doc);return}
+  try{await db.collection("records").add(doc);m.innerHTML='<div class="msgline">記録しました。</div>';show("data");openOrder(doc)}
+  catch(err){$("r-save").disabled=false;m.innerHTML=`<div class="msgline err">${err.code==="quota_exceeded"?"保存できる件数の上限です。古い記録を削除してください。":err.code==="invalid_argument"?"このページで記録する権限がありません。オーナーに「Contributor（投稿者）」以上にしてもらってください。":"保存できませんでした（"+esc(err.code||err.message||"error")+"）。この端末に控えを残しました。"}</div>`;if(err.code!=="invalid_argument"){const p=getPend();p.unshift(doc);setPend(p);mergeRecs()}}}
+
+/* ---------- 記録・データ画面 ---------- */
+let dataProd="";
+function renderData(){const el=$("datapane");if(!el)return;
+  const head=`<div class="row" style="justify-content:space-between;margin-bottom:12px"><h2 class="sec-t" style="margin:0">記録の一覧</h2><button class="btn sm" type="button" id="d-new">＋ 新しく記録</button></div>`;
+  const pend=getPend().length;
+  const status=(dbState!=="ok"&&dbState!=="loading"&&!CAN_LOCAL)?noSaveBanner():dbState==="ok"?`<div class="msgline" style="margin-bottom:12px">保存先：つながっています${pend?`（この端末に未送信 ${pend}件）`:""}</div>`:dbState==="loading"?'<div class="msgline" style="margin-bottom:12px">保存先：確認中…</div>':`<div class="msgline err" style="margin-bottom:12px">保存先：つながっていません${dbErr?"（"+esc(dbErr)+"）":""}。記録はこの端末に保存されます${pend?`（未送信 ${pend}件）`:""}。Claudeのアプリ（claude.ai）の中でこのページを開くと、自動で送られます。</div>`;
+  const n=RECS.length,items=RECS.flatMap(r=>r.items||[]),tried=items.filter(i=>i.feel&&i.feel!=="未試着"),ok=tried.filter(i=>i.feel==="ぴったり").length;
+  const prods=[...new Set(items.map(i=>i.id))].filter(id=>P[id]).sort((x,y)=>items.filter(i=>i.id===y).length-items.filter(i=>i.id===x).length);
+  if(!dataProd||!prods.includes(dataProd))dataProd=prods[0]||"";
+  const exp=pend?`<div class="panel"><h3>未送信の記録（${pend}件）</h3><p>保存先につながったら自動で送ります。すぐ反映したいときは、コピーしてClaudeのチャットに貼り付けてください。</p><button class="btn sm ghost" type="button" id="d-exp">未送信の記録をコピー</button></div>`:"";
+  const recHTML=`<div class="panel"><h3>最近の記録（${n}件）</h3>${RECS.slice(0,30).map(r=>`<div class="rec"><button class="del" type="button" data-del="${esc(r.id)}">削除</button><b>${esc(r.code)}</b>${r._local?' <span class="tag">未送信</span>':""} <span class="meta2">${esc(r.sex||"")} ${esc(r.age||"")} ${esc(r.type||"")}・${(r.createdAt||"").slice(0,10)}</span><div class="meta2">${["h","wt","top","under","waist","hip"].filter(f=>r[f]).map(f=>({h:"身長",wt:"体重",top:"トップ",under:"アンダー",waist:"ウエスト",hip:"ヒップ"}[f])+" "+r[f]).join(" / ")}</div><div>${(r.items||[]).map(i=>`${esc(i.name)} <b>${esc([i.color,i.size].filter(Boolean).join(" ")||"—")}</b>${i.qty>1?"×"+i.qty:""}${i.feel?"（"+esc(i.feel)+"）":""}`).join("、")}</div><button class="btn sm ghost" type="button" data-ord="${esc(r.id)}" style="margin-top:6px">G-MAX注文リスト</button>${(r.body||[]).length||(r.health||[]).length?`<div class="meta2">お悩み：${esc([...(r.body||[]),...(r.health||[])].join("、"))}</div>`:""}</div>`).join("")}</div>`;
+  let html=head+status+exp+(n?recHTML:'<div class="empty" style="margin-bottom:14px">まだ記録がありません。「＋ 新しく記録」から入れてください。</div>')+`<div class="kpis"><div class="kpi"><b>${n}</b><span>記録した人数</span></div><div class="kpi"><b>${items.length}</b><span>処方アイテム</span></div><div class="kpi"><b>${tried.length?Math.round(ok/tried.length*100)+"%":"—"}</b><span>試着でぴったり</span></div></div>`;
+  html+=`<div class="panel"><h3>サイズ検索</h3><p>お客様の採寸を入れると、似た体型の人がどのサイズを選んだかが出ます（身長±8cm・体重±6kg 程度を「似た体型」としています）。</p>
+   <div class="grid2"><label class="fl" style="grid-column:1/-1">商品<select id="s-p">${Object.entries(P).map(([k,p])=>`<option value="${k}"${k===dataProd?" selected":""}>${p.s}｜${p.n}</option>`).join("")}</select></label>
+   <label class="fl">身長 cm<input id="s-h" type="number" inputmode="decimal"></label><label class="fl">体重 kg<input id="s-wt" type="number" inputmode="decimal"></label>
+   <label class="fl">トップ cm<input id="s-top" type="number" inputmode="decimal"></label><label class="fl">アンダー cm<input id="s-under" type="number" inputmode="decimal"></label>
+   <label class="fl">ウエスト cm<input id="s-waist" type="number" inputmode="decimal"></label><label class="fl">ヒップ cm<input id="s-hip" type="number" inputmode="decimal"></label></div><div id="s-out"></div></div>`;
+  if(n){
+    html+=`<div class="panel"><h3>商品×サイズの体型</h3><p>そのサイズを選んだ人の平均（カッコ内は最小〜最大）。</p><select id="t-p" style="font:inherit;font-size:15px;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);width:100%;margin-bottom:8px">${prods.map(k=>`<option value="${k}"${k===dataProd?" selected":""}>${P[k].n}（${items.filter(i=>i.id===k).length}件）</option>`).join("")}</select><div class="tbl" id="t-out"></div></div>`;
+    const W={};RECS.forEach(r=>{const ws=[...(r.body||[]),...(r.health||[])];(r.items||[]).forEach(it=>ws.forEach(w=>{W[w]=W[w]||{};W[w][it.id]=(W[w][it.id]||0)+1}))});
+    html+=`<div class="panel"><h3>お悩み別 よく処方された商品</h3><div class="wh">${Object.entries(W).sort((x,y)=>Object.values(y[1]).reduce((a,b)=>a+b,0)-Object.values(x[1]).reduce((a,b)=>a+b,0)).map(([w,o])=>`<div><b>${esc(w)}</b>${Object.entries(o).sort((x,y)=>y[1]-x[1]).slice(0,3).map(([id,c])=>`${esc(P[id]?.n||id)}（${c}）`).join("・")}</div>`).join("")||'<div>まだありません</div>'}</div></div>`;
+  }
+  el.innerHTML=html;$("d-new").onclick=()=>openRec();
+  if($("d-exp"))$("d-exp").onclick=async()=>{const t="GRANT_NAVI_RECORDS\n"+JSON.stringify(getPend());try{await navigator.clipboard.writeText(t);$("d-exp").textContent="コピーしました"}catch(e){$("d-exp").insertAdjacentHTML("afterend",`<textarea style="width:100%;height:120px;margin-top:8px">${esc(t)}</textarea>`);$("d-exp").textContent="下の文字を全部選んでコピーしてください"}};
+  const sf=()=>{const b={};[["h","s-h"],["wt","s-wt"],["top","s-top"],["under","s-under"],["waist","s-waist"],["hip","s-hip"]].forEach(([f,id])=>b[f]=num($(id).value));const filled=Object.values(b).filter(Boolean).length;
+    $("s-out").innerHTML=filled<2?'<p class="ev">2項目以上入れてください。</p>':distHTML(similar($("s-p").value,b,15))};
+  ["s-p","s-h","s-wt","s-top","s-under","s-waist","s-hip"].forEach(id=>$(id).addEventListener("input",sf));sf();
+  if($("t-p")){const tf=()=>{dataProd=$("t-p").value;const by={};RECS.forEach(r=>(r.items||[]).forEach(it=>{if(it.id!==dataProd)return;const s=(it.size||"未記入").trim();by[s]=by[s]||[];by[s].push({r,feel:it.feel})}));
+    const st=(arr,f)=>{const v=arr.map(x=>x.r[f]).filter(x=>typeof x==="number");if(!v.length)return"—";const av=v.reduce((a,b)=>a+b,0)/v.length;return `${av.toFixed(1)}<br><small style="color:var(--muted)">${Math.min(...v)}〜${Math.max(...v)}</small>`};
+    $("t-out").innerHTML=`<table><thead><tr><th>サイズ</th><th>人数</th><th>身長</th><th>体重</th><th>トップ</th><th>アンダー</th><th>ウエスト</th><th>ヒップ</th><th>ぴったり</th></tr></thead><tbody>${Object.entries(by).sort((x,y)=>y[1].length-x[1].length).map(([s,arr])=>{const t=arr.filter(x=>x.feel&&x.feel!=="未試着");return `<tr><td class="l"><b>${esc(s)}</b></td><td>${arr.length}</td><td>${st(arr,"h")}</td><td>${st(arr,"wt")}</td><td>${st(arr,"top")}</td><td>${st(arr,"under")}</td><td>${st(arr,"waist")}</td><td>${st(arr,"hip")}</td><td>${t.length?Math.round(t.filter(x=>x.feel==="ぴったり").length/t.length*100)+"%":"—"}</td></tr>`}).join("")}</tbody></table>`};
+    $("t-p").onchange=tf;tf()}
+  el.querySelectorAll("[data-ord]").forEach(b=>b.onclick=()=>{const r=RECS.find(x=>x.id===b.dataset.ord);if(r)openOrder(r)});
+  el.querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{if(b.dataset.armed){if(b.dataset.del.startsWith("local-")){const p=getPend();p.splice(+b.dataset.del.slice(6),1);setPend(p);mergeRecs();renderData();return}try{await db.doc("records/"+b.dataset.del).delete()}catch(e){b.textContent="削除できませんでした"}}else{b.dataset.armed="1";b.textContent="もう一度押すと削除"}});
+}
+
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{const v=b.dataset.v;if(v==="chat"&&!log.children.length)start();if(v==="result"&&!hasResult)emptyResult();show(v)});
+$("back").onclick=()=>show("home");
+$("start").onclick=()=>{show("chat");start()};
+$("sample").onclick=()=>{SEL.clear();A={sex:"女性",age:"40代",birth:"2人以上",work:"座り仕事",sport:"ほとんどしない",fit:"ほどほどがいい",body:["猫背・姿勢","お腹","お尻"],posture:"両方",belly:"下腹だけ出る",hip:"横に広がる",feet:["土踏まずがない・偏平足"],health:["痛み・こり","冷え"],painWhere:["首・肩","腰"],painLevel:"ほぼ毎日",temp:"35度台",coldWhere:"全身",goal:"見た目を整えたい",h:160,wt:58,top:86,under:70,waist:68,hip:94};
+  log.innerHTML="";Q.forEach(q=>{if(A[q.k]===undefined&&q.k!=="hw")return;say(q.q,"bot");say(q.k==="hw"?"身長 160cm / 体重 58kg / トップバスト 86cm / アンダーバスト 70cm / ウエスト 68cm / ヒップ 94cm":Array.isArray(A[q.k])?A[q.k].join("、"):A[q.k],"me")});idx=Q.length;$("bar").style.width="100%";$("count").textContent="サンプル";done()};
+
+
+/* ---------- G-MAX 注文リスト ---------- */
+const GMCAT={"101":"LALA Grant Fantasy","201":"LALA Grant Fantasy","102":"LALA Grant Fairy","202":"LALA Grant Fairy","103":"LALA Grant Gracy","104":"LALA Grant Gracy","109":"LALA Grant Gracy","225":"LALA Grant Drainage","114":"LALA Grant Drainage","116":"BiBi Grant","119":"BiBi Grant","254":"BiBi Grant","256":"BiBi Grant","255":"BiBi Grant","220":"BiBi Grant","161":"LALA SPORTS GRANT TAI-KAN","262":"LALA SPORTS GRANT TAI-KAN","264":"LALA SPORTS GRANT TAI-KAN","162":"LALA SPORTS GRANT Emm∀","163":"LALA SPORTS GRANT Emm∀","538":"RE.B5","516":"RE.B5","529":"RE.B5","521":"RE.B5","512":"RE.B5","181":"X-mag MICHAEL","281":"X-mag MICHAEL","185":"X-mag MICHAEL","184":"X-mag RAPHAEL"};
+const GMNAME={"101":"ニッパービスチェ","201":"ハイウエストガードル","102":"Tバックボディスーツ","202":"レギュラーガードル","103":"袖付ボディスーツ","104":"ララドール(袖なしボディスーツ)","109":"ブラジャー","225":"スパッツⅡ","114":"アームガードルⅡ(レースなし)","116":"レディースパンプ半袖","119":"メンズパンプ半袖","254":"メンズビビガードル","256":"レディースメッシュガードル6分丈","255":"骨盤ベルト","220":"エナジック・ハイソックス(2足組)","161":"ブラジャー","262":"ボクサーガードル","264":"5本指ソックス(2足組)","162":"エマパンプ メンズ","163":"エマパンプ レディース","538":"ダイヤモンド・ホルミーVブラトップ","516":"ホルミーレギンス","529":"ホルミーサポートショーツ","521":"ホルミーメンズボクサーパンツ10分丈","512":"シングルケット(オーガニックコットン使用)","181":"レーシーブラジャー","281":"ショーツガードル","185":"メンズニッパー","184":"スムースボディ"};
+/* ---------- 追加の商品（写真つき・G-MAXの全インナー） ---------- */
+Object.assign(P,{
+ g214:{s:"LALA Fantasy",n:"レーシーショーツ",fix:["ショーツ","毎日の1枚"],f:["ko"],act:"LALAのガードルやボディスーツの下にはくショーツ。カラー展開が多く、セットでそろえられる。",say:"LALAと合わせてはくショーツです"},
+ g216:{s:"LALA Fantasy",n:"サニタリーショーツ",fix:["生理中"],f:["ko"],act:"生理中もLALAを続けるためのサニタリーショーツ。",say:"生理中も習慣を切らさないためのショーツです"},
+ g215:{s:"LALA Fairy",n:"Tバックショーツ",fix:["ショーツ","ヒップライン"],f:["ko"],act:"お尻の丸みをつぶさないTバック。Fairyのボディスーツと合わせる。",say:"お尻の形をきれいに見せるショーツです"},
+ g117:{s:"BiBi",n:"レディースエレクトパンプ 7分袖",fix:["猫背","二の腕"],f:["ko"],act:"7分袖のパンプ。背中のバツ印で背すじを起こし、二の腕まで包む。",say:"二の腕まで包むパンプです"},
+ g118:{s:"BiBi",n:"レディースハイネックエレクトパンプ 10分袖",fix:["猫背","冷え"],f:["ko"],act:"ハイネック・長袖で首から腕まで包むパンプ。寒い時期に。",say:"首から腕まで温かく包むパンプです"},
+ g122:{s:"BiBi",n:"レディースクルーネックビビパンプ 10分袖",fix:["猫背","冷え"],f:["ko"],act:"クルーネック・長袖のパンプ。服の下に着やすい。",say:"服の下に着やすい長袖のパンプです"},
+ g129:{s:"BiBi",n:"レディースストレッチメッシュパンプ",fix:["猫背","暑い時期"],f:["ko"],act:"メッシュで通気性がよいパンプ。夏や運動時に。",say:"メッシュで涼しく着られるパンプです"},
+ g253:{s:"BiBi",n:"レディースエレクトガードル 10分丈",fix:["お尻","脚","冷え"],f:["ko"],act:"足首までの10分丈ガードル。お尻から脚まで支える。",say:"お尻から足首まで支えるガードルです"},
+ g127:{s:"BiBi",n:"ファットバーンブラショーツ",fix:["お腹","姿勢"],f:["ko"],act:"ブラとショーツのセット。サイズは上下の組み合わせで選ぶ（例：M-L）。",say:"上下セットで着られるインナーです"},
+ g244:{s:"BiBi",n:"レディースファットバーンスパッツ",fix:["お腹","脚"],f:["ko"],act:"お腹から脚まで包むスパッツ。",say:"お腹から脚まで包むスパッツです"},
+ g261:{s:"BiBi",n:"光電子美容マスク（4色組）",fix:["顔まわり"],f:["ko"],act:"光電子のマスク。4色セット。",say:"光電子のマスクです"},
+ g258:{s:"BiBi",n:"エナジック・アンクルソックス（3足組）",fix:["足先の冷え"],f:["ko"],act:"くるぶし丈のソックス3足組。",say:"くるぶし丈のソックスです"},
+ g120:{s:"BiBi",n:"メンズハイネックエレクトパンプ 10分袖",fix:["猫背","冷え"],f:["ko"],act:"男性用のハイネック長袖パンプ。",say:"首から腕まで包む男性用パンプです"},
+ g128:{s:"BiBi",n:"メンズストレッチメッシュパンプ",fix:["猫背","暑い時期"],f:["ko"],act:"男性用のメッシュパンプ。通気性がよい。",say:"涼しく着られる男性用パンプです"},
+ g259:{s:"BiBi",n:"メンズストレッチメッシュボクサーパンツ 2分丈",fix:["腰まわり"],f:["ko"],act:"男性用のボクサーパンツ。",say:"男性用のボクサーパンツです"},
+ g260:{s:"BiBi",n:"メンズストレッチメッシュガードル",fix:["お腹まわり","腰"],f:["ko"],act:"男性用のメッシュガードル。",say:"男性用のガードルです"},
+ g245:{s:"BiBi",n:"メンズファットバーンスパッツ",fix:["お腹","脚"],f:["ko"],act:"男性用のスパッツ。お腹から脚まで包む。",say:"男性用のスパッツです"},
+ g208:{s:"LALA Drainage",n:"ドレナージュ・タイツ",fix:["脚のむくみ","冷え"],f:["ko"],act:"光電子のタイツ。脚を包んでラインを整える。",say:"脚を包むタイツです"},
+ g257:{s:"LALA Drainage",n:"ドレナージュストッキング",fix:["脚のむくみ"],f:["ko"],act:"光電子のストッキング。",say:"脚を支えるストッキングです"},
+ g246:{s:"LALA Drainage",n:"ショートストッキング（3足組）",fix:["脚のむくみ"],f:["ko"],act:"ひざ下丈のストッキング3足組。",say:"ひざ下丈のストッキングです"},
+ g124:{s:"LALA Drainage",n:"アームガードルメッシュ",fix:["二の腕"],f:["ko"],act:"メッシュのアームガードル。UVカット率93%以上。",say:"二の腕を包むメッシュのアームガードルです"},
+ g248:{s:"LALA Drainage",n:"プレミアムビューティーバンテージ（2本入り）",fix:["部分ケア"],f:["ko"],act:"気になる部分に巻くバンテージ。",say:"気になるところに巻くバンテージです"},
+ g524:{s:"ホルミー（Re.B5）",n:"ホルミーメンズリラックスタンクトップ",fix:["疲れ","夜のケア"],f:["ho"],act:"男性用の北投石タンクトップ。",say:"男性用のリラックス用タンクトップです"},
+ g517:{s:"ホルミー（Re.B5）",n:"ホルミーバンテージブラジャー",fix:["バスト","めぐり"],f:["ho"],act:"北投石の生地のバンテージブラ。",say:"温泉の鉱石の生地を使ったブラです"},
+ g520:{s:"ホルミー（Re.B5）",n:"ホルミーメンズレギンス",fix:["冷え","夜のケア"],f:["ho"],act:"男性用の北投石レギンス。",say:"男性用のレギンスです"},
+ g530:{s:"ホルミー（Re.B5）",n:"ホルミーサポートショーツ 4分丈",fix:["お腹の冷え","太もも"],f:["ho"],act:"太ももまで包む4分丈のショーツ。",say:"太ももまで包むショーツです"},
+ g523:{s:"ホルミー（Re.B5）",n:"ホルミーメンズボクサーパンツ 2分丈",fix:["冷え","疲れ"],f:["ho"],act:"男性用の北投石ボクサーパンツ。",say:"男性用のボクサーパンツです"},
+ g518:{s:"ホルミー（Re.B5）",n:"テラミーシーツ",fix:["眠り"],f:["ho"],act:"寝具用のシーツ。",say:"寝ている間に使うシーツです"},
+ g519:{s:"ホルミー（Re.B5）",n:"テラミーピローシート",fix:["眠り","首・肩"],f:["ho"],act:"枕に敷くシート。",say:"枕に敷くシートです"},
+ g540:{s:"ホルミー（Re.B5）",n:"ホルミープレミアムハーフケット",fix:["眠り","冷え"],f:["ho"],act:"スナップボタン付きのハーフケット。",say:"ひざ掛けにも使えるケットです"},
+ g513:{s:"ホルミー（Re.B5）",n:"ダイヤモンド・ホルミーハーフケット",fix:["眠り","冷え"],f:["ho"],act:"ハーフケット。3色。",say:"ひざ掛けにも使えるケットです"},
+ g182:{s:"マグ（X-mag）",n:"レーシーニッパー",fix:["ウエスト","腰のこり"],f:["mg","ko"],med:1,act:"ウエストラインをソフトに整えるライトなニッパー。管理医療機器。",say:"ウエストを整えながらこりをほぐす医療機器のニッパーです"},
+ g282:{s:"マグ（X-mag）",n:"Tバックショーツ",fix:["ショーツ"],f:["ko"],act:"マグのブラ・ガードルと合わせるTバックショーツ。",say:"マグと合わせるショーツです"},
+ g183:{s:"マグ（X-mag）",n:"レーシーボディ",fix:["背中〜腰のこり","バスト"],f:["mg","ko"],med:1,act:"背中から腰にかけて磁石6個。カップつきのボディ。管理医療機器。",say:"背中から腰までのこりをほぐす医療機器のボディです"},
+ g263:{s:"TAI-KAN",n:"TAI-KAN スパッツ",fix:["体幹","脚"],f:["ko"],act:"重心を整えるカッティングのスパッツ。",say:"重心を整えるスパッツです"}
+});
+const B=s=>s.split(" ");
+const C10=["アプリコット","ブラック","ブルームーン","チェリー","LOVE","ラピス","モカ","オリーヴ","シェル","ホワイト×ブラック"];
+Object.assign(GM,{
+ g214:{c:"214",col:C10,sz:B("S M L LL 3L")},g216:{c:"216",col:["ブラック","ローズ"],sz:B("S M L LL 3L")},
+ g215:{c:"215",col:C10.filter(x=>x!=="オリーヴ"),sz:B("S M L LL")},
+ g117:{c:"117",col:[],sz:B("S M L LL")},g118:{c:"118",col:[],sz:B("S M L LL")},g122:{c:"122",col:[],sz:B("S M L LL")},
+ g129:{c:"129",col:[],sz:B("S M L LL")},g253:{c:"253",col:[],sz:B("S M L LL")},
+ g127:{c:"127",col:[],sz:B("M-M M-L M-LL M-3L L-M L-L L-LL L-3L LL-M LL-L LL-LL LL-3L 3L-M 3L-L 3L-LL 3L-3L")},
+ g244:{c:"244",col:[],sz:B("SS S M L LL 3L")},g261:{c:"261",col:[],sz:[]},g258:{c:"258",col:[],sz:B("S M L LL 3L")},
+ g120:{c:"120",col:[],sz:B("M L LL 3L 4L")},g128:{c:"128",col:["ブラック","ライトグレー","ホワイト"],sz:B("M L LL 3L 4L")},
+ g259:{c:"259",col:[],sz:B("M L LL 3L 4L")},g260:{c:"260",col:[],sz:B("M L LL 3L 4L")},g245:{c:"245",col:[],sz:B("M L LL 3L 4L")},
+ g208:{c:"208",col:["ボルドー","ブラック","チャコール","インディゴ"],sz:B("S M L LL TLL")},
+ g257:{c:"257",col:["ブラック","ハニーブラウン","ヌードベージュ"],sz:B("S M L LL TLL")},
+ g246:{c:"246",col:[],sz:[]},g124:{c:"124",col:[],sz:B("M L LL")},g248:{c:"248",col:[],sz:[]},
+ g524:{c:"524",col:[],sz:B("M L LL O")},g517:{c:"517",col:["ブラック杢","ネイビー杢"],sz:B("S M1 M2 M3 L LL1 LL2")},
+ g520:{c:"520",col:[],sz:B("M L LL O")},g530:{c:"530",col:[],sz:B("S M L LL")},g523:{c:"523",col:[],sz:B("M L LL O")},
+ g518:{c:"518",col:["グレージュ","グリーン","レッド"],sz:[]},g519:{c:"519",col:["グレージュ","グリーン","レッド"],sz:[]},
+ g540:{c:"540",col:[],sz:[]},g513:{c:"513",col:["ブラック","ネイビー","ピンク"],sz:[]},
+ g182:{c:"182",col:["ブラック","ライトグレー","パープル","ターコイズ"],sz:B("M L LL")},
+ g282:{c:"282",col:["ブラック","ライトグレー","パープル","ターコイズ"],sz:B("S M L LL")},
+ g183:{c:"183",col:["ブラック","ブルー","グリーン","ピンク"],sz:B("70B 75B 70C 75C 80C 85C 70D 75D 80D 85D 70E 75E 80E 70F 75F")},
+ g263:{c:"263",col:[],sz:B("S M L LL 3L")}
+});
+Object.assign(GMCAT,{"214":"LALA Grant Fantasy","216":"LALA Grant Fantasy","215":"LALA Grant Fairy","117":"BiBi Grant","118":"BiBi Grant","122":"BiBi Grant","129":"BiBi Grant","253":"BiBi Grant","127":"BiBi Grant","244":"BiBi Grant","261":"BiBi Grant","258":"BiBi Grant","120":"BiBi Grant","128":"BiBi Grant","259":"BiBi Grant","260":"BiBi Grant","245":"BiBi Grant","208":"LALA Grant Drainage","257":"LALA Grant Drainage","246":"LALA Grant Drainage","124":"LALA Grant Drainage","248":"LALA Grant Drainage","524":"RE.B5","517":"RE.B5","520":"RE.B5","530":"RE.B5","523":"RE.B5","518":"RE.B5","519":"RE.B5","540":"RE.B5","513":"RE.B5","182":"X-mag MICHAEL","282":"X-mag MICHAEL","183":"X-mag GABRIEL","263":"LALA SPORTS GRANT TAI-KAN"});
+Object.assign(P,{
+ g606:{s:"Grant WELL-BEING",n:"プラサード スリーピング（電位掛け布団）",fix:["眠り","疲れ"],f:[],med:1,act:"寝具として使う電位治療器。1日15分（または30分）の短時間で使う。効果の表記は添付文書どおりに伝える。",say:"寝具として使う治療器です。効果は添付文書の表記どおりにお伝えします"},
+ g607:{s:"Grant WELL-BEING",n:"プラサード スリーピング ポータブル（カバー付き）",fix:["眠り","持ち運び"],f:[],med:1,act:"持ち運べるタイプの電位治療器。カバー付き。効果の表記は添付文書どおりに伝える。",say:"持ち運べるタイプの治療器です"},
+ g9553:{s:"ルームウエア",n:"テラミールームウエア 腹巻きロングパンツ（男女兼用）",fix:["お腹の冷え","部屋着"],f:["ho"],act:"腹巻きつきのロングパンツ。テラミー（鉱石）の再生繊維入り。限定品。",say:"お腹まで温かく包む部屋着のパンツです"}
+});
+Object.assign(GM,{g606:{c:"606",col:[],sz:[]},g607:{c:"607",col:[],sz:[]},g9553:{c:"9553",col:["ベージュ","ライトグレー"],sz:["S","M","L"]}});
+Object.assign(GMCAT,{"606":"ｸﾞﾗﾝﾄｳｪﾙﾋﾞｰｲﾝｸﾞ","607":"ｸﾞﾗﾝﾄｳｪﾙﾋﾞｰｲﾝｸﾞ","9553":"SPOT"});
+/* ---------- 化粧品・健康食品・そのほか（G-MAX全商品） ---------- */
+Object.assign(P,{"g121": {"s": "BiBi", "n": "レディースビビパンプ 7分袖", "fix": ["衣類"], "f": [], "act": "衣類。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "レディースビビパンプ 7分袖です", "extra": 1}, "g249": {"s": "LALA Drainage", "n": "プレミアムビューティーバンテージ（1本入り）", "fix": ["部分ケア"], "f": [], "act": "部分ケア。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "プレミアムビューティーバンテージ（1本入り）です", "extra": 1}, "g605": {"s": "LALA お手入れ", "n": "ララクリーン フィノ（洗濯用石けん）", "fix": ["お手入れ"], "f": [], "act": "お手入れ。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "ララクリーン フィノ（洗濯用石けん）です", "extra": 1}, "g305": {"s": "Cordial（健康食品）", "n": "H.G.H グラミノ", "fix": ["健康食品"], "f": [], "act": "健康食品。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "H.G.H グラミノです", "extra": 1}, "g317": {"s": "Cordial（健康食品）", "n": "ポリマシードレスベラ", "fix": ["健康食品"], "f": [], "act": "健康食品。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "ポリマシードレスベラです", "extra": 1}, "g331": {"s": "Cordial（健康食品）", "n": "パワータウ100", "fix": ["健康食品"], "f": [], "act": "健康食品。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "パワータウ100です", "extra": 1}, "g332": {"s": "Cordial（健康食品）", "n": "EZブレイク（イージーブレイク）", "fix": ["健康食品"], "f": [], "act": "健康食品。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "EZブレイク（イージーブレイク）です", "extra": 1}, "g334": {"s": "Cordial（健康食品）", "n": "美容専科 シルクグラミノ", "fix": ["健康食品"], "f": [], "act": "健康食品。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "美容専科 シルクグラミノです", "extra": 1}, "g341": {"s": "Cordial（健康食品）", "n": "NMN358", "fix": ["健康食品"], "f": [], "act": "健康食品。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "NMN358です", "extra": 1}, "g333": {"s": "Grangelina（スキンケア・美顔器）", "n": "プレミアムUV100", "fix": ["スキンケア"], "f": [], "act": "スキンケア。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "プレミアムUV100です", "extra": 1}, "g355": {"s": "Grangelina（スキンケア・美顔器）", "n": "エレクトロニックカレントパック", "fix": ["スキンケア"], "f": [], "act": "スキンケア。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "エレクトロニックカレントパックです", "extra": 1}, "g356": {"s": "Grangelina（スキンケア・美顔器）", "n": "テラミースプラッシュパルス2700", "fix": ["美顔器"], "f": [], "act": "美顔器。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "テラミースプラッシュパルス2700です", "extra": 1}, "g357": {"s": "Grangelina（スキンケア・美顔器）", "n": "ザ ハッピープリンスジェル", "fix": ["スキンケア"], "f": [], "act": "スキンケア。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "ザ ハッピープリンスジェルです", "extra": 1}, "g358": {"s": "Grangelina（スキンケア・美顔器）", "n": "パールディフェンダー", "fix": ["スキンケア"], "f": [], "act": "スキンケア。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "パールディフェンダーです", "extra": 1}, "g361": {"s": "Grangelina（スキンケア・美顔器）", "n": "ザ・ボディスタイリング（シャワーヘッド）", "fix": ["バス用品"], "f": [], "act": "バス用品。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "ザ・ボディスタイリング（シャワーヘッド）です", "extra": 1}, "g362": {"s": "Grangelina（スキンケア・美顔器）", "n": "ザ ワイルドホース プラセンタ 130g", "fix": ["スキンケア"], "f": [], "act": "スキンケア。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "ザ ワイルドホース プラセンタ 130gです", "extra": 1}, "g363": {"s": "Grangelina（スキンケア・美顔器）", "n": "モナオール（保湿クリーム）", "fix": ["スキンケア"], "f": [], "act": "スキンケア。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "モナオール（保湿クリーム）です", "extra": 1}, "g364": {"s": "Grangelina（スキンケア・美顔器）", "n": "ザ・キューティフル（シート式カラーエクステンション）", "fix": ["ヘア"], "f": [], "act": "ヘア。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "ザ・キューティフル（シート式カラーエクステンション）です", "extra": 1}, "g365": {"s": "Grangelina（スキンケア・美顔器）", "n": "モナオールL300", "fix": ["スキンケア"], "f": [], "act": "スキンケア。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "モナオールL300です", "extra": 1}, "g366": {"s": "Grangelina（スキンケア・美顔器）", "n": "モナオール ボディソープ", "fix": ["バス用品"], "f": [], "act": "バス用品。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "モナオール ボディソープです", "extra": 1}, "g367": {"s": "Grangelina（スキンケア・美顔器）", "n": "プレミアムテラキューティフル（カラーエクステンション）", "fix": ["ヘア"], "f": [], "act": "ヘア。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "プレミアムテラキューティフル（カラーエクステンション）です", "extra": 1}, "g9116": {"s": "限定品（SPOT）", "n": "限定レディースパンプ半袖", "fix": ["衣類"], "f": [], "act": "衣類。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "限定レディースパンプ半袖です", "extra": 1}, "g9119": {"s": "限定品（SPOT）", "n": "限定メンズパンプ半袖", "fix": ["衣類"], "f": [], "act": "衣類。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "限定メンズパンプ半袖です", "extra": 1}, "g9208": {"s": "限定品（SPOT）", "n": "限定ドレナージュ・タイツ", "fix": ["衣類"], "f": [], "act": "衣類。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "限定ドレナージュ・タイツです", "extra": 1}, "g9406": {"s": "限定品（SPOT）", "n": "限定ヒカルコトリートメント1L（詰め替え用）", "fix": ["ヘア"], "f": [], "act": "ヘア。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "限定ヒカルコトリートメント1L（詰め替え用）です", "extra": 1}, "g9720": {"s": "限定品（SPOT）", "n": "限定リペア（入浴剤）", "fix": ["バス用品"], "f": [], "act": "バス用品。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "限定リペア（入浴剤）です", "extra": 1}, "g9531": {"s": "限定品（SPOT）", "n": "限定テラミータオル リラックスセット②", "fix": ["タオル"], "f": [], "act": "タオル。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "限定テラミータオル リラックスセット②です", "extra": 1}, "g9532": {"s": "限定品（SPOT）", "n": "限定テラミータオル バスタイムセット", "fix": ["タオル"], "f": [], "act": "タオル。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "限定テラミータオル バスタイムセットです", "extra": 1}, "g401": {"s": "Leafy（ヘアケア）", "n": "スカルプ＆ヘアシステム プラスエッセンス", "fix": ["ヘア"], "f": [], "act": "ヘア。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "スカルプ＆ヘアシステム プラスエッセンスです", "extra": 1}, "g422": {"s": "Leafy（ヘアケア）", "n": "スカルプ＆ヘアシステム トリートメント", "fix": ["ヘア"], "f": [], "act": "ヘア。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "スカルプ＆ヘアシステム トリートメントです", "extra": 1}, "g531": {"s": "ホルミー（Re.B5）", "n": "ホルミーサポートショーツ 10分丈", "fix": ["冷え", "下半身"], "f": ["ho"], "act": "足首近くまで包む10分丈の北投石ショーツ。", "say": "ホルミーサポートショーツ 10分丈です", "extra": 1}, "g536": {"s": "ホルミー（Re.B5）", "n": "ホルミーバブルパック", "fix": ["スキンケア"], "f": [], "act": "スキンケア。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "ホルミーバブルパックです", "extra": 1}, "g539": {"s": "ホルミー（Re.B5）", "n": "テラミークリーム", "fix": ["スキンケア"], "f": [], "act": "スキンケア。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "テラミークリームです", "extra": 1}, "g507": {"s": "ホルミー（Re.B5）", "n": "ホルミーマスク", "fix": ["マスク"], "f": [], "act": "マスク。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "ホルミーマスクです", "extra": 1}, "g532": {"s": "ホルミー（Re.B5）", "n": "レースマスク（洗えるフィルタータイプ）", "fix": ["マスク"], "f": [], "act": "マスク。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "レースマスク（洗えるフィルタータイプ）です", "extra": 1}, "g533": {"s": "ホルミー（Re.B5）", "n": "カットフィルター10枚セット（洗えるタイプ）", "fix": ["マスク"], "f": [], "act": "マスク。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "カットフィルター10枚セット（洗えるタイプ）です", "extra": 1}, "g534": {"s": "ホルミー（Re.B5）", "n": "レースマスク（使い捨てフィルタータイプ）", "fix": ["マスク"], "f": [], "act": "マスク。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "レースマスク（使い捨てフィルタータイプ）です", "extra": 1}, "g535": {"s": "ホルミー（Re.B5）", "n": "カットフィルター60枚セット（使い捨てタイプ）", "fix": ["マスク"], "f": [], "act": "マスク。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "カットフィルター60枚セット（使い捨てタイプ）です", "extra": 1}, "g714": {"s": "Grant SCIENCE WATER", "n": "シャイン（美容乳液）", "fix": ["スキンケア"], "f": [], "act": "スキンケア。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "シャイン（美容乳液）です", "extra": 1}, "g715": {"s": "Grant SCIENCE WATER", "n": "リセット（洗い流すパック）", "fix": ["スキンケア"], "f": [], "act": "スキンケア。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "リセット（洗い流すパック）です", "extra": 1}, "g716": {"s": "Grant SCIENCE WATER", "n": "EV.No.1（複合機能水）", "fix": ["スキンケア"], "f": [], "act": "スキンケア。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "EV.No.1（複合機能水）です", "extra": 1}, "g717": {"s": "Grant SCIENCE WATER", "n": "EV.No.3（複合機能水）", "fix": ["スキンケア"], "f": [], "act": "スキンケア。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "EV.No.3（複合機能水）です", "extra": 1}, "g731": {"s": "Grant SCIENCE WATER", "n": "クレンジング（全身クレンジング）200ml", "fix": ["スキンケア"], "f": [], "act": "スキンケア。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "クレンジング（全身クレンジング）200mlです", "extra": 1}, "g732": {"s": "Grant SCIENCE WATER", "n": "ウォッシュ（全身洗浄料）200ml", "fix": ["スキンケア"], "f": [], "act": "スキンケア。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "ウォッシュ（全身洗浄料）200mlです", "extra": 1}, "g733": {"s": "Grant SCIENCE WATER", "n": "モイスト（美容化粧水）200ml", "fix": ["スキンケア"], "f": [], "act": "スキンケア。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "モイスト（美容化粧水）200mlです", "extra": 1}, "g739": {"s": "Grant SCIENCE WATER", "n": "サイエンスウォーター（ポンプ付）", "fix": ["スキンケア"], "f": [], "act": "スキンケア。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "サイエンスウォーター（ポンプ付）です", "extra": 1}, "g721": {"s": "DR LALA Grant", "n": "DR LALA 化粧水", "fix": ["スキンケア"], "f": [], "act": "スキンケア。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "DR LALA 化粧水です", "extra": 1}, "g722": {"s": "DR LALA Grant", "n": "DR LALA 美容液", "fix": ["スキンケア"], "f": [], "act": "スキンケア。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "DR LALA 美容液です", "extra": 1}, "g727": {"s": "DR LALA Grant", "n": "DR LALA 洗顔料（エアレスボトル2本入り）", "fix": ["スキンケア"], "f": [], "act": "スキンケア。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "DR LALA 洗顔料（エアレスボトル2本入り）です", "extra": 1}, "g728": {"s": "DR LALA Grant", "n": "DR LALA ジェル（70ml）", "fix": ["スキンケア"], "f": [], "act": "スキンケア。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "DR LALA ジェル（70ml）です", "extra": 1}, "g450": {"s": "Bible（スキンケア）", "n": "バイブル グロスファクター ハーブエッセンス（美容液）", "fix": ["スキンケア"], "f": [], "act": "スキンケア。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "バイブル グロスファクター ハーブエッセンス（美容液）です", "extra": 1}, "g452": {"s": "Bible（スキンケア）", "n": "バイブル グロスファクター プレミアムハーブエッセンス（美容液）", "fix": ["スキンケア"], "f": [], "act": "スキンケア。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "バイブル グロスファクター プレミアムハーブエッセンス（美容液）です", "extra": 1}, "g453": {"s": "Bible（スキンケア）", "n": "バイブル グロスファクター プレミアムハーブウォータースプレー（化粧水）", "fix": ["スキンケア"], "f": [], "act": "スキンケア。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "バイブル グロスファクター プレミアムハーブウォータースプレー（化粧水）です", "extra": 1}, "g651": {"s": "Puravia（浄水器）", "n": "グラント還元水プラヴィア", "fix": ["浄水器"], "f": [], "act": "浄水器。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "グラント還元水プラヴィアです", "extra": 1}, "g460": {"s": "HARITHOTH（メイク）", "n": "HT コルセットファンデーション", "fix": ["メイク"], "f": [], "act": "メイク。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "HT コルセットファンデーションです", "extra": 1}, "g461": {"s": "HARITHOTH（メイク）", "n": "HT ハリセラム（美容液）", "fix": ["スキンケア"], "f": [], "act": "スキンケア。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "HT ハリセラム（美容液）です", "extra": 1}, "g462": {"s": "HARITHOTH（メイク）", "n": "コルセットファンデーション 替えパフ", "fix": ["メイク"], "f": [], "act": "メイク。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "コルセットファンデーション 替えパフです", "extra": 1}, "g404": {"s": "HIKARUKO（ヘアケア）", "n": "ヒカルコ シャンプー", "fix": ["ヘア"], "f": [], "act": "ヘア。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "ヒカルコ シャンプーです", "extra": 1}, "g405": {"s": "HIKARUKO（ヘアケア）", "n": "ヒカルコ トリートメント", "fix": ["ヘア"], "f": [], "act": "ヘア。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "ヒカルコ トリートメントです", "extra": 1}, "gY204": {"s": "LALA 付属品", "n": "延長グリッパー（Tバックボディスーツ用）", "fix": ["付属品"], "f": [], "act": "付属品。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "延長グリッパー（Tバックボディスーツ用）です", "extra": 1}, "gY205": {"s": "LALA 付属品", "n": "延長グリッパー（ララドール・袖付ボディスーツ用）", "fix": ["付属品"], "f": [], "act": "付属品。詳しい使い方・成分は商品の説明書とカタログで確認する。", "say": "延長グリッパー（ララドール・袖付ボディスーツ用）です", "extra": 1}});
+Object.assign(GM,{"g121": {"c": "121", "col": [], "sz": ["S", "M", "L", "LL"]}, "g249": {"c": "249", "col": [], "sz": []}, "g605": {"c": "605", "col": [], "sz": []}, "g305": {"c": "305", "col": [], "sz": []}, "g317": {"c": "317", "col": [], "sz": []}, "g331": {"c": "331", "col": [], "sz": []}, "g332": {"c": "332", "col": [], "sz": []}, "g334": {"c": "334", "col": [], "sz": []}, "g341": {"c": "341", "col": [], "sz": []}, "g333": {"c": "333", "col": [], "sz": []}, "g355": {"c": "355", "col": [], "sz": []}, "g356": {"c": "356", "col": [], "sz": []}, "g357": {"c": "357", "col": [], "sz": []}, "g358": {"c": "358", "col": [], "sz": []}, "g361": {"c": "361", "col": [], "sz": []}, "g362": {"c": "362", "col": [], "sz": []}, "g363": {"c": "363", "col": [], "sz": ["1個", "3個セット"]}, "g364": {"c": "364", "col": ["8色セット(ALL)", "チョコブラウン", "ハニーブラウン", "ジンジャーピール", "キャラメルブラウン", "オレンジピール", "マロンブラウン", "ローズゴールド", "シャンパンゴールド"], "sz": []}, "g365": {"c": "365", "col": [], "sz": []}, "g366": {"c": "366", "col": [], "sz": []}, "g367": {"c": "367", "col": ["8色", "チョコブラウン", "ハニーブラウン", "ジンジャーピール", "キャラメルブラウン", "オレンジピール", "マロンブラウン", "ローズゴールド", "シャンパンゴールド"], "sz": []}, "g9116": {"c": "9116", "col": [], "sz": []}, "g9119": {"c": "9119", "col": [], "sz": ["L", "LL", "3L", "4L"]}, "g9208": {"c": "9208", "col": ["ブラウン", "グリーン", "ターコイズ", "トマト"], "sz": ["S", "M", "L", "LL"]}, "g9406": {"c": "9406", "col": [], "sz": []}, "g9720": {"c": "9720", "col": [], "sz": []}, "g9531": {"c": "9531", "col": ["ネイビー", "ピンク"], "sz": []}, "g9532": {"c": "9532", "col": ["ネイビー", "ピンク"], "sz": []}, "g401": {"c": "401", "col": [], "sz": []}, "g422": {"c": "422", "col": [], "sz": []}, "g531": {"c": "531", "col": [], "sz": ["S", "M", "L", "LL"]}, "g536": {"c": "536", "col": [], "sz": []}, "g539": {"c": "539", "col": [], "sz": []}, "g507": {"c": "507", "col": [], "sz": []}, "g532": {"c": "532", "col": [], "sz": []}, "g533": {"c": "533", "col": [], "sz": []}, "g534": {"c": "534", "col": [], "sz": []}, "g535": {"c": "535", "col": [], "sz": []}, "g714": {"c": "714", "col": [], "sz": []}, "g715": {"c": "715", "col": [], "sz": []}, "g716": {"c": "716", "col": [], "sz": []}, "g717": {"c": "717", "col": [], "sz": []}, "g731": {"c": "731", "col": [], "sz": []}, "g732": {"c": "732", "col": [], "sz": []}, "g733": {"c": "733", "col": [], "sz": []}, "g739": {"c": "739", "col": [], "sz": []}, "g721": {"c": "721", "col": [], "sz": []}, "g722": {"c": "722", "col": [], "sz": []}, "g727": {"c": "727", "col": [], "sz": []}, "g728": {"c": "728", "col": [], "sz": []}, "g450": {"c": "450", "col": [], "sz": []}, "g452": {"c": "452", "col": [], "sz": ["30ml", "200ml", "500ml"]}, "g453": {"c": "453", "col": [], "sz": []}, "g651": {"c": "651", "col": [], "sz": []}, "g460": {"c": "460", "col": [], "sz": []}, "g461": {"c": "461", "col": [], "sz": []}, "g462": {"c": "462", "col": [], "sz": ["1", "12"]}, "g404": {"c": "404", "col": [], "sz": []}, "g405": {"c": "405", "col": [], "sz": []}, "gY204": {"c": "Y204", "col": ["ブラック", "キューティミント", "エンジェル"], "sz": []}, "gY205": {"c": "Y205", "col": ["ブラック", "カフェオーレ", "LOVE", "ラピス", "モカ", "シェル"], "sz": []}});
+Object.assign(GMCAT,{"121": "BiBi Grant", "249": "LALA Grant Drainage", "605": "LALA Grant", "305": "Cordial Grant", "317": "Cordial Grant", "331": "Cordial Grant", "332": "Cordial Grant", "334": "Cordial Grant", "341": "Cordial Grant", "333": "Grangelina", "355": "Grangelina", "356": "Grangelina", "357": "Grangelina", "358": "Grangelina", "361": "Grangelina", "362": "Grangelina", "363": "Grangelina", "364": "Grangelina", "365": "Grangelina", "366": "Grangelina", "367": "Grangelina", "9116": "SPOT", "9119": "SPOT", "9208": "SPOT", "9406": "SPOT", "9720": "SPOT", "9531": "SPOT", "9532": "SPOT", "401": "Leafy", "422": "Leafy Kyu-ju", "531": "RE.B5", "536": "RE.B5", "539": "RE.B5", "507": "RE.B5", "532": "RE.B5", "533": "RE.B5", "534": "RE.B5", "535": "RE.B5", "714": "Grant SCIENCE WATER", "715": "Grant SCIENCE WATER", "716": "Grant SCIENCE WATER", "717": "Grant SCIENCE WATER", "731": "Grant SCIENCE WATER", "732": "Grant SCIENCE WATER", "733": "Grant SCIENCE WATER", "739": "Grant SCIENCE WATER", "721": "DR LALA Grant", "722": "DR LALA Grant", "727": "DR LALA Grant", "728": "DR LALA Grant", "450": "Bible", "452": "Bible", "453": "Bible", "651": "Puravia", "460": "HARITHOTH", "461": "HARITHOTH", "462": "HARITHOTH", "404": "HIKARUKO", "405": "HIKARUKO", "Y204": "用品等", "Y205": "用品等"});
+const COLIMG={"101": {"ミスティブラック": "c101_0.jpg", "LOVE": "c101_1.jpg"}, "201": {"ミスティブラック": "c201_0.jpg", "LOVE": "c201_1.jpg"}, "104": {"ブルームーン": "c104_0.jpg", "ブラック": "c104_1.jpg", "チェリー": "c104_2.jpg", "ラピス": "c104_3.jpg", "シェル": "c104_4.jpg", "モカ": "c104_5.jpg"}, "109": {"ブルームーン": "c109_0.jpg", "ブラック": "c109_1.jpg", "チェリー": "c109_2.jpg", "ラピス": "c109_3.jpg", "アプリコット": "c109_4.jpg", "シェル": "c109_5.jpg", "モカ": "c109_6.jpg"}, "202": {"ブルームーン": "c202_0.jpg", "ホワイト×ブラック": "c202_1.jpg", "ブラック": "c202_2.jpg", "チェリー": "c202_3.jpg", "ラピス(4分丈)": "c202_4.jpg", "シェル(4分丈)": "c202_5.jpg", "モカ(4分丈)": "c202_6.jpg"}, "102": {"ブルームーン": "c102_0.jpg", "ホワイト×ブラック": "c102_1.jpg"}, "161": {"ピンク": "c161_0.jpg", "グレー": "c161_1.jpg", "カーキ": "c161_2.jpg", "ブルー": "c161_3.jpg"}, "262": {"ピンク": "c262_0.jpg", "グレー": "c262_1.jpg", "カーキ": "c262_2.jpg", "ブルー": "c262_3.jpg"}, "181": {"ターコイズ": "c181_0.jpg", "ブラック": "c181_1.jpg", "パープル": "c181_2.jpg"}, "281": {"ターコイズ": "c281_0.jpg", "ブラック": "c281_1.jpg", "パープル": "c281_2.jpg", "ライトグレー": "c281_3.jpg"}, "184": {"アプリコット": "c184_0.jpg", "バイオレット": "c184_1.jpg"}, "185": {"ブラック": "c185_0.jpg", "ライトグレー": "c185_1.jpg"}, "516": {"ブラック杢": "c516_0.jpg", "ネイビー杢": "c516_1.jpg"}, "214": {"ブルームーン": "c214_0.jpg", "ブラック": "c214_1.jpg", "LOVE": "c214_2.jpg", "チェリー": "c214_3.jpg", "ラピス": "c214_4.jpg", "アプリコット": "c214_5.jpg", "シェル": "c214_6.jpg", "モカ": "c214_7.jpg"}, "215": {"ブルームーン": "c215_0.jpg", "ブラック": "c215_1.jpg", "LOVE": "c215_2.jpg", "チェリー": "c215_3.jpg", "ラピス": "c215_4.jpg", "アプリコット": "c215_5.jpg", "シェル": "c215_6.jpg", "モカ": "c215_7.jpg"}, "216": {"ローズ": "c216_0.jpg", "ブラック": "c216_1.jpg"}, "128": {"ブラック": "c128_0.jpg", "ライトグレー": "c128_1.jpg", "ホワイト": "c128_2.jpg"}, "208": {"ブラック": "c208_0.jpg", "インディゴ": "c208_1.jpg", "チャコール": "c208_2.jpg", "ボルドー": "c208_3.jpg"}, "257": {"ヌードベージュ": "c257_0.jpg", "ハニーブラウン": "c257_1.jpg", "ブラック": "c257_2.jpg"}, "517": {"ブラック杢": "c517_0.jpg", "ネイビー杢": "c517_1.jpg"}, "182": {"ターコイズ": "c182_0.jpg", "ブラック": "c182_1.jpg", "パープル": "c182_2.jpg", "ライトグレー": "c182_3.jpg"}, "282": {"ターコイズ": "c282_0.jpg", "ブラック": "c282_1.jpg", "パープル": "c282_2.jpg", "ライトグレー": "c282_3.jpg"}, "183": {"ブラック": "c183_0.jpg", "ピンク": "c183_1.jpg", "グリーン": "c183_2.jpg", "ブルー": "c183_3.jpg"}, "9208": {"ブラウン": "c9208_0.jpg", "トマト": "c9208_1.jpg", "グリーン": "c9208_2.jpg", "ターコイズ": "c9208_3.jpg"}};
+const IMG=id=>id.startsWith("g")?`img/${id}.jpg`:`img/${id}.jpg`;
+
+function orderText(r){return (r.items||[]).map(i=>`${i.gm||GM[i.id]?.c||""} ${i.name}${i.color?" / "+i.color:""}${i.size?" / "+i.size:""} ×${i.qty||1}`).join("\n")}
+function buildBookmarklet(items){
+  const json=JSON.stringify(items);
+  const src=`(function(){
+var LS='__gn2',ITEMS=${json};
+var saved=null;try{saved=JSON.parse(localStorage.getItem(LS)||'null');}catch(e){}
+var existing=document.getElementById('__gn');
+if(existing){existing.remove();return;}
+var i=(saved&&saved.idx!=null)?saved.idx:0;
+var D=ITEMS;
+function save(){try{localStorage.setItem(LS,JSON.stringify({idx:i,ts:Date.now()}));}catch(e){}}
+save();
+var p=document.createElement('div');p.id='__gn';
+p.style.cssText='position:fixed;bottom:16px;right:16px;z-index:2147483647;width:288px;background:#0f172a;color:#e2e8f0;border-radius:18px;padding:16px;box-shadow:0 16px 48px rgba(0,0,0,.65);font:14px/1.5 system-ui,-apple-system,sans-serif;user-select:none';
+function mk(t,s){var e=document.createElement(t);if(s)e.style.cssText=s;return e;}
+function btn(txt,s,cb){var e=mk('button',s);e.type='button';e.textContent=txt;e.onclick=cb;return e;}
+function fillSearch(c){
+  var qq=['input[name*=hinban]','input[name*=itemcd]','input[name*=syouhin]','input[name*=shouhin]','input[name*=code]','input[name*=keyword]','input[name*=search]','input[name*=item]','input[placeholder*="\\u5546\\u54c1"]','input[placeholder*="\\u30b3\\u30fc\\u30c9"]','input[placeholder*="\\u691c\\u7d22"]','input[type=search]'];
+  for(var q of qq){var el=document.querySelector(q);if(el&&el.offsetParent!==null&&!el.disabled&&!el.readOnly){el.focus();el.value=c;el.dispatchEvent(new InputEvent('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));return true;}}
+  return false;
+}
+function fillSelect(text){
+  if(!text)return 0;
+  var matched=0,sels=Array.from(document.querySelectorAll('select'));
+  for(var sel of sels){
+    if(sel.name&&/pass|mail|pref|month|year|day|addr|bank|branch/i.test(sel.name))continue;
+    var opts=Array.from(sel.options);
+    for(var o of opts){if(o.text.trim()===text||o.value===text||(text.length>1&&o.text.includes(text))){sel.value=o.value;sel.dispatchEvent(new Event('change',{bubbles:true}));matched++;break;}}
+  }
+  return matched;
+}
+function fillQty(qty){
+  var els=document.querySelectorAll('input[name*=qty],input[name*=suryo],input[name*=quantity],input[name*=num],input[type=number]');
+  for(var el of els){if(el.offsetParent!==null&&!el.disabled){el.value=String(qty);el.dispatchEvent(new Event('change',{bubbles:true}));return true;}}
+  return false;
+}
+function autoFill(it){
+  var msgs=[];
+  if(fillSearch(it.c))msgs.push('\\u2713 \\u691c\\u7d22: '+it.c);
+  if(it.col&&fillSelect(it.col)>0)msgs.push('\\u2713 \\u30ab\\u30e9\\u30fc: '+it.col);
+  if(it.sz&&fillSelect(it.sz)>0)msgs.push('\\u2713 \\u30b5\\u30a4\\u30ba: '+it.sz);
+  if(it.qty>1&&fillQty(it.qty))msgs.push('\\u2713 \\u6570\\u91cf: '+it.qty);
+  return msgs;
+}
+function render(){
+  while(p.firstChild)p.removeChild(p.firstChild);
+  if(i>=D.length){
+    var w=mk('div','text-align:center;padding:16px 8px');
+    var ck=mk('div','font-size:44px');ck.textContent='\\u2705';w.appendChild(ck);
+    var done=mk('b','display:block;font-size:16px;margin:12px 0');done.textContent='\\u5168\\u5546\\u54c1\\u30ab\\u30fc\\u30c8\\u5b8c\\u4e86\\uff01';w.appendChild(done);
+    w.appendChild(btn('\\u30ea\\u30bb\\u30c3\\u30c8','width:100%;background:#1e293b;color:#94a3b8;border:none;border-radius:8px;padding:8px;cursor:pointer;font-size:12px;margin-bottom:6px',function(){i=0;save();render();}));
+    w.appendChild(btn('\\u9589\\u3058\\u308b','width:100%;background:#0071e3;color:#fff;border:none;border-radius:10px;padding:10px;cursor:pointer;font-size:14px;font-weight:700',function(){p.remove();try{localStorage.removeItem(LS);}catch(e){}}));
+    p.appendChild(w);return;
+  }
+  var it=D[i],msgs=autoFill(it);
+  var hdr=mk('div','display:flex;justify-content:space-between;align-items:center;margin-bottom:8px');
+  var lbl=mk('span','font-size:11px;color:#64748b');lbl.textContent='\\u51e6\\u65b9\\u30ca\\u30d3 '+(i+1)+'/'+D.length+' \\u2014 \\u9032\\u6357\\u306f\\u30da\\u30fc\\u30b8\\u8fba\\u308a\\u3067\\u3082\\u4fdd\\u6301';
+  hdr.appendChild(lbl);
+  hdr.appendChild(btn('\\u00d7','background:none;border:none;color:#64748b;font-size:24px;cursor:pointer;padding:0;line-height:1',function(){p.remove();}));
+  p.appendChild(hdr);
+  var nm=mk('b','display:block;font-size:16px;margin-bottom:10px');nm.textContent=it.n;p.appendChild(nm);
+  var box=mk('div','background:#1e293b;border-radius:10px;padding:10px;margin-bottom:8px;line-height:2.2');
+  var cl=mk('span','font-size:11px;color:#64748b');cl.textContent='\\u5546\\u54c1\\u30b3\\u30fc\\u30c9 ';box.appendChild(cl);
+  var cd=mk('span','font-size:24px;font-weight:900;color:#38bdf8;letter-spacing:.12em');cd.textContent=it.c;box.appendChild(cd);
+  if(it.col){var br1=document.createElement('br');box.appendChild(br1);var lc=mk('span','font-size:11px;color:#64748b');lc.textContent='\\u30ab\\u30e9\\u30fc ';box.appendChild(lc);var cv=mk('b');cv.textContent=it.col;box.appendChild(cv);}
+  if(it.sz){var br2=document.createElement('br');box.appendChild(br2);var ls=mk('span','font-size:11px;color:#64748b');ls.textContent='\\u30b5\\u30a4\\u30ba ';box.appendChild(ls);var sv=mk('b');sv.textContent=it.sz;box.appendChild(sv);}
+  var br3=document.createElement('br');box.appendChild(br3);var lq=mk('span','font-size:11px;color:#64748b');lq.textContent='\\u6570\\u91cf ';box.appendChild(lq);var qv=mk('b');qv.textContent=it.qty;box.appendChild(qv);
+  p.appendChild(box);
+  if(msgs.length){var ml=mk('div','font-size:11px;color:#4ade80;margin-bottom:8px;line-height:1.8');ml.textContent=msgs.join('  ');p.appendChild(ml);}
+  var row=mk('div','display:flex;gap:8px');
+  if(i>0)row.appendChild(btn('\\u25c0','flex:1;background:#1e293b;color:#e2e8f0;border:none;border-radius:10px;padding:10px;cursor:pointer;font-size:15px',function(){i--;save();render();}));
+  row.appendChild(btn('\\u30ab\\u30fc\\u30c8\\u306b\\u5165\\u308c\\u305f \\u2192 \\u6b21\\u3078','flex:2;background:#0071e3;color:#fff;border:none;border-radius:10px;padding:10px;cursor:pointer;font-weight:700;font-size:13px',function(){i++;save();render();}));
+  p.appendChild(row);
+}
+document.body.appendChild(p);render();
+})()`;
+  return 'javascript:'+encodeURIComponent(src);
+}
+function showGmaxAuto(r){
+  const items=(r.items||[]).map(i=>({c:String(i.gm||GM[i.id]?.c||''),n:String(i.name||''),col:String(i.color||''),sz:String(i.size||''),qty:Number(i.qty)||1}));
+  const bm=buildBookmarklet(items);
+  $("sheet-t").textContent="G-MAX 自動入力";
+  $("sheet-b").innerHTML=`<p class="s-lead" style="margin-bottom:12px">お客様がG-MAXで商品選択するとき（登録フロー⑰番）にこのツールを使うと、商品コード・カラー・サイズが自動で入力されます。</p>
+<div class="s-sec">
+  <h4>事前準備（1回だけ）</h4>
+  <ol style="margin:0;padding-left:1.2em;line-height:2.2;font-size:14px">
+    <li>下の「<b>ブックマーク用ボタン</b>」を<b>PC</b>のブラウザのブックマークバーにドラッグ</li>
+    <li>次回からはドラッグ不要（同じお客様でも新しいお客様でも使える）</li>
+  </ol>
+</div>
+<div class="s-sec">
+  <h4>G-MAX登録時の使い方（お客様と一緒に⑰番の画面になったら）</h4>
+  <ol style="margin:0;padding-left:1.2em;line-height:2.2;font-size:14px">
+    <li>ブックマークバーの「<b>処方ナビ</b>」をクリック</li>
+    <li>右下にパネルが出て、<b>商品コードを自動入力</b>・カラー/サイズも選択</li>
+    <li>「カートに入れた → 次へ」を押すと次の商品に進む</li>
+    <li><b>ページが変わっても進捗は保持</b>されるので再度クリックすれば続きから</li>
+  </ol>
+</div>
+<div class="s-sec" style="text-align:center;padding:16px">
+  <h4>ブックマーク用ボタン（PCのブラウザにドラッグ）</h4>
+  <a id="bm-link" href="${esc(bm)}" style="display:inline-block;background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:11px 28px;font-weight:700;text-decoration:none;font-size:15px;box-shadow:0 2px 8px rgba(226,71,122,.3);margin:10px 0">処方ナビ 自動入力</a>
+  <p style="font-size:12px;color:var(--muted);margin:4px 0 0">↑ このボタンをドラッグしてブックマークバーに入れてください</p>
+</div>
+<div class="s-sec">
+  <h4>アドレスバーに直接貼る場合（Safari / Chrome）</h4>
+  <p style="font-size:12px;color:var(--muted);margin:0 0 8px">G-MAXの商品選択ページでアドレスバーに貼り付けて Enter（Chrome は先に <code style="background:var(--bg);padding:1px 5px;border-radius:4px">javascript:</code> と入力してから貼り付け）</p>
+  <div class="stack"><button class="btn sm" type="button" id="bm-copy">コードをコピー</button></div>
+</div>
+<div class="stack" style="margin-top:10px"><button class="btn ghost" type="button" id="bm-back">← 注文リストに戻る</button></div>`;
+  $("bm-copy").onclick=async()=>{try{await navigator.clipboard.writeText(bm);$("bm-copy").textContent="コピーしました"}catch(e){}};
+  $("bm-back").onclick=()=>openOrder(r);
+  $("bm-link").onclick=e=>{e.preventDefault();navigator.clipboard.writeText(bm).catch(()=>{})};
+}
+/* ---------- G-MAX自動登録 サーバー連携 ---------- */
+const API='http://localhost:3333/api';
+let _srvOk=null;
+async function pingSrv(){
+  try{
+    const r=await fetch(API+'/ping',{signal:AbortSignal.timeout(2000)});
+    _srvOk=r.ok;
+    const b=$('srv-badge');if(!b)return;
+    b.textContent=_srvOk?'起動中':'停止中';
+    b.style.background=_srvOk?'#dcfce7':'#fee2e2';
+    b.style.color=_srvOk?'#166534':'#991b1b';
+  }catch{
+    _srvOk=false;
+    const b=$('srv-badge');if(!b)return;
+    b.textContent='停止中';b.style.background='#fee2e2';b.style.color='#991b1b';
+  }
+}
+async function startGmaxRegister(r){
+  if(!_srvOk){alert('自動化サーバーが起動していません。\nserver/ フォルダで\n  node server.mjs\nを実行してからお試しください。');return;}
+  const email=($('c-mail')?.value||'').trim();
+  if(!email){alert('お客様のメールアドレスを入力してください。');$('c-mail')?.focus();return;}
+  const customer={
+    lastName:($('c-sei')?.value||'').trim(),
+    firstName:($('c-mei')?.value||'').trim(),
+    phone:($('c-tel')?.value||'').trim(),
+    password:($('c-pass')?.value||'').trim(),
+  };
+  const items=(r.items||[]).map(i=>({
+    code:String(i.gm||GM[i.id]?.c||''),
+    name:String(i.name||''),
+    color:String(i.color||''),
+    size:String(i.size||''),
+    qty:Number(i.qty)||1,
+  }));
+  $('reg-start').disabled=true;$('reg-start').textContent='実行中…';
+  $('reg-log').hidden=false;$('reg-log').innerHTML='';
+  let jobId;
+  try{
+    const res=await fetch(API+'/invite-and-cart',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({customerEmail:email,customer,items})});
+    const d=await res.json();
+    if(!d.ok)throw new Error(d.error||'サーバーエラー');
+    jobId=d.jobId;
+  }catch(e){
+    appendLog('エラー: '+e.message,'error');
+    $('reg-start').disabled=false;$('reg-start').textContent='招待を送って自動カート設定';
+    return;
+  }
+  appendLog('ジョブ開始 (ID: '+jobId.slice(0,8)+'…)');
+  pollJob(jobId,r);
+}
+async function pollJob(jobId,r){
+  let lastLen=0;
+  const iv=setInterval(async()=>{
+    try{
+      const res=await fetch(API+'/status/'+jobId);
+      const d=await res.json();
+      if(!d.ok)return;
+      const newLogs=(d.logs||[]).slice(lastLen);
+      newLogs.forEach(e=>appendLog(e.msg));
+      lastLen=d.logs.length;
+      if(d.status==='done'||d.status==='failed'){
+        clearInterval(iv);
+        const ok=d.result?.ok;
+        appendLog(ok?'完了: カート設定が終わりました！':'失敗しました。ログを確認してください。',ok?'ok':'error');
+        $('reg-start').disabled=false;
+        $('reg-start').textContent=ok?'もう一度実行':'再試行';
+      }
+    }catch{}
+  },2000);
+}
+function appendLog(msg,type){
+  const el=document.createElement('div');
+  el.style.cssText='font-size:12px;padding:2px 0;line-height:1.6;'+(type==='error'?'color:#ef4444':type==='ok'?'color:#22c55e':'color:var(--muted)');
+  el.textContent=msg;
+  $('reg-log').appendChild(el);
+  $('reg-log').scrollTop=9999;
+}
+
+function openOrder(r){$("sheet-t").textContent="G-MAX 注文リスト";
+ const itemsHtml=(r.items||[]).map((i,n)=>{const code=i.gm||GM[i.id]?.c||"";const steps=[["カテゴリ",GMCAT[code]||"—"],["商品",(GMNAME[code]||i.name)+"（"+code+"）"],...(i.color?[["カラー",i.color]]:[]),...(i.size?[["サイズ",i.size]]:[]),["数量",(i.qty||1)+"個"],["押す","商品をカートに追加"]];
+  return `<div class="s-line" style="align-items:start"><img src="img/${i.id}.jpg" alt=""><div><b>${n+1}点目</b><ol style="margin:4px 0 0;padding-left:1.3em;font-size:13.5px">${steps.map(([k,v])=>`<li><span style="color:var(--muted)">${k}：</span><b style="display:inline">${esc(v)}</b></li>`).join("")}</ol></div></div>`;}).join("");
+ const inputStyle="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:14px;margin-top:4px;background:var(--surface)";
+ $("sheet-b").innerHTML=`
+<p class="s-lead">左のカテゴリから順に押していけば、迷わずカートに入れられます。</p>
+<div class="s-sec"><h4>${esc(r.code||"")}　お客様の画面で、上から順に押す</h4>${itemsHtml}</div>
+<div class="s-say"><h4>コピー用</h4><pre id="ordtxt" style="white-space:pre-wrap;margin:0;font:inherit">${esc(orderText(r))}</pre></div>
+<div class="stack"><button class="btn" type="button" id="ordcopy">注文リストをコピー</button></div>
+
+<div class="s-sec" style="margin-top:12px">
+  <h4 style="display:flex;align-items:center;gap:8px">
+    G-MAX 自動カート設定
+    <span id="srv-badge" style="font-size:11px;font-weight:500;padding:2px 10px;border-radius:999px;background:#f1f5f9;color:#64748b">確認中…</span>
+  </h4>
+  <p style="font-size:13px;color:var(--muted);margin:0 0 10px">
+    ボタンを押すとブラウザが開くので、ご自身のG-MAXアカウントでログインしてください。ログイン後は自動で招待メール送信とカート設定が進みます。
+  </p>
+  <div id="reg-form-wrap">
+    <label style="font-size:12px;font-weight:600;color:var(--muted)">お客様のメールアドレス</label>
+    <input id="c-mail" type="email" placeholder="hanako@example.com" style="${inputStyle};margin-bottom:10px">
+    <details style="margin-bottom:10px">
+      <summary style="cursor:pointer;font-size:13px;color:var(--muted);user-select:none">お客様情報（名前・電話・パスワード）</summary>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+        <div><label style="font-size:12px;color:var(--muted)">姓</label><input id="c-sei" type="text" placeholder="山田" style="${inputStyle}"></div>
+        <div><label style="font-size:12px;color:var(--muted)">名</label><input id="c-mei" type="text" placeholder="花子" style="${inputStyle}"></div>
+        <div><label style="font-size:12px;color:var(--muted)">電話番号</label><input id="c-tel" type="tel" placeholder="09012345678" style="${inputStyle}"></div>
+        <div><label style="font-size:12px;color:var(--muted)">パスワード（お客様に伝える）</label><input id="c-pass" type="text" placeholder="例: Grant2026!" style="${inputStyle}"></div>
+      </div>
+    </details>
+    <button id="reg-start" class="btn" type="button" style="width:100%;background:var(--accent);color:var(--accent-ink);font-size:15px;padding:12px">招待を送って自動カート設定</button>
+  </div>
+  <div id="reg-log" hidden style="margin-top:10px;max-height:180px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;font-family:monospace"></div>
+  <p style="font-size:11px;color:var(--muted);margin:8px 0 0">
+    ※ サーバーが「停止中」の場合は <code style="background:var(--bg);padding:1px 5px;border-radius:4px">server/</code> フォルダで <code style="background:var(--bg);padding:1px 5px;border-radius:4px">node server.mjs</code> を実行
+  </p>
+</div>
+
+<div class="s-sec" style="margin-top:4px">
+  <h4>手動ツール（お客様のPCで直接操作する場合）</h4>
+  <div class="stack"><button class="btn" type="button" id="gmax-auto" style="background:#334155;color:#e2e8f0">ブックマークレット方式</button></div>
+</div>`;
+
+ $("ordcopy").onclick=async()=>{try{await navigator.clipboard.writeText(orderText(r));$("ordcopy").textContent="コピーしました"}catch(e){const sel=getSelection(),rg=document.createRange();rg.selectNodeContents($("ordtxt"));sel.removeAllRanges();sel.addRange(rg);$("ordcopy").textContent="選択しました（長押しでコピー）"}};
+ $("gmax-auto").onclick=()=>showGmaxAuto(r);
+ $("reg-start").onclick=()=>startGmaxRegister(r);
+ pingSrv();
+ $("sheet").hidden=false;$("sheet").querySelector(".sheet").scrollTop=0}
+/* ---------- シリーズ解説 ---------- */
+function serOf(p){const s=p.s;return s.startsWith("LALA")?"lala":s.startsWith("マグ")?"mag":s.startsWith("Emm")?"emma":s.startsWith("ホルミー")?"hormee":s.startsWith("TAI")?"taikan":s.startsWith("BiBi")?"bibi":""}
+const SER={
+ lala:{n:"LALA（ララ）",lead:"骨格と姿勢を整える、グラントの基本の補整下着。補整力はいちばん。",f:["ko"],
+  feat:["「矯正」ではなく「補整」。ギプスのように力で形を変えるのではなく、補って整える。毎日着ること自体が目的","整えるのは「姿勢」と「温かさ」の2つ。骨格が整うと内臓が正しい位置に戻りやすい","型ごとにカッティングが違い、効かせる場所が違う。型の違うLALAを毎日着回すと全身が整う","光電子が多く入っている場所も型ごとに違う（背中・わきに多いブラ、お腹側に多いハイウエストガードルなど）"],
+  lines:[["Fantasy","お腹と背中。反り腰・猫背・ぽっこりお腹に。ニッパービスチェ＋ハイウエストガードルのセット専用"],["Gracy","8頭身バランス。バスト・ウエスト・ヒップの高さをそろえる。ララドール・ブラ・ガードル"],["Fairy","バストとヒップを1対1に。Tバックボディスーツでお尻の丸みをつぶさない"],["Drainage","脚・腕。スパッツ・タイツ・ストッキング・アームガードル"]],
+  who:["姿勢や体型の崩れが気になる人","出産後、反り腰、猫背、お腹ぽっこり、お尻の下がり","しっかり整えたい人"],
+  not:"運動を本気でしている人や締め付けが苦手な人には、最初から勧めない（TAI-KAN・BiBi・Emm∀ Pump から）",
+  say:"矯正下着は形を力で変えるもの。LALAは補って整える下着です。整えるのは姿勢と温かさです。"},
+ mag:{n:"マグ（X-mag）",lead:"磁石でこりをほぐし、血行を改善する管理医療機器の下着。",f:["mg","ko"],
+  feat:["管理医療機器〈家庭用永久磁石磁気治療器〉。認証番号 221AIBZX00029000","強力なネオジム磁石を、こりやすい位置（ホックの両サイド、腰、背中〜腰）に配置","生地にも光電子が入っているので、薄いのに温かい","デザインは3ライン。MICHAEL（リバーレース・ブラ／ニッパー／ショーツガードル）、RAPHAEL（スムースボディ、磁石6個）、GABRIEL（レーシーボディ、磁石6個）"],
+  who:["肩こり・腰痛がほぼ毎日ある人","鍼・整体・接骨院などに通っている人","生理まわりで腰がつらい人","基本セットに「めぐり」を足したいとき"],
+  not:"ペースメーカーなど体内に医療機器を入れている人は使えない。使う前に添付文書の注意事項を確認する",
+  warn:"言ってよい効果は「装着部位のこりをほぐし、血行を改善する」まで。「治る」とは言わない。",
+  say:"医療機器として認められている下着で、着けている部分のこりをほぐし、血行を改善します。"},
+ bibi:{n:"BiBi（ビビ）",lead:"やわらかいのに、背中はしっかり支える。リカバリー寄りのインナー。男女とも。",f:["ko"],
+  feat:["光電子繊維。LALAにも使われている繊維","生地はやわらかく楽なのに、背中のバツ印の引き上げで肩甲骨を寄せ、背すじを起こす","マッサージや酸素カプセルのような「リカバリー」の感覚で着られる","パンプ（シャツ）、ガードル、スパッツ、ソックス、骨盤ベルトまでそろう"],
+  who:["締め付けが苦手な人","猫背が気になるけど、まずは楽に始めたい人","男性","LALAの前の1枚目"],
+  say:"やわらかくて楽なのに、背中はしっかり起こしてくれます。"},
+ emma:{n:"Emm∀ Pump（エマパン）",lead:"最強のリカバリーウェア。迷ったら、まずこれを着てもらう。",f:["ko","ho"],
+  feat:["メッシュの部分に光電子、柄の部分にホルミシス（北投石）。両方入っていて、鉱石の量がいちばん多い","カッティングと貼り込みの作りで、誰が着ても、小さめを着てもシャキッと形が決まる「不思議なTシャツ」","リカバリーウェアであり、ホルミシスの生地でもある","補整力はLALAにはかなわない。軽い補整"],
+  who:["はじめての人・迷ったとき","男性（変化がいちばんわかりやすい）","運動後や仕事中のリカバリーに","締め付けが苦手な人"],
+  say:"着た瞬間に背すじが決まる、リカバリー用のシャツです。まず一度着てみてください。"},
+ hormee:{n:"ホルミー（Re.B5）",lead:"薄くて軽い、北投石の生地。LALAで形を、ホルミーで中身を整える。",f:["ho"],
+  feat:["光電子ではなく、ラジウム温泉の鉱石「北投石」を使った生地。LALA・BiBiとは鉱石の種類が違う","生地は薄いが価格は高め（生地のプリントをヨーロッパ系から取り寄せているため）","LALAとセットが基本。LALAが骨格を、ホルミーが中身（めぐり・水分）を整える","ブラトップ・レギンス・ショーツ・メンズ・ケット・シーツ・マスクまで。夜や寝具でも使える"],
+  who:["LALAを選んだすべての人（基本セット）","冷えが強い人・平熱が35度台の人（夜も着る）","50代以上","疲れが抜けにくい・眠りが浅い人"],
+  warn:"「細胞が元気になる」「抗酸化」「ミトコンドリア」はメーカー側の説明。お客様には「ラジウム温泉の鉱石を使った生地」までにする。",
+  say:"LALAで形を、ホルミーで中身を整えるセットです。温泉の鉱石を使った薄い生地です。"},
+ taikan:{n:"TAI-KAN（体幹）",lead:"着るだけで重心が整う。運動する人のための補整下着。",f:["ko"],
+  feat:["名前の通り「体幹」を整える。丹田（おへその下）に力が入った立ち方を作り、重心を体の真ん中に置く","バランスよく立てる＝姿勢が整う＝運動しやすい","整える力は繊維よりカッティングから。素材は光電子（生地感はLALAと違う）","ブラはパチンと留めるだけでバストトップが上がり、胸が開く。締め付けが少ない"],
+  who:["運動している人・トレーナー（LALAから入らない）","締め付けが嫌な人","骨格やお肉のバランスがある程度整っている人"],
+  not:"サイズ選びが難しく、体のバランスが崩れている人には着せにくい",
+  say:"体幹が整うと、同じトレーニングでも効き方が変わります。着るだけで重心が整って、動きやすくなります。"}
+};
+const SERFIG={lala:["cutting","kodenshi"],mag:["magnet"],bibi:["kodenshi"],emma:["kodenshi","hormesis"],hormee:["hormesis"],taikan:["stack","kodenshi"]};
+function openSeries(k){const d=SER[k];if(!d)return;const items=Object.entries(P).filter(([id,p])=>serOf(p)===k);
+ $("sheet-t").textContent=d.n;
+ $("sheet-b").innerHTML=`<p class="s-lead">${d.lead}</p><div class="s-hero">${items.slice(0,8).map(([id])=>`<img src="img/${id}.jpg" alt="">`).join("")}</div>
+ <div class="s-sec"><h4>特徴</h4><ul>${d.feat.map(x=>`<li>${x}</li>`).join("")}</ul></div>
+ ${(SERFIG[k]||[]).map(figHTML).join("")}
+ <div class="s-sec"><h4>使われている素材</h4>${d.f.map(f=>`<div class="mat"><span class="dot" style="background:${F[f].c}"></span><span><b>${F[f].n}</b>　${F[f].d}</span></div>`).join("")}</div>
+ ${k==="lala"?CUT_TABLE:""}${d.lines?`<div class="s-sec"><h4>型の違い</h4><ul>${d.lines.map(l=>`<li><b>${l[0]}</b>　${l[1]}</li>`).join("")}</ul></div>`:""}
+ <div class="s-sec"><h4>こんな人に</h4><ul>${d.who.map(x=>`<li>${x}</li>`).join("")}</ul>${d.not?`<p style="margin-top:8px;color:var(--muted)">※ ${d.not}</p>`:""}</div>
+ ${d.warn?`<div class="s-sec warn"><h4>伝えるときの注意</h4><p>${d.warn}</p></div>`:""}
+ <div class="s-say"><h4>お客様への伝え方</h4>「${d.say}」</div>
+ <div class="s-sec"><h4>商品（${items.length}点）</h4>${items.map(([id,p])=>`<div class="s-line"><img src="img/${id}.jpg" alt=""><div><b>${p.n}</b><span>${p.fix.join("・")}</span></div></div>`).join("")}</div>`;
+ $("sheet").hidden=false;$("sheet").querySelector(".sheet").scrollTop=0;$("sheet-x").focus()}
+const closeSheet=()=>{$("sheet").hidden=true};
+$("sheet-x").onclick=closeSheet;$("sheet").addEventListener("click",e=>{if(e.target.id==="sheet")closeSheet()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("sheet").hidden)closeSheet();if((e.key==="Enter"||e.key===" ")&&e.target.dataset?.ser&&e.target.tagName==="FIGURE"){e.preventDefault();openSeries(e.target.dataset.ser)}});
+document.addEventListener("click",e=>{const t=e.target.closest("[data-ser]");if(t){e.preventDefault();openSeries(t.dataset.ser)}});
+emptyResult();
+</script>
+
+</body></html>

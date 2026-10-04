@@ -1,0 +1,436 @@
+/**
+ * G-MAX 招待→登録→カート自動投入 Playwright スクリプト
+ *
+ * 動作フロー:
+ *  1. G-MAXログイン画面をブラウザで開く（スタイリストが手動ログイン）
+ *  2. ログイン検知後、招待メールを送信して招待URLを取得
+ *  3. 招待URLを開いてお客様情報を登録
+ *  4. 商品選択画面 (ステップ⑰) に到達したら各商品をカートに追加
+ *  5. 進捗を onProgress コールバックで随時通知
+ */
+
+import { chromium } from 'playwright';
+
+// -----------------------------------------------------------
+// sendInviteAndAutomate — ブラウザを開いてスタイリストが手動ログイン後、
+// 招待メールを送信して招待URLを取得し、カート自動設定まで行う
+// -----------------------------------------------------------
+export async function sendInviteAndAutomate({ loginUrl, customerEmail, customer, items, onProgress }) {
+  const log = (msg) => { onProgress?.({ time: new Date().toISOString(), msg }); };
+
+  log('G-MAXのログイン画面を開いています…');
+  const browser = await chromium.launch({ headless: false, args: ['--no-sandbox'] });
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, locale: 'ja-JP' });
+  const page = await ctx.newPage();
+
+  try {
+    // Step 1: G-MAXログイン画面を開く（手動ログイン待ち）
+    await page.goto(loginUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    log('G-MAXのログイン画面が開きました。ご自身のID・パスワードでログインしてください（最大120秒）');
+
+    await waitForManualLogin(page, loginUrl, log);
+
+    // Step 2: 招待メール送信ページへ
+    log(`お客様への招待メールを送信します: ${customerEmail}`);
+    const inviteUrl = await sendInvitationEmail(page, customerEmail, loginUrl, log);
+
+    if (!inviteUrl) {
+      log('⚠ 招待URLの自動取得ができませんでした。');
+      await browser.close();
+      return { ok: false, error: '招待URL取得失敗', needsManualUrl: true };
+    }
+
+    log(`招待URL取得: ${inviteUrl}`);
+
+    // Step 3: 招待URLを開いて登録 + カート設定
+    const page2 = await ctx.newPage();
+    const result = await automateGmax({
+      invitationUrl: inviteUrl,
+      customer,
+      items,
+      onProgress,
+      _page: page2,
+    });
+
+    await browser.close();
+    return result;
+
+  } catch (err) {
+    log(`エラー: ${err.message}`);
+    const screenshotPath = `/tmp/gmax-invite-error-${Date.now()}.png`;
+    await page.screenshot({ path: screenshotPath }).catch(() => {});
+    await browser.close();
+    return { ok: false, error: err.message, screenshotPath };
+  }
+}
+
+// ログイン完了を検知するまで待機（最大120秒）
+async function waitForManualLogin(page, loginUrl, log, timeoutMs = 120000) {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    await page.waitForTimeout(2000);
+    const url = page.url();
+    const txt = await page.innerText('body').catch(() => '');
+
+    const isLoggedIn =
+      txt.includes('マイページ') ||
+      txt.includes('ログアウト') ||
+      txt.includes('会員一覧') ||
+      txt.includes('メンバー') ||
+      (url !== loginUrl && !url.endsWith('granteones/') && !url.includes('LOGIN'));
+
+    if (isLoggedIn) {
+      log('ログインを確認しました。処理を続行します…');
+      return;
+    }
+
+    const elapsed = Math.round((Date.now() - start) / 1000);
+    if (elapsed > 0 && elapsed % 20 === 0) {
+      log(`ログイン待機中… (${elapsed}秒経過)`);
+    }
+  }
+  throw new Error('ログインタイムアウト (120秒)。もう一度試してください。');
+}
+
+async function sendInvitationEmail(page, customerEmail, baseUrl, log) {
+  // G-MAXの招待メール送信ページを探す (URLパターンは実際のG-MAXに合わせて調整)
+  const invitePagePatterns = [
+    baseUrl + 'invite', baseUrl + 'member/invite', baseUrl + '?PRGNAME=INVITE',
+    baseUrl + '?PRGNAME=MEMBER_INVITE', baseUrl + 'customer/new',
+  ];
+
+  for (const url of invitePagePatterns) {
+    try {
+      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 8000 });
+      const txt = await page.innerText('body');
+      if (txt.includes('招待') || txt.includes('メール') || txt.includes('会員')) {
+        log(`招待ページ発見: ${url}`);
+        break;
+      }
+    } catch {}
+  }
+
+  // メールアドレス入力欄を探す
+  const emailEl = await page.$('input[type="email"], input[name*="mail"], input[placeholder*="メール"]').catch(() => null);
+  if (emailEl) {
+    await emailEl.fill(customerEmail);
+    log(`メールアドレス入力: ${customerEmail}`);
+
+    // 送信ボタン
+    const sendBtn = await page.$('input[type="submit"], button[type="submit"], button:has-text("送信"), button:has-text("招待")').catch(() => null);
+    if (sendBtn) {
+      await sendBtn.click();
+      await page.waitForLoadState('domcontentloaded');
+      await page.waitForTimeout(2000);
+    }
+  }
+
+  // 招待URL取得を試みる（確認画面・ログに表示される場合）
+  const pageText = await page.innerText('body').catch(() => '');
+  const urlMatch = pageText.match(/https?:\/\/sslgw\.jns-asp\.jp\/granteones\/[^\s"'<>]+/);
+  if (urlMatch) return urlMatch[0];
+
+  // リンク要素から探す
+  const links = await page.$$eval('a[href*="invite"], a[href*="signup"], a[href*="register"]', els => els.map(el => el.href));
+  if (links.length) return links[0];
+
+  return null;
+}
+
+// -----------------------------------------------------------
+// セレクタ設定 (G-MAXの実際のDOMに合わせて調整)
+// -----------------------------------------------------------
+const SEL = {
+  // 登録フォーム各フィールド (name属性 or input type で探す)
+  lastName:   'input[name*="sei"], input[name*="lastname"], input[placeholder*="姓"]',
+  firstName:  'input[name*="mei"], input[name*="firstname"], input[placeholder*="名"]',
+  phone:      'input[name*="tel"], input[name*="phone"], input[type="tel"]',
+  password:   'input[name*="pass"], input[type="password"]',
+  passwordConf: 'input[name*="pass2"], input[name*="passconf"], input[type="password"]:nth-of-type(2)',
+  email:      'input[name*="mail"], input[type="email"]',
+
+  // 商品検索 (ステップ⑰: 商品コード入力)
+  searchInput: 'input[name*="srch"], input[name*="search"], input[name*="hinban"], input[placeholder*="商品コード"], input[placeholder*="コード"]',
+  searchBtn:   'input[type="submit"][value*="検索"], button:has-text("検索"), input[name*="btn"][value*="検索"]',
+
+  // カートに追加
+  addToCart:   'input[type="submit"][value*="カート"], button:has-text("カートに入れる"), input[value*="カートに入れる"]',
+
+  // 「次へ」「確認」系ボタン
+  nextBtn:     'input[type="submit"][value*="次"], input[type="submit"][value*="登録"], button:has-text("次へ"), button:has-text("登録")',
+
+  // ページ判定用キーワード
+  step17Hint:  ['商品選択', '初回商品', 'カートに追加', '商品コード'],
+  registrationHint: ['会員登録', '新規登録', 'お客様情報', 'ご登録'],
+  completionHint:   ['登録完了', 'マイページ', 'ホーム'],
+};
+
+// -----------------------------------------------------------
+// メイン処理
+// -----------------------------------------------------------
+export async function automateGmax({ invitationUrl, customer, items, onProgress, headless = false }) {
+  const log = (msg, data = null) => {
+    const entry = { time: new Date().toISOString(), msg, ...(data ? { data } : {}) };
+    onProgress?.(entry);
+  };
+
+  log('Playwright 起動中…');
+
+  const browser = await chromium.launch({
+    headless,
+    args: ['--no-sandbox'],
+  });
+
+  const ctx = await browser.newContext({
+    viewport: { width: 1280, height: 800 },
+    locale: 'ja-JP',
+    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36',
+  });
+
+  const page = await ctx.newPage();
+
+  try {
+    // ステップ1: 招待URLを開く
+    log('招待URLを開いています…', { url: invitationUrl });
+    await page.goto(invitationUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await page.waitForTimeout(1500);
+
+    const title1 = await page.title();
+    log('ページ読み込み完了', { title: title1 });
+
+    // ステップ2: 登録フォームを検出・入力
+    const pageText = await page.innerText('body').catch(() => '');
+    const isRegistration = SEL.registrationHint.some(kw => pageText.includes(kw));
+
+    if (isRegistration && customer) {
+      log('登録フォームを検出。お客様情報を入力します…');
+      await fillRegistrationForm(page, customer, log);
+    } else if (!isRegistration) {
+      log('登録フォームが見つかりません。商品選択画面を探します…');
+    }
+
+    // ステップ3: 商品選択画面 (ステップ⑰) まで待機
+    log('商品選択画面への遷移を待っています…');
+    await waitForStep17(page, log);
+
+    // ステップ4: 各商品をカートに投入
+    log(`${items.length} 点の商品をカートに追加します…`);
+    const results = [];
+    for (let idx = 0; idx < items.length; idx++) {
+      const item = items[idx];
+      log(`[${idx + 1}/${items.length}] ${item.name} (${item.code}) を追加中…`);
+      const ok = await addItemToCart(page, item, log);
+      results.push({ ...item, ok });
+      if (!ok) {
+        log(`⚠ ${item.name} の追加に失敗しました。スキップして次の商品に進みます。`);
+      }
+      await page.waitForTimeout(800);
+    }
+
+    const succeeded = results.filter(r => r.ok).length;
+    log(`完了: ${succeeded}/${items.length} 点をカートに追加しました。`, { results });
+
+    const finalUrl = page.url();
+    return { ok: true, results, finalUrl };
+
+  } catch (err) {
+    log(`エラーが発生しました: ${err.message}`);
+    const screenshotPath = `/tmp/gmax-error-${Date.now()}.png`;
+    await page.screenshot({ path: screenshotPath }).catch(() => {});
+    return { ok: false, error: err.message, screenshotPath };
+  } finally {
+    await browser.close();
+  }
+}
+
+// -----------------------------------------------------------
+// 登録フォーム入力
+// -----------------------------------------------------------
+async function fillRegistrationForm(page, customer, log) {
+  const fill = async (sel, val, label) => {
+    if (!val) return;
+    try {
+      const el = await page.$(sel);
+      if (el) {
+        await el.fill(val);
+        log(`  入力: ${label} = ${label.includes('パス') ? '****' : val}`);
+        return true;
+      }
+    } catch (_) {}
+    // フォールバック: placeholder/aria-label などで探す
+    return false;
+  };
+
+  await fill(SEL.lastName,    customer.lastName,    '姓');
+  await fill(SEL.firstName,   customer.firstName,   '名');
+  await fill(SEL.phone,       customer.phone,       '電話番号');
+  await fill(SEL.email,       customer.email,       'メール');
+  await fill(SEL.password,    customer.password,    'パスワード');
+  await fill(SEL.passwordConf,customer.password,    'パスワード確認');
+
+  // ラジオボタン・チェックボックスがあれば性別を選択
+  if (customer.gender === 'female') {
+    await page.$('input[value*="女"][type="radio"]').then(el => el?.click()).catch(() => {});
+    await page.$('input[value="2"][type="radio"]').then(el => el?.click()).catch(() => {});
+  }
+
+  // 生年月日 select
+  if (customer.birthYear) {
+    await selectByValue(page, 'select[name*="year"], select[name*="nen"]', customer.birthYear).catch(() => {});
+    await selectByValue(page, 'select[name*="month"], select[name*="tsuki"]', customer.birthMonth).catch(() => {});
+    await selectByValue(page, 'select[name*="day"], select[name*="nichi"]', customer.birthDay).catch(() => {});
+  }
+
+  log('登録フォーム入力完了。送信します…');
+  await page.waitForTimeout(500);
+
+  // 「次へ」「登録」ボタンをクリック
+  const submitted = await clickFirst(page, SEL.nextBtn);
+  if (!submitted) {
+    // フォームをsubmit
+    await page.$('form').then(f => f?.evaluate(el => el.submit())).catch(() => {});
+  }
+
+  await page.waitForLoadState('domcontentloaded');
+  await page.waitForTimeout(1500);
+
+  // 確認ページがあればもう1回submit
+  const confirmText = await page.innerText('body').catch(() => '');
+  if (confirmText.includes('確認') && (confirmText.includes('登録') || confirmText.includes('送信'))) {
+    log('確認ページを検出。確定送信します…');
+    await clickFirst(page, SEL.nextBtn);
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(1500);
+  }
+}
+
+// -----------------------------------------------------------
+// 商品選択画面まで待機 (最大60秒、5秒ごとに再チェック)
+// -----------------------------------------------------------
+async function waitForStep17(page, log, maxWaitMs = 60000) {
+  const start = Date.now();
+  while (Date.now() - start < maxWaitMs) {
+    const txt = await page.innerText('body').catch(() => '');
+    if (SEL.step17Hint.some(kw => txt.includes(kw))) {
+      log('商品選択画面に到達しました。');
+      return true;
+    }
+    // ページが変わっている場合はリロード待機ではなくそのまま
+    await page.waitForTimeout(5000);
+    const elapsed = Math.round((Date.now() - start) / 1000);
+    log(`商品選択画面を待機中… (${elapsed}秒経過)`);
+  }
+  throw new Error('商品選択画面への到達タイムアウト (60秒)。お客様がまだ登録中か、画面遷移が想定と異なります。');
+}
+
+// -----------------------------------------------------------
+// 1商品をカートに追加
+// -----------------------------------------------------------
+async function addItemToCart(page, item, log) {
+  try {
+    // 商品コード検索
+    const searchEl = await page.$(SEL.searchInput);
+    if (searchEl) {
+      await searchEl.fill('');
+      await searchEl.fill(item.code);
+      await page.waitForTimeout(300);
+
+      // 検索ボタン押下
+      const btnEl = await page.$(SEL.searchBtn);
+      if (btnEl) {
+        await btnEl.click();
+      } else {
+        await searchEl.press('Enter');
+      }
+      await page.waitForLoadState('domcontentloaded');
+      await page.waitForTimeout(800);
+    } else {
+      // 商品一覧から商品コードで探す
+      const codeEl = await page.$(`[data-code="${item.code}"], [value="${item.code}"]`);
+      if (!codeEl) {
+        log(`  商品コード ${item.code} の入力フォームが見つかりません`);
+        return false;
+      }
+    }
+
+    // カラー選択
+    if (item.color) {
+      await selectByText(page, 'select', item.color).catch(() =>
+        page.$(`input[value="${item.color}"]`).then(el => el?.click()).catch(() => {}));
+    }
+
+    // サイズ選択
+    if (item.size) {
+      await selectByText(page, 'select', item.size).catch(() =>
+        page.$(`input[value="${item.size}"]`).then(el => el?.click()).catch(() => {}));
+    }
+
+    // 数量
+    if (item.qty > 1) {
+      const qtyEl = await page.$('input[name*="qty"], input[name*="suryo"], input[name*="quantity"], input[type="number"]');
+      if (qtyEl) await qtyEl.fill(String(item.qty));
+    }
+
+    // 「カートに入れる」
+    const addBtn = await page.$(SEL.addToCart);
+    if (!addBtn) {
+      log(`  「カートに入れる」ボタンが見つかりません`);
+      return false;
+    }
+
+    await addBtn.click();
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(600);
+
+    // 追加成功確認
+    const afterTxt = await page.innerText('body').catch(() => '');
+    if (afterTxt.includes('カートに追加') || afterTxt.includes('追加しました')) {
+      return true;
+    }
+    // エラーメッセージがなければ成功とみなす
+    if (!afterTxt.includes('エラー') && !afterTxt.includes('失敗')) {
+      return true;
+    }
+    return false;
+
+  } catch (err) {
+    log(`  エラー: ${err.message}`);
+    return false;
+  }
+}
+
+// -----------------------------------------------------------
+// ユーティリティ
+// -----------------------------------------------------------
+async function selectByValue(page, selector, value) {
+  if (!value) return;
+  const els = await page.$$(selector);
+  for (const el of els) {
+    await el.selectOption({ value: String(value) }).catch(() =>
+      el.selectOption({ label: String(value) }).catch(() => {}));
+  }
+}
+
+async function selectByText(page, selector, text) {
+  if (!text) return false;
+  const els = await page.$$(selector);
+  for (const el of els) {
+    const options = await el.$$eval('option', opts =>
+      opts.map(o => ({ value: o.value, text: o.textContent?.trim() })));
+    const match = options.find(o => o.text === text || o.text?.includes(text));
+    if (match) {
+      await el.selectOption({ value: match.value });
+      return true;
+    }
+  }
+  return false;
+}
+
+async function clickFirst(page, selector) {
+  const el = await page.$(selector).catch(() => null);
+  if (el) {
+    await el.click();
+    return true;
+  }
+  return false;
+}
