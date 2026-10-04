@@ -64,32 +64,44 @@ export async function sendInviteAndAutomate({ loginUrl, customerEmail, customer,
   }
 }
 
-// ログイン完了を検知するまで待機（最大120秒）
-async function waitForManualLogin(page, loginUrl, log, timeoutMs = 120000) {
+// ログイン完了を手動で確認するまで待機（最大300秒）
+// Playwrightのブラウザ内に「ログイン完了」ボタンを浮かせる → ユーザーが押したら進む
+async function waitForManualLogin(page, loginUrl, log, timeoutMs = 300000) {
+  // ページ内に浮かぶ確認オーバーレイを注入
+  const injectOverlay = async () => {
+    await page.evaluate(() => {
+      if (document.getElementById('__jobs_login_overlay')) return;
+      const d = document.createElement('div');
+      d.id = '__jobs_login_overlay';
+      d.style.cssText = 'position:fixed;top:16px;right:16px;z-index:2147483647;background:#e2477a;color:#fff;padding:14px 18px;border-radius:12px;font:14px -apple-system,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.3);max-width:280px;line-height:1.5';
+      d.innerHTML = '<div style="font-weight:700;margin-bottom:6px">G-MAXにログインしてください</div><div style="font-size:12px;opacity:.9;margin-bottom:10px">ログインが完了したら下のボタンを押してください</div><button id="__jobs_login_done" style="width:100%;background:#fff;color:#e2477a;border:none;padding:10px;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px">ログイン完了 →</button>';
+      document.body.appendChild(d);
+      document.getElementById('__jobs_login_done').onclick = () => { window.__jobs_login_done = true; d.remove(); };
+    }).catch(() => {});
+  };
+
+  await injectOverlay();
   const start = Date.now();
+
   while (Date.now() - start < timeoutMs) {
-    await page.waitForTimeout(2000);
-    const url = page.url();
-    const txt = await page.innerText('body').catch(() => '');
+    await page.waitForTimeout(1500);
 
-    const isLoggedIn =
-      txt.includes('マイページ') ||
-      txt.includes('ログアウト') ||
-      txt.includes('会員一覧') ||
-      txt.includes('メンバー') ||
-      (url !== loginUrl && !url.endsWith('granteones/') && !url.includes('LOGIN'));
-
-    if (isLoggedIn) {
-      log('ログインを確認しました。処理を続行します…');
+    // ユーザーがボタンを押したか確認
+    const done = await page.evaluate(() => window.__jobs_login_done === true).catch(() => false);
+    if (done) {
+      log('ログイン完了を確認しました。処理を続行します…');
       return;
     }
 
+    // ページが遷移したら再注入
+    await injectOverlay();
+
     const elapsed = Math.round((Date.now() - start) / 1000);
-    if (elapsed > 0 && elapsed % 20 === 0) {
-      log(`ログイン待機中… (${elapsed}秒経過)`);
+    if (elapsed > 0 && elapsed % 30 === 0) {
+      log(`ログイン待機中… (${elapsed}秒経過、残り${Math.round((timeoutMs-Date.now()+start)/1000)}秒)`);
     }
   }
-  throw new Error('ログインタイムアウト (120秒)。もう一度試してください。');
+  throw new Error('ログインタイムアウト (5分)。ブラウザ内の「ログイン完了」ボタンを押してください。');
 }
 
 async function sendInvitationEmail(page, customerEmail, baseUrl, log) {
