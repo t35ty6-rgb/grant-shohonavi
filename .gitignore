@@ -1,3 +1,5 @@
 server/node_modules/
 node_modules/
 *.log
+api-key.txt
+inspect-dumps/
