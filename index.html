@@ -1070,6 +1070,15 @@ const IMG=id=>id.startsWith("g")?`img/${id}.jpg`:`img/${id}.jpg`;
 function orderText(r){return (r.items||[]).map(i=>`${i.gm||GM[i.id]?.c||""} ${i.name}${i.color?" / "+i.color:""}${i.size?" / "+i.size:""} ×${i.qty||1}`).join("\n")}
 const API=(location.hostname==='localhost'||location.hostname==='127.0.0.1'||location.protocol==='file:')?'http://localhost:3333/api':'https://hindu-css-catalog-spider.trycloudflare.com/api';
 let _srvOk=null;
+function apiKey(){return (localStorage.getItem('grantApiKey')||'').trim();}
+function apiHeaders(){const h={'Content-Type':'application/json'};const k=apiKey();if(k)h['X-API-Key']=k;return h;}
+function requireApiKey(){
+  let k=apiKey();
+  if(k)return k;
+  k=prompt('初回のみ：サーバーのAPIキーを入力してください\n（Mac mini側 server/api-key.txt の内容）');
+  if(k&&k.trim()){localStorage.setItem('grantApiKey',k.trim());return k.trim();}
+  return null;
+}
 async function pingSrv(){
   try{
     const r=await fetch(API+'/ping',{signal:AbortSignal.timeout(2000)});
@@ -1086,6 +1095,7 @@ async function pingSrv(){
 }
 async function startGmaxRegister(r){
   if(!_srvOk){alert('自動化サーバーが起動していません。\n「サーバー起動.command」をダブルクリックしてから再試行してください。');return;}
+  if(!requireApiKey()){alert('APIキーが未設定です。処理を中止しました。');return;}
   const email=($('c-mail')?.value||'').trim();
   if(!email){alert('お客様のメールアドレスを入力してください。');$('c-mail')?.focus();return;}
   const customer={lastName:($('c-sei')?.value||'').trim(),firstName:($('c-mei')?.value||'').trim(),phone:($('c-tel')?.value||'').trim(),password:($('c-pass')?.value||'').trim()};
@@ -1094,9 +1104,12 @@ async function startGmaxRegister(r){
   $('reg-log').hidden=false;$('reg-log').innerHTML='';
   let jobId;
   try{
-    const res=await fetch(API+'/invite-and-cart',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({customerEmail:email,customer,items})});
+    const res=await fetch(API+'/invite-and-cart',{method:'POST',headers:apiHeaders(),body:JSON.stringify({customerEmail:email,customer,items})});
     const d=await res.json();
-    if(!d.ok)throw new Error(d.error||'サーバーエラー');
+    if(!d.ok){
+      if(res.status===401){localStorage.removeItem('grantApiKey');throw new Error('APIキーが違います。設定ボタンから入力し直してください。');}
+      throw new Error(d.error||'サーバーエラー');
+    }
     jobId=d.jobId;
   }catch(e){
     appendLog('エラー: '+e.message,'error');
@@ -1110,7 +1123,7 @@ async function pollJob(jobId,r){
   let lastLen=0;
   const iv=setInterval(async()=>{
     try{
-      const res=await fetch(API+'/status/'+jobId);
+      const res=await fetch(API+'/status/'+jobId,{headers:apiHeaders()});
       const d=await res.json();
       if(!d.ok)return;
       const newLogs=(d.logs||[]).slice(lastLen);
@@ -1140,10 +1153,11 @@ function openOrder(r){$("sheet-t").textContent="G-MAX 注文リスト";
   return `<div class="s-line" style="align-items:start"><img src="img/${i.id}.jpg" alt=""><div><b>${n+1}点目</b><ol style="margin:4px 0 0;padding-left:1.3em;font-size:13.5px">${steps.map(([k,v])=>`<li><span style="color:var(--muted)">${k}：</span><b style="display:inline">${esc(v)}</b></li>`).join("")}</ol></div></div>`}).join("")}</div>
  <div class="s-say"><h4>コピー用</h4><pre id="ordtxt" style="white-space:pre-wrap;margin:0;font:inherit">${esc(orderText(r))}</pre></div>
  <div class="stack"><button class="btn" type="button" id="ordcopy">注文リストをコピー</button></div>
- <div class="s-sec" style="margin-top:12px"><h4 style="display:flex;align-items:center;gap:8px">G-MAX 自動カート設定<span id="srv-badge" style="font-size:11px;font-weight:500;padding:2px 10px;border-radius:999px;background:#f1f5f9;color:#64748b">確認中…</span></h4><p style="font-size:13px;color:var(--muted);margin:0 0 10px">ボタンを押すとブラウザが開くので、ご自身のG-MAXアカウントでログインしてください。ログイン後は自動で招待メール送信とカート設定が進みます。</p><div><label style="font-size:12px;font-weight:600;color:var(--muted)">お客様のメールアドレス</label><input id="c-mail" type="email" placeholder="hanako@example.com" style="${inputS};margin-bottom:10px"><details style="margin-bottom:10px"><summary style="cursor:pointer;font-size:13px;color:var(--muted);user-select:none">お客様情報（名前・電話・パスワード）</summary><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px"><div><label style="font-size:12px;color:var(--muted)">姓</label><input id="c-sei" type="text" placeholder="山田" style="${inputS}"></div><div><label style="font-size:12px;color:var(--muted)">名</label><input id="c-mei" type="text" placeholder="花子" style="${inputS}"></div><div><label style="font-size:12px;color:var(--muted)">電話番号</label><input id="c-tel" type="tel" placeholder="09012345678" style="${inputS}"></div><div><label style="font-size:12px;color:var(--muted)">パスワード（お客様に伝える）</label><input id="c-pass" type="text" placeholder="例: Grant2026!" style="${inputS}"></div></div></details><button id="reg-start" class="btn" type="button" style="width:100%;font-size:15px;padding:12px">招待を送って自動カート設定</button></div><div id="reg-log" hidden style="margin-top:10px;max-height:180px;overflow-y:auto;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;font-family:monospace"></div><p style="font-size:11px;color:var(--muted);margin:8px 0 0">※ サーバーが「停止中」の場合は「サーバー起動.command」をダブルクリックしてください</p></div>
+ <div class="s-sec" style="margin-top:12px"><h4 style="display:flex;align-items:center;gap:8px">G-MAX 自動カート設定<span id="srv-badge" style="font-size:11px;font-weight:500;padding:2px 10px;border-radius:999px;background:#f1f5f9;color:#64748b">確認中…</span><button type="button" id="apikey-btn" title="APIキー設定" style="margin-left:auto;background:none;border:1px solid var(--line);color:var(--muted);font-size:11px;padding:2px 8px;border-radius:999px;cursor:pointer">キー設定</button></h4><p style="font-size:13px;color:var(--muted);margin:0 0 10px">ボタンを押すとブラウザが開くので、ご自身のG-MAXアカウントでログインしてください。ログイン後は自動で招待メール送信とカート設定が進みます。</p><div><label style="font-size:12px;font-weight:600;color:var(--muted)">お客様のメールアドレス</label><input id="c-mail" type="email" placeholder="hanako@example.com" style="${inputS};margin-bottom:10px"><details style="margin-bottom:10px"><summary style="cursor:pointer;font-size:13px;color:var(--muted);user-select:none">お客様情報（名前・電話・パスワード）</summary><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px"><div><label style="font-size:12px;color:var(--muted)">姓</label><input id="c-sei" type="text" placeholder="山田" style="${inputS}"></div><div><label style="font-size:12px;color:var(--muted)">名</label><input id="c-mei" type="text" placeholder="花子" style="${inputS}"></div><div><label style="font-size:12px;color:var(--muted)">電話番号</label><input id="c-tel" type="tel" placeholder="09012345678" style="${inputS}"></div><div><label style="font-size:12px;color:var(--muted)">パスワード（お客様に伝える）</label><input id="c-pass" type="text" placeholder="例: Grant2026!" style="${inputS}"></div></div></details><button id="reg-start" class="btn" type="button" style="width:100%;font-size:15px;padding:12px">招待を送って自動カート設定</button></div><div id="reg-log" hidden style="margin-top:10px;max-height:180px;overflow-y:auto;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;font-family:monospace"></div><p style="font-size:11px;color:var(--muted);margin:8px 0 0">※ サーバーが「停止中」の場合は「サーバー起動.command」をダブルクリックしてください</p></div>
  <div class="s-sec" style="margin-top:10px"><h4>手動でG-MAXを使う場合（オンラインサインアップ）</h4><ul><li>G-MAX トップ →「招待メール」でお客様のメールアドレスに送る</li><li>お客様がメールのURLから登録（3時間以内・本人が入力）</li><li>商品選択の画面で、このリストどおりにカートへ</li><li>ビジネス会員の初回は、税率が違う商品（下着とサプリなど）を一緒に注文できない</li></ul></div>`;
  $("ordcopy").onclick=async()=>{try{await navigator.clipboard.writeText(orderText(r));$("ordcopy").textContent="コピーしました"}catch(e){const sel=getSelection(),rg=document.createRange();rg.selectNodeContents($("ordtxt"));sel.removeAllRanges();sel.addRange(rg);$("ordcopy").textContent="選択しました（長押しでコピー）"}};
  $("reg-start").onclick=()=>startGmaxRegister(r);
+ $("apikey-btn").onclick=()=>{const cur=apiKey();const k=prompt('APIキーを入力/変更：\n（Mac mini側 server/api-key.txt の内容）',cur);if(k!==null){if(k.trim())localStorage.setItem('grantApiKey',k.trim());else localStorage.removeItem('grantApiKey');alert('保存しました');}};
  pingSrv();
  $("sheet").hidden=false;$("sheet").querySelector(".sheet").scrollTop=0}
 /* ---------- シリーズ解説 ---------- */

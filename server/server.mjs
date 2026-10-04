@@ -7,16 +7,35 @@
 import express from 'express';
 import { automateGmax, sendInviteAndAutomate } from './gmax-automate.mjs';
 import { randomUUID } from 'crypto';
+import { readFileSync, existsSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __dir = dirname(fileURLToPath(import.meta.url));
+const KEY_PATH = join(__dir, 'api-key.txt');
+if (!existsSync(KEY_PATH)) {
+  console.error(`\n⚠ api-key.txt が見つかりません: ${KEY_PATH}\n生成: node -e "require('fs').writeFileSync('${KEY_PATH}', require('crypto').randomBytes(32).toString('hex'))"\n`);
+  process.exit(1);
+}
+const API_KEY = readFileSync(KEY_PATH, 'utf8').trim();
 
 const app = express();
 app.use(express.json({ limit: '1mb' }));
 
-// CORS: ローカルファイル (file://) と localhost から許可
+// CORS: どこからでも受け付ける (認証は X-API-Key で行う)
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,X-API-Key');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
+
+// API Key 認証 (/api/ping は除外、サーバー起動確認用)
+app.use((req, res, next) => {
+  if (req.path === '/api/ping') return next();
+  const key = req.get('X-API-Key') || req.query.key;
+  if (key !== API_KEY) return res.status(401).json({ ok: false, error: 'APIキーが正しくありません' });
   next();
 });
 
