@@ -32,28 +32,21 @@ export async function sendInviteAndAutomate({ loginUrl, customerEmail, customer,
 
     // Step 2: 招待メール送信ページへ
     log(`お客様への招待メールを送信します: ${customerEmail}`);
-    const inviteUrl = await sendInvitationEmail(page, customerEmail, loginUrl, log);
+    const inviteResult = await sendInvitationEmail(page, customerEmail, loginUrl, log);
 
-    if (!inviteUrl) {
-      log('⚠ 招待URLの自動取得ができませんでした。');
+    if (!inviteResult) {
+      log('⚠ 招待ページで操作完了を確認できませんでした (タイムアウト)');
       await browser.close();
-      return { ok: false, error: '招待URL取得失敗', needsManualUrl: true };
+      return { ok: false, error: '招待操作タイムアウト' };
     }
 
-    log(`招待URL取得: ${inviteUrl}`);
-
-    // Step 3: 招待URLを開いて登録 + カート設定
-    const page2 = await ctx.newPage();
-    const result = await automateGmax({
-      invitationUrl: inviteUrl,
-      customer,
-      items,
-      onProgress,
-      _page: page2,
-    });
+    // 現状: 招待は手動送信方式。ダンプ取得後に完全自動化のセレクタを書く
+    log('✓ Phase 1 完了: ログイン + 招待ページでの操作確認');
+    log('ℹ 次回アップデート: 招待フォーム完全自動入力 + カート自動投入');
+    log(`💾 ダンプファイル /tmp/gmax-invite-*.html + .png を確認してください`);
 
     await browser.close();
-    return result;
+    return { ok: true, phase: 1, note: '招待ページまで到達、ダンプ保存済み' };
 
   } catch (err) {
     log(`エラー: ${err.message}`);
@@ -105,16 +98,18 @@ async function waitForManualLogin(page, loginUrl, log, timeoutMs = 300000) {
 }
 
 async function sendInvitationEmail(page, customerEmail, baseUrl, log) {
-  // G-MAXの招待メール送信ページを探す (URLパターンは実際のG-MAXに合わせて調整)
   const invitePagePatterns = [
-    baseUrl + 'invite', baseUrl + 'member/invite', baseUrl + '?PRGNAME=INVITE',
-    baseUrl + '?PRGNAME=MEMBER_INVITE', baseUrl + 'customer/new',
+    baseUrl + '?PRGNAME=INVITE',
+    baseUrl + '?PRGNAME=MEMBER_INVITE',
+    baseUrl + 'invite',
+    baseUrl + 'member/invite',
+    baseUrl + 'customer/new',
   ];
 
   for (const url of invitePagePatterns) {
     try {
       await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 8000 });
-      const txt = await page.innerText('body');
+      const txt = await page.innerText('body').catch(() => '');
       if (txt.includes('招待') || txt.includes('メール') || txt.includes('会員')) {
         log(`招待ページ発見: ${url}`);
         break;
@@ -122,29 +117,58 @@ async function sendInvitationEmail(page, customerEmail, baseUrl, log) {
     } catch {}
   }
 
-  // メールアドレス入力欄を探す
-  const emailEl = await page.$('input[type="email"], input[name*="mail"], input[placeholder*="メール"]').catch(() => null);
-  if (emailEl) {
-    await emailEl.fill(customerEmail);
-    log(`メールアドレス入力: ${customerEmail}`);
-
-    // 送信ボタン
-    const sendBtn = await page.$('input[type="submit"], button[type="submit"], button:has-text("送信"), button:has-text("招待")').catch(() => null);
-    if (sendBtn) {
-      await sendBtn.click();
-      await page.waitForLoadState('domcontentloaded');
-      await page.waitForTimeout(2000);
-    }
+  // ページ構造をダンプ (次回セレクタ特定のため)
+  const ts = Date.now();
+  const htmlPath = `/tmp/gmax-invite-${ts}.html`;
+  const shotPath = `/tmp/gmax-invite-${ts}.png`;
+  try {
+    const fs = await import('fs');
+    const html = await page.content();
+    await fs.promises.writeFile(htmlPath, html, 'utf8');
+    await page.screenshot({ path: shotPath, fullPage: true });
+    log(`📸 招待ページ ダンプ: ${shotPath}`);
+    log(`📄 招待ページ HTML: ${htmlPath}`);
+  } catch (e) {
+    log(`⚠ ダンプ失敗: ${e.message}`);
   }
 
-  // 招待URL取得を試みる（確認画面・ログに表示される場合）
-  const pageText = await page.innerText('body').catch(() => '');
-  const urlMatch = pageText.match(/https?:\/\/sslgw\.jns-asp\.jp\/granteones\/[^\s"'<>]+/);
-  if (urlMatch) return urlMatch[0];
+  // ページ内の全フィールドをログに吐く (セレクタ発見用)
+  try {
+    const fields = await page.$$eval('input, select, textarea', els => els.map(el => ({
+      tag: el.tagName,
+      type: el.type || '',
+      name: el.name || '',
+      id: el.id || '',
+      placeholder: el.placeholder || '',
+    })));
+    log(`🔍 検出フィールド数: ${fields.length}`);
+    fields.slice(0, 30).forEach((f, i) => log(`  [${i}] ${f.tag}${f.type?'['+f.type+']':''} name=${f.name} id=${f.id} ph="${f.placeholder}"`));
+  } catch {}
 
-  // リンク要素から探す
-  const links = await page.$$eval('a[href*="invite"], a[href*="signup"], a[href*="register"]', els => els.map(el => el.href));
-  if (links.length) return links[0];
+  log('⏸ 招待ページで一時停止。ブラウザ内で手動で招待メール送信してください。');
+  log('⏸ 送信完了後、画面右上の青いボタンを押すと処理が続行されます。');
+
+  // 「次へ」オーバーレイを表示
+  await page.evaluate(() => {
+    if (document.getElementById('__jobs_proceed_overlay')) return;
+    const d = document.createElement('div');
+    d.id = '__jobs_proceed_overlay';
+    d.style.cssText = 'position:fixed;top:16px;right:16px;z-index:2147483647;background:#2f5bd3;color:#fff;padding:14px 18px;border-radius:12px;font:14px -apple-system,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.3);max-width:300px;line-height:1.5';
+    d.innerHTML = '<div style="font-weight:700;margin-bottom:6px">招待メール送信してください</div><div style="font-size:12px;opacity:.9;margin-bottom:10px">このG-MAX画面で招待メールの操作をしてください。終わったら下のボタン。</div><button id="__jobs_proceed_done" style="width:100%;background:#fff;color:#2f5bd3;border:none;padding:10px;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px">次へ →</button>';
+    document.body.appendChild(d);
+    document.getElementById('__jobs_proceed_done').onclick = () => { window.__jobs_proceed_done = true; d.remove(); };
+  }).catch(() => {});
+
+  // 最大5分待機
+  const start = Date.now();
+  while (Date.now() - start < 300000) {
+    await page.waitForTimeout(1500);
+    const done = await page.evaluate(() => window.__jobs_proceed_done === true).catch(() => false);
+    if (done) {
+      log('✓ 招待送信完了を確認');
+      return 'MANUAL_INVITE_SENT';
+    }
+  }
 
   return null;
 }
