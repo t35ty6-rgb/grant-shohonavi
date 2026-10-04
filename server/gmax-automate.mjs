@@ -24,29 +24,90 @@ export async function sendInviteAndAutomate({ loginUrl, customerEmail, customer,
   const page = await ctx.newPage();
 
   try {
-    // Step 1: G-MAXログイン画面を開く（手動ログイン待ち）
+    // ブラウザ閉じられた時のハンドラ
+    let closed = false;
+    page.on('close', () => { closed = true; });
+    browser.on('disconnected', () => { closed = true; });
+
     await page.goto(loginUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
-    log('G-MAXのログイン画面が開きました。ご自身のID・パスワードでログインしてください（最大120秒）');
+    log('G-MAXが開きました。ログインだけしてください。');
+    log('ログイン後、画面右上のピンクのボタンを押すと招待送信を自動化します。');
 
+    // ログインオーバーレイ (手動確認)
     await waitForManualLogin(page, loginUrl, log);
+    if (closed) return { ok: false, error: 'ブラウザが閉じられた' };
 
-    // Step 2: 招待メール送信ページへ
-    log(`お客様への招待メールを送信します: ${customerEmail}`);
-    const inviteResult = await sendInvitationEmail(page, customerEmail, loginUrl, log);
-
-    if (!inviteResult) {
-      log('⚠ 招待ページで操作完了を確認できませんでした (タイムアウト)');
-      await browser.close();
-      return { ok: false, error: '招待操作タイムアウト' };
+    // 招待ページへ遷移
+    log('招待ページを探しています…');
+    const invitePagePatterns = [
+      loginUrl + '?PRGNAME=INVITE', loginUrl + '?PRGNAME=MEMBER_INVITE',
+      loginUrl + 'invite', loginUrl + 'member/invite', loginUrl + 'customer/new',
+    ];
+    let foundInvite = false;
+    for (const url of invitePagePatterns) {
+      if (closed) return { ok: false, error: 'ブラウザが閉じられた' };
+      try {
+        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 8000 });
+        const txt = await page.innerText('body').catch(() => '');
+        if (txt.includes('招待') || txt.includes('メール送信') || txt.includes('新規会員')) {
+          log(`✓ 招待ページ発見: ${url}`);
+          foundInvite = true;
+          break;
+        }
+      } catch {}
     }
 
-    // 現状: 招待は手動送信方式。ダンプ取得後に完全自動化のセレクタを書く
-    log('✓ Phase 1 完了: ログイン + 招待ページでの操作確認');
-    log('ℹ 次回アップデート: 招待フォーム完全自動入力 + カート自動投入');
-    log(`💾 ダンプファイル /tmp/gmax-invite-*.html + .png を確認してください`);
+    if (!foundInvite) {
+      log('⚠ 招待ページのURLパターンが見つかりません。G-MAXのトップから手動で招待画面を開いてください。');
+      log('→ 画面右上に「招待画面に来た→」ボタン出します');
+      await page.evaluate(() => {
+        if (document.getElementById('__jobs_at_invite')) return;
+        const d = document.createElement('div');
+        d.id = '__jobs_at_invite';
+        d.style.cssText = 'position:fixed;top:16px;right:16px;z-index:2147483647;background:#2f5bd3;color:#fff;padding:14px 18px;border-radius:12px;font:14px -apple-system,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.3);max-width:300px';
+        d.innerHTML = '<div style="font-weight:700;margin-bottom:8px">招待画面を開いて</div><button id="__jobs_at_invite_btn" style="width:100%;background:#fff;color:#2f5bd3;border:none;padding:10px;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px">招待画面に来た →</button>';
+        document.body.appendChild(d);
+        document.getElementById('__jobs_at_invite_btn').onclick = () => { window.__jobs_at_invite = true; d.remove(); };
+      }).catch(() => {});
+      const s2 = Date.now();
+      while (Date.now() - s2 < 300000 && !closed) {
+        await page.waitForTimeout(1500).catch(() => {});
+        const ok = await page.evaluate(() => window.__jobs_at_invite === true).catch(() => false);
+        if (ok) break;
+      }
+    }
+    if (closed) return { ok: false, error: 'ブラウザが閉じられた' };
 
-    await browser.close();
-    return { ok: true, phase: 1, note: '招待ページまで到達、ダンプ保存済み' };
+    // 招待ページのダンプ + フィールド検出
+    const ts = Date.now();
+    const htmlPath = `/tmp/gmax-invite-${ts}.html`;
+    const shotPath = `/tmp/gmax-invite-${ts}.png`;
+    try {
+      const fs = await import('fs');
+      await fs.promises.writeFile(htmlPath, await page.content(), 'utf8');
+      await page.screenshot({ path: shotPath, fullPage: true });
+      log(`📸 招待ページ ダンプ: ${shotPath}`);
+      log(`📄 招待ページ HTML: ${htmlPath}`);
+    } catch (e) {
+      log(`⚠ ダンプ失敗: ${e.message}`);
+    }
+
+    try {
+      const fields = await page.$$eval('input, select, textarea, button', els => els.map(el => ({
+        tag: el.tagName, type: el.type || '', name: el.name || '', id: el.id || '',
+        value: (el.value || '').slice(0, 20), placeholder: el.placeholder || '',
+        text: (el.innerText || el.textContent || '').trim().slice(0, 30),
+      })));
+      log(`🔍 検出フィールド/ボタン数: ${fields.length}`);
+      fields.slice(0, 60).forEach((f, i) => log(`  [${i}] ${f.tag}${f.type?'['+f.type+']':''} name="${f.name}" id="${f.id}" text="${f.text}" ph="${f.placeholder}"`));
+    } catch {}
+
+    log('');
+    log('✓ Phase 1 完了。ダンプファイルを送ってください（Jobsが読んでフォーム自動入力コードを書きます）:');
+    log(`   ${htmlPath}`);
+    log('ℹ ブラウザは開いたままにしておきます (手動で招待送信してください)');
+
+    return { ok: true, phase: 1, note: '招待ページ ダンプ取得完了', dumpPath: htmlPath, screenshotPath: shotPath };
 
   } catch (err) {
     log(`エラー: ${err.message}`);
