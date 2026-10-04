@@ -1068,7 +1068,7 @@ const COLIMG={"101":{"ミスティブラック":"c101_mb.jpg","LOVE":"c101_lo.jp
 const IMG=id=>id.startsWith("g")?`img/${id}.jpg`:`img/${id}.jpg`;
 
 function orderText(r){return (r.items||[]).map(i=>`${i.gm||GM[i.id]?.c||""} ${i.name}${i.color?" / "+i.color:""}${i.size?" / "+i.size:""} ×${i.qty||1}`).join("\n")}
-const API='http://localhost:3333/api';
+const API=(location.hostname==='localhost'||location.hostname==='127.0.0.1'||location.protocol==='file:')?'http://localhost:3333/api':'https://hindu-css-catalog-spider.trycloudflare.com/api';
 let _srvOk=null;
 async function pingSrv(){
   try{
