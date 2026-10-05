@@ -36,16 +36,28 @@ async function main() {
   console.log(`現在開いてるタブ数: ${pages.length}`);
   pages.forEach((p, i) => console.log(`  [${i}] ${p.url()}`));
 
-  let page;
+  // ARGUMENTS 付き (ログイン済み) の granteones タブを優先
+  let page = pages.find(p => /granteones.*ARGUMENTS=/.test(p.url()))
+          || pages.find(p => p.url().includes('granteones'))
+          || pages[0];
+  if (!page) {
+    console.error('❌ granteones のタブが見つかりません');
+    process.exit(1);
+  }
+  console.log(`→ 対象タブ: ${page.url().slice(0, 100)}`);
+
   if (targetUrl) {
-    page = await ctx.newPage();
-    await page.goto(targetUrl, { waitUntil: 'domcontentloaded' });
-  } else {
-    page = pages.find(p => p.url().includes('granteones')) || pages[0];
-    if (!page) {
-      console.error('❌ granteones のタブが見つかりません');
-      process.exit(1);
+    // ARGUMENTS がURLに無ければ現在のタブから抽出して付与
+    let navTarget = targetUrl;
+    if (!/ARGUMENTS=/.test(navTarget)) {
+      const curUrl = page.url();
+      const m = curUrl.match(/ARGUMENTS=([^&]+)/);
+      if (m) {
+        navTarget += (navTarget.includes('?') ? '&' : '?') + 'ARGUMENTS=' + m[1];
+        console.log(`→ ARGUMENTS 継承: ${m[1]}`);
+      }
     }
+    await page.goto(navTarget, { waitUntil: 'domcontentloaded' });
   }
 
   console.log(`\n対象: ${page.url()}`);
