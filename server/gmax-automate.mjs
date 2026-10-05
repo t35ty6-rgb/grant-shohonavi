@@ -308,19 +308,25 @@ export async function automateGmax({ invitationUrl, assistant, customer, items, 
           log(`  ! Q${q} 選択失敗`);
         }
       }
-      // 覚書テスト は scoring() 関数 で 採点 → 次ページ 遷移
+      // 覚書テスト は scoring() 関数 で 採点 → テスト結果 ページ
       await Promise.all([
         page.waitForLoadState('domcontentloaded'),
         page.evaluate(() => { if (typeof scoring === 'function') scoring(); }),
       ]);
       await page.waitForTimeout(2500);
-      // 採点結果ダイアログ / 確認 画面 → さらに 次へ (formBunki_next があれば)
+      log(`→ テスト結果 (title: ${await page.title().catch(() => '?')})`);
+      // テスト結果ページ → 「次へ進む」リンクをクリック
       try {
-        await page.evaluate(() => { if (typeof formBunki_next === 'function') formBunki_next(); });
-        await page.waitForLoadState('domcontentloaded', { timeout: 10000 });
-        await page.waitForTimeout(1500);
-      } catch {}
-      log(`覚書テスト完了 → 次へ (title: ${await page.title().catch(() => '?')})`);
+        const nextHref = await page.$eval('a[href*="signup_class_check"], a:has-text("次へ進む")', a => a.href).catch(() => null);
+        if (nextHref) {
+          log(`→ 次へ進む: ${nextHref.slice(0, 80)}...`);
+          await page.goto(nextHref, { waitUntil: 'domcontentloaded', timeout: 15000 });
+          await page.waitForTimeout(1500);
+        }
+      } catch (e) {
+        log(`⚠ 次へ進むリンク失敗: ${e.message.slice(0, 80)}`);
+      }
+      log(`覚書テスト完了 → 次 (title: ${await page.title().catch(() => '?')})`);
     }
 
     // Step 2: 紹介者情報 → アシスタント情報を入力
