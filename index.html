@@ -1068,7 +1068,20 @@ const COLIMG={"101":{"ミスティブラック":"c101_mb.jpg","LOVE":"c101_lo.jp
 const IMG=id=>id.startsWith("g")?`img/${id}.jpg`:`img/${id}.jpg`;
 
 function orderText(r){return (r.items||[]).map(i=>`${i.gm||GM[i.id]?.c||""} ${i.name}${i.color?" / "+i.color:""}${i.size?" / "+i.size:""} ×${i.qty||1}`).join("\n")}
-const API=(location.hostname==='localhost'||location.hostname==='127.0.0.1'||location.protocol==='file:')?'http://localhost:3333/api':'https://hindu-css-catalog-spider.trycloudflare.com/api';
+/* ---------- API URL (localhost / tunnel 自動切替) ---------- */
+let API='http://localhost:3333/api';
+let API_READY=false;
+function initApi(){
+  const local=(location.hostname==='localhost'||location.hostname==='127.0.0.1'||location.protocol==='file:');
+  if(local){API='http://localhost:3333/api';API_READY=true;return Promise.resolve();}
+  // 外部アクセス時: GitHub Pages の tunnel-url.txt から現在のトンネルURLを取る
+  return fetch('tunnel-url.txt?t='+Date.now(),{signal:AbortSignal.timeout(3000)})
+    .then(r=>r.ok?r.text():null)
+    .then(txt=>{if(txt){const u=txt.trim();if(u.startsWith('https://'))API=u.replace(/\/$/,'')+'/api';}})
+    .catch(()=>{})
+    .finally(()=>{API_READY=true;});
+}
+initApi();
 
 /* ---------- アシスタント管理 (localStorage) ---------- */
 const AKEY='grant_assistants_v1';
@@ -1196,7 +1209,8 @@ async function pingSrv(){
   }
 }
 async function startGmaxRegister(r){
-  if(!_srvOk){alert('自動化サーバーが起動していません。\n「サーバー起動.command」をダブルクリックしてから再試行してください。');return;}
+  if(!API_READY){await initApi();}
+  if(!_srvOk){alert('自動化サーバーが起動していません。\nMac mini で「サーバー起動.command」をダブルクリックしてから再試行してください。');return;}
   if(!requireApiKey()){alert('APIキーが未設定です。処理を中止しました。');return;}
   const email=($('c-mail')?.value||'').trim();
   if(!email){alert('お客様のメールアドレスを入力してください。');$('c-mail')?.focus();return;}
