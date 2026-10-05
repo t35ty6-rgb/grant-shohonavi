@@ -308,11 +308,18 @@ export async function automateGmax({ invitationUrl, assistant, customer, items, 
           log(`  ! Q${q} 選択失敗`);
         }
       }
+      // 覚書テスト は scoring() 関数 で 採点 → 次ページ 遷移
       await Promise.all([
         page.waitForLoadState('domcontentloaded'),
-        page.evaluate(() => { if (typeof formBunki_next === 'function') formBunki_next(); }),
+        page.evaluate(() => { if (typeof scoring === 'function') scoring(); }),
       ]);
-      await page.waitForTimeout(1500);
+      await page.waitForTimeout(2500);
+      // 採点結果ダイアログ / 確認 画面 → さらに 次へ (formBunki_next があれば)
+      try {
+        await page.evaluate(() => { if (typeof formBunki_next === 'function') formBunki_next(); });
+        await page.waitForLoadState('domcontentloaded', { timeout: 10000 });
+        await page.waitForTimeout(1500);
+      } catch {}
       log(`覚書テスト完了 → 次へ (title: ${await page.title().catch(() => '?')})`);
     }
 
