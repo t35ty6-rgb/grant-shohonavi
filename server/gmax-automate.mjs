@@ -352,11 +352,65 @@ export async function automateGmax({ invitationUrl, assistant, customer, items, 
           log('  ⚠ 次へ進むリンクが見つからない → 停止');
           shouldStop = true;
         } else {
-          log('  → 覚書テスト: 13問自動解答 → 採点');
-          const quizAnswers = { 1:'1', 2:'2', 3:'2', 4:'2', 5:'1', 6:'1', 7:'2', 8:'1', 9:'1', 10:'2', 11:'2', 12:'2', 13:'1' };
-          for (const [q, v] of Object.entries(quizAnswers)) {
-            await page.check(`input[name="question${q}"][value="${v}"]`, { timeout: 1500 }).catch(() => {});
+          log('  → 覚書テスト: 問題文 読取 → キーワード 判定 → 解答');
+          // キーワード → 正答 (1=はい, 2=いいえ) マップ
+          // "はい" = コンプライアンス 遵守事項 / "いいえ" = 禁止/違反事項
+          const answerRules = [
+            { kw: ['クーリングオフ', '説得'], ans: '2' },     // 説得は妨害 = いいえ
+            { kw: ['在庫を持った方がよい'], ans: '2' },        // 在庫NG = いいえ
+            { kw: ['他社商品', '持ち込んではならない'], ans: '1' }, // 禁止事項が正しい = はい
+            { kw: ['他社商品', '宗教'], ans: '1' },
+            { kw: ['広告', 'チラシ', '自作'], ans: '2' },     // 自作NG = いいえ
+            { kw: ['75才以上', '学生', '登録はできない'], ans: '1' }, // 制限は正しい = はい
+            { kw: ['クーリングオフの説明', '絶対'], ans: '1' }, // 法律で必要 = はい
+            { kw: ['概要書面', '渡さなくてもよい'], ans: '2' }, // 書面交付必要 = いいえ
+            { kw: ['断られても', '契約するまで'], ans: '2' },   // 何度も勧誘NG = いいえ
+            { kw: ['SNS', '名称を出さなければ'], ans: '2' },   // SNS全部NG = いいえ
+            { kw: ['昇格', '過剰', '認められている'], ans: '2' }, // 過量販売NG = いいえ
+            { kw: ['特定商取引法', '薬機法', '学ぶ必要'], ans: '1' }, // 継続学習必要 = はい
+            { kw: ['勧誘開始前', '氏名', '商品名', '勧誘目的'], ans: '1' }, // 法律で必要 = はい
+            { kw: ['個人情報', '他の目的', '使用してはならない'], ans: '1' }, // プライバシー = はい
+            { kw: ['個人情報', 'グラント以外'], ans: '1' },
+            { kw: ['ビジネス活動', '継続的'], ans: '1' },
+          ];
+          // 全質問の text を 取る
+          const quizData = await page.$$eval('input[name^="question"][type="radio"]', radios => {
+            const map = {};
+            for (const r of radios) {
+              const qname = r.name;
+              if (!map[qname]) {
+                // 問題文 は 近くの text (親 or 兄弟 要素)
+                let el = r.closest('tr, div, li, td');
+                let text = '';
+                while (el && text.length < 10) {
+                  text = (el.textContent || '').trim();
+                  el = el.parentElement;
+                }
+                map[qname] = text.slice(0, 300);
+              }
+            }
+            return map;
+          });
+          log(`  検出質問数: ${Object.keys(quizData).length}`);
+          let answered = 0;
+          for (const [qname, qtext] of Object.entries(quizData)) {
+            let answer = null;
+            for (const rule of answerRules) {
+              if (rule.kw.every(kw => qtext.includes(kw))) { answer = rule.ans; break; }
+            }
+            if (!answer) {
+              log(`  ! ${qname}: 判定不能 → "${qtext.slice(0, 80)}..."`);
+              continue;
+            }
+            try {
+              await page.check(`input[name="${qname}"][value="${answer}"]`, { timeout: 1500 });
+              answered++;
+              log(`  ✓ ${qname}=${answer === '1' ? 'はい' : 'いいえ'} (${qtext.slice(0, 40)}...)`);
+            } catch (e) {
+              log(`  ! ${qname} 選択失敗: ${e.message.slice(0, 40)}`);
+            }
           }
+          log(`  → ${answered} 問 解答完了`);
           log('  → scoring() 実行');
           await page.evaluate(() => { if (typeof scoring === 'function') scoring(); }).catch(() => {});
           await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
