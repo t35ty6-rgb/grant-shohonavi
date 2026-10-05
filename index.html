@@ -188,6 +188,13 @@ details.fs>.fs-body{padding:0 14px 14px}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:14px}
 .panel h3{margin:0 0 4px;font-size:15px}
 .panel>p{margin:0 0 10px;font-size:12.5px;color:var(--muted)}
+details.panel{padding:0}
+details.panel>summary{list-style:none;cursor:pointer;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:15px;font-weight:700;color:var(--ink);user-select:none;min-height:44px;box-sizing:border-box}
+details.panel>summary::-webkit-details-marker{display:none}
+details.panel>summary::after{content:"";width:10px;height:10px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .2s ease;flex-shrink:0}
+details.panel[open]>summary::after{transform:rotate(-135deg)}
+details.panel[open]>summary{border-bottom:1px solid var(--line)}
+details.panel>.panel-body{padding:14px}
 .dist{display:flex;flex-direction:column;gap:6px;margin-top:10px}
 .dr{display:grid;grid-template-columns:4.5em minmax(0,1fr) 7.5em;gap:8px;align-items:center;font-size:13px;font-variant-numeric:tabular-nums}
 .dr .bg{height:12px;background:var(--bg);border-radius:6px;overflow:hidden}
@@ -981,15 +988,15 @@ function renderData(){const el=$("datapane");if(!el)return;
   const exp=pend?`<div class="panel"><h3>未送信の記録（${pend}件）</h3><p>保存先につながったら自動で送ります。すぐ反映したいときは、コピーしてClaudeのチャットに貼り付けてください。</p><button class="btn sm ghost" type="button" id="d-exp">未送信の記録をコピー</button></div>`:"";
   const recHTML=`<div class="panel"><h3>最近の記録（${n}件）</h3>${RECS.slice(0,30).map(r=>`<div class="rec"><button class="del" type="button" data-del="${esc(r.id)}">削除</button><b>${esc(r.code)}</b>${r._local?' <span class="tag">未送信</span>':""} <span class="meta2">${esc(r.sex||"")} ${esc(r.age||"")} ${esc(r.type||"")}・${(r.createdAt||"").slice(0,10)}</span><div class="meta2">${["h","wt","top","under","waist","hip"].filter(f=>r[f]).map(f=>({h:"身長",wt:"体重",top:"トップ",under:"アンダー",waist:"ウエスト",hip:"ヒップ"}[f])+" "+r[f]).join(" / ")}</div><div>${(r.items||[]).map(i=>`${esc(i.name)} <b>${esc([i.color,i.size].filter(Boolean).join(" ")||"—")}</b>${i.qty>1?"×"+i.qty:""}${i.feel?"（"+esc(i.feel)+"）":""}`).join("、")}</div><button class="btn sm ghost" type="button" data-ord="${esc(r.id)}" style="margin-top:6px">G-MAX注文リスト</button>${(r.body||[]).length||(r.health||[]).length?`<div class="meta2">お悩み：${esc([...(r.body||[]),...(r.health||[])].join("、"))}</div>`:""}</div>`).join("")}</div>`;
   let html=head+status+exp+(n?recHTML:'<div class="empty" style="margin-bottom:14px">まだ記録がありません。「＋ 新しく記録」から入れてください。</div>')+`<div class="kpis"><div class="kpi"><b>${n}</b><span>記録した人数</span></div><div class="kpi"><b>${items.length}</b><span>処方アイテム</span></div><div class="kpi"><b>${tried.length?Math.round(ok/tried.length*100)+"%":"—"}</b><span>試着でぴったり</span></div></div>`;
-  html+=`<div class="panel"><h3>サイズ検索</h3><p>お客様の採寸を入れると、似た体型の人がどのサイズを選んだかが出ます（身長±8cm・体重±6kg 程度を「似た体型」としています）。</p>
+  html+=`<details class="panel"><summary>サイズ検索</summary><div class="panel-body"><p style="margin:0 0 10px;font-size:12.5px;color:var(--muted)">お客様の採寸を入れると、似た体型の人がどのサイズを選んだかが出ます（身長±8cm・体重±6kg 程度を「似た体型」としています）。</p>
    <div class="grid2"><label class="fl" style="grid-column:1/-1">商品<select id="s-p">${Object.entries(P).map(([k,p])=>`<option value="${k}"${k===dataProd?" selected":""}>${p.s}｜${p.n}</option>`).join("")}</select></label>
    <label class="fl">身長 cm<input id="s-h" type="number" inputmode="decimal"></label><label class="fl">体重 kg<input id="s-wt" type="number" inputmode="decimal"></label>
    <label class="fl">トップ cm<input id="s-top" type="number" inputmode="decimal"></label><label class="fl">アンダー cm<input id="s-under" type="number" inputmode="decimal"></label>
-   <label class="fl">ウエスト cm<input id="s-waist" type="number" inputmode="decimal"></label><label class="fl">ヒップ cm<input id="s-hip" type="number" inputmode="decimal"></label></div><div id="s-out"></div></div>`;
+   <label class="fl">ウエスト cm<input id="s-waist" type="number" inputmode="decimal"></label><label class="fl">ヒップ cm<input id="s-hip" type="number" inputmode="decimal"></label></div><div id="s-out"></div></div></details>`;
   if(n){
-    html+=`<div class="panel"><h3>商品×サイズの体型</h3><p>そのサイズを選んだ人の平均（カッコ内は最小〜最大）。</p><select id="t-p" style="font:inherit;font-size:15px;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);width:100%;margin-bottom:8px">${prods.map(k=>`<option value="${k}"${k===dataProd?" selected":""}>${P[k].n}（${items.filter(i=>i.id===k).length}件）</option>`).join("")}</select><div class="tbl" id="t-out"></div></div>`;
+    html+=`<details class="panel"><summary>商品×サイズの体型</summary><div class="panel-body"><p style="margin:0 0 10px;font-size:12.5px;color:var(--muted)">そのサイズを選んだ人の平均（カッコ内は最小〜最大）。</p><select id="t-p" style="font:inherit;font-size:15px;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);width:100%;margin-bottom:8px">${prods.map(k=>`<option value="${k}"${k===dataProd?" selected":""}>${P[k].n}（${items.filter(i=>i.id===k).length}件）</option>`).join("")}</select><div class="tbl" id="t-out"></div></div></details>`;
     const W={};RECS.forEach(r=>{const ws=[...(r.body||[]),...(r.health||[])];(r.items||[]).forEach(it=>ws.forEach(w=>{W[w]=W[w]||{};W[w][it.id]=(W[w][it.id]||0)+1}))});
-    html+=`<div class="panel"><h3>お悩み別 よく処方された商品</h3><div class="wh">${Object.entries(W).sort((x,y)=>Object.values(y[1]).reduce((a,b)=>a+b,0)-Object.values(x[1]).reduce((a,b)=>a+b,0)).map(([w,o])=>`<div><b>${esc(w)}</b>${Object.entries(o).sort((x,y)=>y[1]-x[1]).slice(0,3).map(([id,c])=>`${esc(P[id]?.n||id)}（${c}）`).join("・")}</div>`).join("")||'<div>まだありません</div>'}</div></div>`;
+    html+=`<details class="panel"><summary>お悩み別 よく処方された商品</summary><div class="panel-body"><div class="wh">${Object.entries(W).sort((x,y)=>Object.values(y[1]).reduce((a,b)=>a+b,0)-Object.values(x[1]).reduce((a,b)=>a+b,0)).map(([w,o])=>`<div><b>${esc(w)}</b>${Object.entries(o).sort((x,y)=>y[1]-x[1]).slice(0,3).map(([id,c])=>`${esc(P[id]?.n||id)}（${c}）`).join("・")}</div>`).join("")||'<div>まだありません</div>'}</div></div></details>`;
   }
   el.innerHTML=html;$("d-new").onclick=()=>openRec();
   if($("d-exp"))$("d-exp").onclick=async()=>{const t="GRANT_NAVI_RECORDS\n"+JSON.stringify(getPend());try{await navigator.clipboard.writeText(t);$("d-exp").textContent="コピーしました"}catch(e){$("d-exp").insertAdjacentHTML("afterend",`<textarea style="width:100%;height:120px;margin-top:8px">${esc(t)}</textarea>`);$("d-exp").textContent="下の文字を全部選んでコピーしてください"}};
