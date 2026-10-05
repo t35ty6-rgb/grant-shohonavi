@@ -1381,7 +1381,10 @@ async function startSignupAutomate(r){
     zip2:(($('c-zip')?.value||'').replace(/[^0-9]/g,'').slice(3,7)),
     pref:($('c-pref')?.value||'').trim(),city:($('c-city')?.value||'').trim(),
     addr:($('c-addr')?.value||'').trim(),bldg:($('c-bldg')?.value||'').trim(),
+    serial:($('c-serial')?.value||'').trim(),
   };
+  const _ut2=($('c-usertype')?.value||'1');
+  if(_ut2==='1'&&!customer.serial){alert('シリアル番号が未入力です。概要書面右上のQRをカメラ/画像ボタンで読み取るか、手入力してください。');return;}
   const items=(r.items||[]).map(i=>({code:String(i.gm||GM[i.id]?.c||''),name:String(i.name||''),color:String(i.color||''),size:String(i.size||''),qty:Number(i.qty)||1}));
   $('signup-start').disabled=true;$('signup-start').textContent='実行中…';
   $('signup-log').hidden=false;$('signup-log').innerHTML='';
