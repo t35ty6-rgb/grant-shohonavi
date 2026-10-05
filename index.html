@@ -27,7 +27,7 @@
 *{box-sizing:border-box}
 html,body{height:100%}
 body{background:var(--desk);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7;overflow:hidden}
-.app{height:100%;max-width:440px;margin:0 auto;background:var(--bg);display:flex;flex-direction:column;position:relative}
+.app{height:100%;max-width:440px;margin:0 auto;background:var(--bg);display:flex;flex-direction:column;position:relative;padding-left:env(safe-area-inset-left,0);padding-right:env(safe-area-inset-right,0)}
 @media (min-width:600px){body{padding-block:20px}.app{border-radius:28px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.18);border:1px solid var(--line)}}
 .appbar{flex:none;display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--line)}
 .appbar .back{font:inherit;border:none;background:none;color:var(--ink);font-size:22px;line-height:1;padding:2px 6px;cursor:pointer;border-radius:8px}
@@ -208,7 +208,8 @@ details.more[open] summary::after{content:"－"}
 .home .hint2{font-size:12px;color:var(--muted);margin:-12px 0 16px;text-align:right}
 .sheet-bg[hidden]{display:none}
 .sheet-bg{position:absolute;inset:0;background:rgba(10,10,14,.45);z-index:50;display:flex;align-items:flex-end}
-.sheet{background:var(--bg);width:100%;max-height:88%;overflow-y:auto;border-radius:22px 22px 0 0;padding:0 16px calc(20px + env(safe-area-inset-bottom,0px))}
+.sheet{background:var(--bg);width:100%;max-height:92%;overflow-y:auto;border-radius:22px 22px 0 0;padding:0 12px calc(20px + env(safe-area-inset-bottom,0px))}
+@media (min-width:420px){.sheet{padding:0 16px calc(20px + env(safe-area-inset-bottom,0px))}}
 .sheet-h{position:sticky;top:0;background:var(--bg);display:flex;align-items:center;gap:10px;padding:14px 0 10px;z-index:1}
 .sheet-h b{font-size:18px;font-weight:900}
 .sheet-h .x{margin-left:auto;font:inherit;font-size:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 14px;cursor:pointer}
@@ -267,6 +268,16 @@ label[hidden],.fl[hidden]{display:none!important}.sw-big>div{min-width:0;flex:1}
 .cat-t.sel{border:2px solid var(--accent)}
 .cat-h{font-size:13px;font-weight:900;margin:10px 0 6px}
 @media (prefers-reduced-motion:no-preference){.msg{animation:in .22s ease-out both}@keyframes in{from{transform:translateY(5px)}to{transform:none}}}
+/* === モバイル (<400px) で ビッタリ fit: 2-col grid を 1-col に、padding 削減 === */
+@media (max-width:399px){
+  .s-sec{padding:11px 11px;border-radius:14px}
+  .sheet-h{padding:12px 0 8px}
+  .s-sec h4{font-size:11.5px}
+  input,select,textarea{font-size:16px !important}
+  .sheet [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr !important}
+}
+/* iOS Safari の 入力欄 auto-zoom 回避: 全 input/select は 16px 以上 */
+input,select,textarea{font-size:16px}
 </style>
 
 <div class="app">
@@ -1319,7 +1330,7 @@ function openModal(title,html){
   if(!m){
     m=document.createElement('div');m.id='__modal';
     m.setAttribute('role','dialog');m.setAttribute('aria-modal','true');
-    m.style.cssText='position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto';
+    m.style.cssText='position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding:24px 10px;overflow-y:auto';
     document.body.appendChild(m);
   }
   m.innerHTML=`<div style="background:var(--surface);border-radius:14px;padding:22px;max-width:620px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3)" role="document">
