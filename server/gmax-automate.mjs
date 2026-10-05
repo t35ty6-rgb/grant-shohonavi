@@ -192,9 +192,74 @@ export async function automateGmax({ invitationUrl, assistant, customer, items, 
       }
     }
 
-    log('✓ Step 2 まで自動入力完了。残りはお客様に入力してもらってください (姓名・生年月日・住所・電話・PW・商品選択)');
-    log('  G-MAX画面はこのまま開いたままにしておきます');
-    return { ok: true, phase: 2, note: 'アシスタント情報まで入力完了' };
+    log('Step 2 完了 → 次へ');
+    await Promise.all([
+      page.waitForLoadState('domcontentloaded'),
+      page.evaluate(() => { if (typeof formBunki_next === 'function') formBunki_next(); }),
+    ]);
+    await page.waitForTimeout(1500);
+
+    // Step 3+: お客様情報を可能な限り入力
+    //   具体的なフィールド名は実機 inspect 済み次第、更新する
+    //   ここでは name 属性で広めに candidate を試す
+    if (customer) {
+      log('Step 3+: お客様情報を自動入力');
+      const custMap = {
+        // 姓名 (漢字)
+        Name_SEI: customer.lastName, Name_MEI: customer.firstName,
+        family_name: customer.lastName, given_name: customer.firstName,
+        last_name: customer.lastName, first_name: customer.firstName,
+        // カナ
+        Kana_SEI: customer.lastNameKana, Kana_MEI: customer.firstNameKana,
+        family_name_kana: customer.lastNameKana, given_name_kana: customer.firstNameKana,
+        // 連絡先
+        TEL: customer.phone, TEL1: customer.phone, tel: customer.phone, phone: customer.phone,
+        MAIL: customer.email, mail: customer.email, email: customer.email,
+        // パスワード
+        PASSWORD: customer.password, password: customer.password, pass: customer.password,
+        PASSWORD_CHECK: customer.password, password_confirm: customer.password,
+        // 住所
+        add1p1: customer.zip1, zip1: customer.zip1,
+        add1p2: customer.zip2, zip2: customer.zip2,
+        add2: customer.pref, pref: customer.pref,
+        add3: customer.city, city: customer.city,
+        add4: customer.addr, addr: customer.addr, address1: customer.addr,
+        add5: customer.bldg, bldg: customer.bldg, address2: customer.bldg,
+      };
+      // 生年月日 (year/month/day 分解)
+      if (customer.birth) {
+        const [y, m, d] = customer.birth.split('-');
+        Object.assign(custMap, {
+          Birth_year: y, Birth_month: m, Birth_day: d,
+          birth_year: y, birth_month: m, birth_day: d,
+          year: y, month: m, day: d,
+        });
+      }
+      let filled = 0;
+      for (const [name, value] of Object.entries(custMap)) {
+        if (value === undefined || value === null || value === '') continue;
+        try {
+          const el = await page.$(`input[name="${name}"]`);
+          if (!el) continue;
+          const type = await el.getAttribute('type').catch(() => 'text');
+          if (type === 'hidden') continue;
+          await el.fill(String(value));
+          filled++;
+        } catch {}
+      }
+      // select 系 (生年月日が select の場合)
+      if (customer.birth) {
+        const [y, m, d] = customer.birth.split('-');
+        for (const [name, val] of [['Birth_year', y], ['Birth_month', String(+m)], ['Birth_day', String(+d)], ['birth_year', y], ['birth_month', String(+m)], ['birth_day', String(+d)]]) {
+          try { await page.selectOption(`select[name="${name}"]`, val); filled++; } catch {}
+        }
+      }
+      log(`  → ${filled} 項目入力しました`);
+    }
+
+    log('✓ お客様情報まで自動入力完了。残り: 内容確認 → 商品選択(⑰) → 送信');
+    log('  G-MAX画面はこのまま開いたままにしておきます (owner で確認してから次へ進めてください)');
+    return { ok: true, phase: 2, note: 'アシスタント + お客様情報 まで入力完了' };
   } catch (err) {
     log(`エラー: ${err.message}`);
     return { ok: false, error: err.message };
