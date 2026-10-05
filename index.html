@@ -1452,6 +1452,8 @@ async function startGmaxRegister(r){
   if(!customer.pref)missing.push('都道府県');
   if(!customer.city)missing.push('市区町村');
   if(!customer.addr)missing.push('番地');
+  const _ut=($('c-usertype')?.value||'1');
+  if(_ut==='1'&&!customer.serial)missing.push('シリアル番号（ビジネス会員は必須、QR読取ボタン）');
   if(missing.length){alert('お客様情報を全部入力してください：\n'+missing.join('、'));return;}
   const items=(r.items||[]).map(i=>({code:String(i.gm||GM[i.id]?.c||''),name:String(i.name||''),color:String(i.color||''),size:String(i.size||''),qty:Number(i.qty)||1}));
   const stylId=($('c-stylist')?.value||selectedStylistId());
