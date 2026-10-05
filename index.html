@@ -155,8 +155,15 @@ details.more[open] summary::after{content:"－"}
 .fig svg{min-width:280px}
 /* forms */
 .form{display:flex;flex-direction:column;gap:14px}
-.fs{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px}
+.fs{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:12px}
 .fs h3{margin:0 0 10px;font-size:14px}
+details.fs{padding:0}
+details.fs>summary{list-style:none;cursor:pointer;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:14px;font-weight:700;color:var(--ink);user-select:none;min-height:44px;box-sizing:border-box}
+details.fs>summary::-webkit-details-marker{display:none}
+details.fs>summary::after{content:"";width:10px;height:10px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .2s ease;flex-shrink:0}
+details.fs[open]>summary::after{transform:rotate(-135deg)}
+details.fs[open]>summary{border-bottom:1px solid var(--line);margin-bottom:12px}
+details.fs>.fs-body{padding:0 14px 14px}
 .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .fl{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted);font-weight:700}
 .fl input,.fl select,.fl textarea,.it input,.it select{font:inherit;font-size:16px;font-weight:400;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px;width:100%;min-width:0}
@@ -897,22 +904,22 @@ function openRec(){
   const worries=[...(a.body||[]),...(a.posture&&a.posture!=="わからない"?[a.posture]:[]),...(a.health||[]),...(a.painWhere||[]).map(x=>x+"の痛み")];
   $("recform").innerHTML=`
   ${dbState==="ok"?'<div class="msgline">保存先：つながっています</div>':dbState==="loading"?'<div class="msgline">保存先：確認中…</div>':CAN_LOCAL?'<div class="msgline err">保存先につながっていません。記録はこの端末に控えておき、つながったときに自動で送ります。</div>':noSaveBanner()}
-  <div class="fs"><h3>お客様（匿名でOK）</h3><div class="grid2">
+  <details class="fs"><summary>お客様（匿名でOK）</summary><div class="fs-body"><div class="grid2">
    <label class="fl">お客様コード<input id="r-code" value="${code}" autocomplete="off"></label>
    <label class="fl">性別${sel("r-sex",["女性","男性"],a.sex)}</label>
    <label class="fl">年代${sel("r-age",["20代","30代","40代","50代","60代以上"],a.age)}</label>
    <label class="fl">体型${sel("r-type",["細め","標準","ぽっちゃり","がっしり"],"")}</label></div>
-   ${worries.length?`<p class="ev" style="margin-top:10px">お悩み：${esc(worries.join("、"))}</p>`:""}</div>
-  <div class="fs"><h3>採寸（わかる項目だけ）</h3><div class="grid2">
+   ${worries.length?`<p class="ev" style="margin-top:10px">お悩み：${esc(worries.join("、"))}</p>`:""}</div></details>
+  <details class="fs"><summary>採寸（わかる項目だけ）</summary><div class="fs-body"><div class="grid2">
    <label class="fl">身長 <span class="unit">cm</span><input id="r-h" type="number" inputmode="decimal" value="${a.h||""}"></label>
    <label class="fl">体重 <span class="unit">kg</span><input id="r-wt" type="number" inputmode="decimal" value="${a.wt||""}"></label>
    <label class="fl">トップバスト <span class="unit">cm</span><input id="r-top" type="number" inputmode="decimal" value="${a.top||""}"></label>
    <label class="fl">アンダーバスト <span class="unit">cm</span><input id="r-under" type="number" inputmode="decimal" value="${a.under||""}"></label>
    <label class="fl">ウエスト <span class="unit">cm</span><input id="r-waist" type="number" inputmode="decimal" value="${a.waist||""}"></label>
-   <label class="fl">ヒップ <span class="unit">cm</span><input id="r-hip" type="number" inputmode="decimal" value="${a.hip||""}"></label></div></div>
-  <div class="fs"><h3>処方したもの・サイズ</h3><div class="items" id="r-items"></div>
-   <button class="btn ghost" type="button" id="r-cat" style="margin-top:10px">＋ 写真から商品を追加</button><div class="row" style="margin-top:10px"><select id="r-add" style="flex:1;font:inherit;font-size:15px;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)"><option value="">商品を追加…</option>${Object.entries(P).map(([k,p])=>`<option value="${k}">${p.s}｜${p.n}</option>`).join("")}</select></div></div>
-  <div class="fs"><label class="fl">メモ（試着して気づいたこと）<textarea id="r-memo"></textarea></label></div>
+   <label class="fl">ヒップ <span class="unit">cm</span><input id="r-hip" type="number" inputmode="decimal" value="${a.hip||""}"></label></div></div></details>
+  <details class="fs" open><summary>処方したもの・サイズ</summary><div class="fs-body"><div class="items" id="r-items"></div>
+   <button class="btn ghost" type="button" id="r-cat" style="margin-top:10px">＋ 写真から商品を追加</button><div class="row" style="margin-top:10px"><select id="r-add" style="flex:1;font:inherit;font-size:15px;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)"><option value="">商品を追加…</option>${Object.entries(P).map(([k,p])=>`<option value="${k}">${p.s}｜${p.n}</option>`).join("")}</select></div></div></details>
+  <details class="fs"><summary>メモ（試着して気づいたこと）</summary><div class="fs-body"><label class="fl"><textarea id="r-memo"></textarea></label></div></details>
   <div class="recsum" id="r-sum"></div><div id="r-msg"></div>
   <button class="btn" type="submit" id="r-save">この内容で記録する</button>`;
   if(SEL.size)[...SEL.entries()].forEach(([id,vs])=>vs.forEach(v=>addItem(id,true,v)));else ids.forEach(id=>addItem(id,true));
