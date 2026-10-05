@@ -316,6 +316,27 @@ export async function automateGmax({ invitationUrl, assistant, customer, items, 
     ]);
     await page.waitForTimeout(1500);
 
+    // Step 3 到達確認 + ページ構造 dump
+    log(`Step 3 URL: ${page.url()}`);
+    log(`Step 3 Title: ${await page.title().catch(() => '?')}`);
+    try {
+      const step3Fields = await page.$$eval('input, select, textarea', els => els.slice(0, 60).map(el => ({
+        tag: el.tagName, type: el.type || '', name: el.name || '', id: el.id || '',
+        placeholder: el.placeholder || '', required: el.required || false,
+      })));
+      log(`Step 3 検出フィールド: ${step3Fields.length}`);
+      step3Fields.forEach((f, i) => log(`  [${i}] ${f.tag}${f.type?'['+f.type+']':''} name="${f.name}" id="${f.id}" ph="${f.placeholder}"${f.required?' REQ':''}`));
+      const dumpPath = `/tmp/gmax-step3-${Date.now()}.html`;
+      const shotPath = dumpPath.replace('.html', '.png');
+      const fs = await import('fs');
+      await fs.promises.writeFile(dumpPath, await page.content(), 'utf8');
+      await page.screenshot({ path: shotPath, fullPage: true });
+      log(`📸 Step 3 dump: ${shotPath}`);
+      log(`📄 Step 3 HTML: ${dumpPath}`);
+    } catch (e) {
+      log(`⚠ Step 3 dump エラー: ${e.message}`);
+    }
+
     // Step 3+: お客様情報を可能な限り入力
     //   具体的なフィールド名は実機 inspect 済み次第、更新する
     //   ここでは name 属性で広めに candidate を試す
@@ -360,18 +381,25 @@ export async function automateGmax({ invitationUrl, assistant, customer, items, 
           if (!el) continue;
           const type = await el.getAttribute('type').catch(() => 'text');
           if (type === 'hidden') continue;
-          await el.fill(String(value));
+          await el.fill(String(value), { timeout: 1000 });
           filled++;
+          log(`  ✓ ${name}=${String(value).slice(0, 30)}`);
         } catch {}
       }
-      // select 系 (生年月日が select の場合)
+      // select 系 (生年月日が select の場合) - timeout 短め
       if (customer.birth) {
         const [y, m, d] = customer.birth.split('-');
         for (const [name, val] of [['Birth_year', y], ['Birth_month', String(+m)], ['Birth_day', String(+d)], ['birth_year', y], ['birth_month', String(+m)], ['birth_day', String(+d)]]) {
-          try { await page.selectOption(`select[name="${name}"]`, val); filled++; } catch {}
+          try {
+            const sel = await page.$(`select[name="${name}"]`);
+            if (!sel) continue;
+            await sel.selectOption(val, { timeout: 1000 });
+            filled++;
+            log(`  ✓ ${name}=${val}`);
+          } catch {}
         }
       }
-      log(`  → ${filled} 項目入力しました`);
+      log(`  → 合計 ${filled} 項目入力しました`);
     }
 
     log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
