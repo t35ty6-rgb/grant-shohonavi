@@ -224,12 +224,20 @@ export async function sendInviteAndAutomate({ customerEmail, assistant, stylist,
  *   - 以降 Step 3+ はお客様入力 (姓名/メール/生年月日/住所/電話/PW) を一部プリフィル
  *   - 商品選択ページ (⑰) で items を順にカートに追加
  */
-export async function automateGmax({ invitationUrl, assistant, customer, items, onProgress, _page }) {
+export async function automateGmax({ invitationUrl, assistant, customer, items, stylist, onProgress, _page }) {
   const log = (msg) => { onProgress?.({ time: new Date().toISOString(), msg }); };
 
-  const browser = await connectChrome(log);
-  const ctx = browser.contexts()[0];
-  const page = _page || await ctx.newPage();
+  let context = null;
+  let page = _page;
+  if (!page) {
+    if (!stylist?.id) return { ok: false, error: 'スタイリスト情報が必要です' };
+    try {
+      context = await launchStylistBrowser(stylist, log);
+    } catch (err) {
+      return { ok: false, error: `Chrome起動エラー: ${err.message}` };
+    }
+    page = await context.newPage();
+  }
 
   try {
     log(`招待URLを開きます: ${invitationUrl.slice(0, 80)}...`);
@@ -347,6 +355,12 @@ export async function automateGmax({ invitationUrl, assistant, customer, items, 
     log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     log('✓ お客様情報まで自動入力完了');
     log('⚠ テストモード: 最終送信ボタンは押しません');
+    log('  G-MAX画面は Mac mini のheadless Chrome で動作中。確認用スクリーンショットは /tmp/gmax-signup-{時刻}.png に保存');
+    try {
+      const shotPath = `/tmp/gmax-signup-${Date.now()}.png`;
+      await page.screenshot({ path: shotPath, fullPage: true });
+      log(`📸 スクリーンショット: ${shotPath}`);
+    } catch {}
     log('  Chromeを確認して、問題なければ手動で「次へ」「送信」を押してください');
     log('  残: 商品選択(⑰) → 内容確認 → 本登録送信');
     log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -355,6 +369,8 @@ export async function automateGmax({ invitationUrl, assistant, customer, items, 
     log(`エラー: ${err.message}`);
     return { ok: false, error: err.message };
   } finally {
-    try { await browser.close(); } catch {}
+    if (context) {
+      try { await context.close(); } catch {}
+    }
   }
 }

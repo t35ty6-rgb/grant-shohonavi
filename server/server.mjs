@@ -105,12 +105,14 @@ app.post('/api/invite-and-cart', async (req, res) => {
 });
 
 // -----------------------------------------------------------
-// POST /api/automate  — 招待URLを直接指定する旧方式（フォールバック）
+// POST /api/signup-automate  — お客様から受け取った招待URLで登録フォーム自動入力
 // -----------------------------------------------------------
-app.post('/api/automate', async (req, res) => {
-  const { invitationUrl, customer, items, headless = false } = req.body;
+app.post('/api/signup-automate', async (req, res) => {
+  const { invitationUrl, customer, items, assistant, stylist } = req.body;
   if (!invitationUrl) return res.status(400).json({ ok: false, error: '招待URLが必要です' });
   if (!items?.length) return res.status(400).json({ ok: false, error: '商品リストが空です' });
+  if (!assistant?.id) return res.status(400).json({ ok: false, error: 'アシスタント情報が必要です' });
+  if (!stylist?.id || !stylist?.gmaxId || !stylist?.gmaxPass) return res.status(400).json({ ok: false, error: 'スタイリスト G-MAX ログイン情報が不足しています' });
 
   const jobId = randomUUID();
   const logs = [];
@@ -118,7 +120,7 @@ app.post('/api/automate', async (req, res) => {
   res.json({ ok: true, jobId });
 
   automateGmax({
-    invitationUrl, customer, items, headless,
+    invitationUrl, customer, items, assistant, stylist,
     onProgress: (entry) => { logs.push(entry); console.log(`[${jobId.slice(0, 8)}]`, entry.msg); },
   })
     .then(result => { jobs.get(jobId).status = result.ok ? 'done' : 'failed'; jobs.get(jobId).result = result; })
