@@ -22,12 +22,50 @@ const CDP_URL = 'http://127.0.0.1:9222';
 const GMAX_INVITE_PRGNAME = 'invitation_mail_input';
 
 async function connectChrome(log) {
+  // Chrome debug port が応答しなければ Chrome を起動
+  let needLaunch = false;
   try {
-    const browser = await chromium.connectOverCDP(CDP_URL);
+    const r = await fetch('http://127.0.0.1:9222/json/version', { signal: AbortSignal.timeout(2000) });
+    if (!r.ok) needLaunch = true;
+  } catch { needLaunch = true; }
+
+  if (needLaunch) {
+    log('Chrome(debug) が応答しないので起動します');
+    const { spawn } = await import('child_process');
+    const PROFILE_DIR = `${process.env.HOME}/.skeleton-granteones-dev-profile`;
+    spawn('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', [
+      '--remote-debugging-port=9222',
+      `--user-data-dir=${PROFILE_DIR}`,
+      'https://sslgw.jns-asp.jp/granteones/',
+    ], { detached: true, stdio: 'ignore' }).unref();
+    // 起動待ち (最大10秒)
+    for (let i = 0; i < 20; i++) {
+      await new Promise(r => setTimeout(r, 500));
+      try {
+        const r = await fetch('http://127.0.0.1:9222/json/version', { signal: AbortSignal.timeout(1000) });
+        if (r.ok) { log('✓ Chrome 起動完了'); break; }
+      } catch {}
+    }
+  } else {
+    // Chrome 動いてるがタブ0ならG-MAX開く
+    try {
+      const r = await fetch('http://127.0.0.1:9222/json/list', { signal: AbortSignal.timeout(2000) });
+      const tabs = r.ok ? await r.json() : [];
+      if (!tabs.length) {
+        log('Chrome(debug) にタブが無いので G-MAX を開きます');
+        const { exec } = await import('child_process');
+        exec(`open -a "Google Chrome" --args --user-data-dir="${process.env.HOME}/.skeleton-granteones-dev-profile" "https://sslgw.jns-asp.jp/granteones/"`);
+        await new Promise(r => setTimeout(r, 2500));
+      }
+    } catch {}
+  }
+
+  try {
+    const browser = await chromium.connectOverCDP(CDP_URL, { timeout: 10000 });
     log('Chrome (CDP) に接続しました');
     return browser;
   } catch (err) {
-    throw new Error(`Chromeに接続できません。「Chrome起動_デバッグモード.command」をダブルクリックしてG-MAXにログインしてから再試行してください。(${err.message})`);
+    throw new Error(`Chromeに接続できません。「サーバー起動.command」をもう一度ダブルクリックしてください。(${err.message})`);
   }
 }
 
