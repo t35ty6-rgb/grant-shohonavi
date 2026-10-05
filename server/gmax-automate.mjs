@@ -405,6 +405,8 @@ export async function automateGmax({ invitationUrl, assistant, customer, items, 
         P_BILL_ADD4: customer.bldg || '',
         // 電話番号
         P_TEL1: tel1, P_TEL2: tel2, P_TEL3: tel3,
+        // シリアル番号 (QRコード)
+        P_MYNUMBER_C: customer.serial || '',
       };
       // 生年月日 (select)
       if (customer.birth) {
