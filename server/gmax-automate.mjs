@@ -91,7 +91,7 @@ function extractArguments(url) {
  * 招待メール送信 (owner → customer)
  * 戻り値: { ok, args, customerEmail }
  */
-async function sendInvite({ page, customerEmail, log }) {
+async function sendInvite({ page, customerEmail, userType = '2', log }) {
   const curUrl = page.url();
   const args = extractArguments(curUrl);
   if (!args) {
@@ -112,8 +112,9 @@ async function sendInvite({ page, customerEmail, log }) {
   log(`お客様メールアドレスを入力: ${customerEmail}`);
   await page.fill('input[name="mailAddress"]', customerEmail);
 
-  log('UserType=愛用者会員 + MailSelect=紹介者 を選択');
-  await page.click('input[name="UserType"][value="2"]');
+  const userTypeLabel = userType === '1' ? 'ビジネス会員' : '愛用者会員';
+  log(`UserType=${userTypeLabel} (value=${userType}) + MailSelect=紹介者 を選択`);
+  await page.click(`input[name="UserType"][value="${userType}"]`);
   await page.click('input[name="MailSelect"][value="1"]');
   await page.waitForTimeout(300);
 
@@ -212,7 +213,7 @@ async function ensureLoggedIn(page, stylist, log) {
   }
 }
 
-export async function sendInviteAndAutomate({ customerEmail, assistant, stylist, items, onProgress }) {
+export async function sendInviteAndAutomate({ customerEmail, assistant, stylist, items, userType, onProgress }) {
   const log = (msg) => { onProgress?.({ time: new Date().toISOString(), msg }); };
 
   log('G-MAX自動化を開始します');
@@ -230,7 +231,7 @@ export async function sendInviteAndAutomate({ customerEmail, assistant, stylist,
       return { ok: false, error: `G-MAX ログインに失敗しました。スタイリスト管理で「${stylist.name}」の G-MAX ID/パスワードを確認してください。` };
     }
 
-    const result = await sendInvite({ page, customerEmail, log });
+    const result = await sendInvite({ page, customerEmail, userType, log });
     log(`✓ 招待メール送信完了 → ${customerEmail}`);
     log(`アシスタント: ${assistant.name} (ID: ${assistant.id})`);
     log(`商品: ${items.length}点 の自動投入予定`);
@@ -349,35 +350,28 @@ export async function automateGmax({ invitationUrl, assistant, customer, items, 
     //   ここでは name 属性で広めに candidate を試す
     if (customer) {
       log('Step 3+: お客様情報を自動入力');
+      // 電話番号を 3-4-4 分割 (ハイフンなし 11桁想定)
+      const telDigits = (customer.phone || '').replace(/[^0-9]/g, '');
+      const tel1 = telDigits.slice(0, 3), tel2 = telDigits.slice(3, 7), tel3 = telDigits.slice(7, 11);
       const custMap = {
         // 姓名 (漢字)
-        Name_SEI: customer.lastName, Name_MEI: customer.firstName,
-        family_name: customer.lastName, given_name: customer.firstName,
-        last_name: customer.lastName, first_name: customer.firstName,
-        // カナ
-        Kana_SEI: customer.lastNameKana, Kana_MEI: customer.firstNameKana,
-        family_name_kana: customer.lastNameKana, given_name_kana: customer.firstNameKana,
-        // 連絡先
-        TEL: customer.phone, TEL1: customer.phone, tel: customer.phone, phone: customer.phone,
-        MAIL: customer.email, mail: customer.email, email: customer.email,
-        // パスワード
-        PASSWORD: customer.password, password: customer.password, pass: customer.password,
-        PASSWORD_CHECK: customer.password, password_confirm: customer.password,
+        P_NAME_D_F_SEI: customer.lastName, P_NAME_D_F_MEI: customer.firstName,
+        // 姓名 (カナ)
+        P_NAME_D_K_SEI: customer.lastNameKana, P_NAME_D_K_MEI: customer.firstNameKana,
+        // 郵便番号
+        P_POST_3: customer.zip1, P_POST_4: customer.zip2,
         // 住所
-        add1p1: customer.zip1, zip1: customer.zip1,
-        add1p2: customer.zip2, zip2: customer.zip2,
-        add2: customer.pref, pref: customer.pref,
-        add3: customer.city, city: customer.city,
-        add4: customer.addr, addr: customer.addr, address1: customer.addr,
-        add5: customer.bldg, bldg: customer.bldg, address2: customer.bldg,
+        P_SHI_ADD2: customer.city,
+        P_CHOU_ADD3: customer.addr,
+        P_BILL_ADD4: customer.bldg || '',
+        // 電話番号
+        P_TEL1: tel1, P_TEL2: tel2, P_TEL3: tel3,
       };
-      // 生年月日 (year/month/day 分解)
+      // 生年月日 (select)
       if (customer.birth) {
         const [y, m, d] = customer.birth.split('-');
         Object.assign(custMap, {
-          Birth_year: y, Birth_month: m, Birth_day: d,
-          birth_year: y, birth_month: m, birth_day: d,
-          year: y, month: m, day: d,
+          P_BIRTH_YEAR: y, P_BIRTH_MONTH: String(+m), P_BIRTH_DAY: String(+d),
         });
       }
       let filled = 0;
@@ -393,10 +387,10 @@ export async function automateGmax({ invitationUrl, assistant, customer, items, 
           log(`  ✓ ${name}=${String(value).slice(0, 30)}`);
         } catch {}
       }
-      // select 系 (生年月日が select の場合) - timeout 短め
+      // 生年月日 select (P_BIRTH_YEAR/MONTH/DAY)
       if (customer.birth) {
         const [y, m, d] = customer.birth.split('-');
-        for (const [name, val] of [['Birth_year', y], ['Birth_month', String(+m)], ['Birth_day', String(+d)], ['birth_year', y], ['birth_month', String(+m)], ['birth_day', String(+d)]]) {
+        for (const [name, val] of [['P_BIRTH_YEAR', y], ['P_BIRTH_MONTH', String(+m)], ['P_BIRTH_DAY', String(+d)]]) {
           try {
             const sel = await page.$(`select[name="${name}"]`);
             if (!sel) continue;
@@ -405,6 +399,25 @@ export async function automateGmax({ invitationUrl, assistant, customer, items, 
             log(`  ✓ ${name}=${val}`);
           } catch {}
         }
+      }
+      // 都道府県 select (P_KEN_ADD1)
+      if (customer.pref) {
+        try {
+          const sel = await page.$('select[name="P_KEN_ADD1"]');
+          if (sel) {
+            await sel.selectOption({ label: customer.pref }, { timeout: 1000 });
+            filled++;
+            log(`  ✓ P_KEN_ADD1=${customer.pref}`);
+          }
+        } catch {}
+      }
+      // 性別 radio (P_SEX: 1=男, 2=女)
+      if (customer.sex) {
+        try {
+          await page.check(`input[name="P_SEX"][value="${customer.sex}"]`, { timeout: 1000 });
+          filled++;
+          log(`  ✓ P_SEX=${customer.sex}`);
+        } catch {}
       }
       log(`  → 合計 ${filled} 項目入力しました`);
     }
