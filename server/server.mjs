@@ -22,6 +22,9 @@ const API_KEY = readFileSync(KEY_PATH, 'utf8').trim();
 const app = express();
 app.use(express.json({ limit: '1mb' }));
 
+// 静的ファイル配信: 親ディレクトリ (Grant 処方ナビ root を http://localhost:3333/ で見られるように)
+app.use('/', express.static(join(__dir, '..'), { index: 'index.html', extensions: ['html'] }));
+
 // CORS: どこからでも受け付ける (認証は X-API-Key で行う)
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -32,8 +35,13 @@ app.use((req, res, next) => {
 });
 
 // API Key 認証 (/api/ping は除外、サーバー起動確認用)
+// localhost からのアクセスは認証不要 (同一マシン上で動いてるため)
 app.use((req, res, next) => {
+  if (!req.path.startsWith('/api/')) return next(); // 静的ファイルはスルー
   if (req.path === '/api/ping') return next();
+  const ip = req.ip || req.socket.remoteAddress || '';
+  const isLocal = ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1';
+  if (isLocal) return next();
   const key = req.get('X-API-Key') || req.query.key;
   if (key !== API_KEY) return res.status(401).json({ ok: false, error: 'APIキーが正しくありません' });
   next();
