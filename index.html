@@ -1333,7 +1333,14 @@ function pollSignupJob(jobId){
 function appendSignupLog(msg,type){
   const el=document.createElement('div');
   el.style.cssText='font-size:12px;padding:2px 0;line-height:1.6;'+(type==='error'?'color:#ef4444':type==='ok'?'color:#22c55e':'color:var(--muted)');
-  el.textContent=msg;
+  const m=msg.match(/\/screenshots\/[^\s]+\.(png|html)/);
+  if(m){
+    const before=msg.slice(0,msg.indexOf(m[0]));
+    const url=(API.replace('/api','')+m[0]);
+    el.innerHTML=esc(before)+' <a href="'+esc(url)+'" target="_blank" style="color:#2563eb;text-decoration:underline;font-weight:600">'+esc(m[0])+'</a>';
+  }else{
+    el.textContent=msg;
+  }
   $('signup-log').appendChild(el);
   $('signup-log').scrollTop=9999;
 }

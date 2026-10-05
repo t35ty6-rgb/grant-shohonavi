@@ -25,6 +25,12 @@ app.use(express.json({ limit: '1mb' }));
 // 静的ファイル配信: 親ディレクトリ (Grant 処方ナビ root を http://localhost:3333/ で見られるように)
 app.use('/', express.static(join(__dir, '..'), { index: 'index.html', extensions: ['html'] }));
 
+// スクリーンショット保存先 (サーバー再起動後も残る)
+import { mkdirSync as mkdirSyncShot } from 'fs';
+const SHOT_DIR = join(__dir, '..', '.screenshots');
+mkdirSyncShot(SHOT_DIR, { recursive: true });
+app.use('/screenshots', express.static(SHOT_DIR));
+
 // CORS: どこからでも受け付ける (認証は X-API-Key で行う)
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');

@@ -3,3 +3,4 @@ node_modules/
 *.log
 api-key.txt
 inspect-dumps/
+.screenshots/

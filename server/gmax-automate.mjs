@@ -17,6 +17,12 @@
  */
 
 import { chromium } from 'playwright';
+import { mkdirSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const SHOT_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', '.screenshots');
+mkdirSync(SHOT_DIR, { recursive: true });
 
 const CDP_URL = 'http://127.0.0.1:9222';
 const GMAX_INVITE_PRGNAME = 'invitation_mail_input';
@@ -173,7 +179,7 @@ async function ensureLoggedIn(page, stylist, log) {
     const idField = await page.waitForSelector('input[name="sendid"]', { timeout: 5000 }).catch(() => null);
     if (!idField) {
       // dump失敗時ページ
-      const shotPath = `/tmp/gmax-login-fail-${Date.now()}.png`;
+      const shotPath = join(SHOT_DIR, `login-fail-${Date.now()}.png`);
       await page.screenshot({ path: shotPath, fullPage: true }).catch(() => {});
       log(`❌ ログインフォームが見つかりません (sendid 無し)`);
       log(`📸 失敗時スクリーンショット: ${shotPath}`);
@@ -195,7 +201,7 @@ async function ensureLoggedIn(page, stylist, log) {
       return true;
     }
     const errText = await page.innerText('body').catch(() => '');
-    const shotPath = `/tmp/gmax-login-fail-${Date.now()}.png`;
+    const shotPath = join(SHOT_DIR, `login-fail-${Date.now()}.png`);
     await page.screenshot({ path: shotPath, fullPage: true }).catch(() => {});
     log(`📸 失敗時スクリーンショット: ${shotPath}`);
     log(`応答抜粋: ${errText.replace(/\s+/g, ' ').slice(0, 200)}`);
@@ -326,8 +332,9 @@ export async function automateGmax({ invitationUrl, assistant, customer, items, 
       })));
       log(`Step 3 検出フィールド: ${step3Fields.length}`);
       step3Fields.forEach((f, i) => log(`  [${i}] ${f.tag}${f.type?'['+f.type+']':''} name="${f.name}" id="${f.id}" ph="${f.placeholder}"${f.required?' REQ':''}`));
-      const dumpPath = `/tmp/gmax-step3-${Date.now()}.html`;
-      const shotPath = dumpPath.replace('.html', '.png');
+      const ts = Date.now();
+      const dumpPath = join(SHOT_DIR, `step3-${ts}.html`);
+      const shotPath = join(SHOT_DIR, `step3-${ts}.png`);
       const fs = await import('fs');
       await fs.promises.writeFile(dumpPath, await page.content(), 'utf8');
       await page.screenshot({ path: shotPath, fullPage: true });
@@ -405,11 +412,11 @@ export async function automateGmax({ invitationUrl, assistant, customer, items, 
     log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     log('✓ お客様情報まで自動入力完了');
     log('⚠ テストモード: 最終送信ボタンは押しません');
-    log('  G-MAX画面は Mac mini のheadless Chrome で動作中。確認用スクリーンショットは /tmp/gmax-signup-{時刻}.png に保存');
     try {
-      const shotPath = `/tmp/gmax-signup-${Date.now()}.png`;
-      await page.screenshot({ path: shotPath, fullPage: true });
-      log(`📸 スクリーンショット: ${shotPath}`);
+      const fname = `signup-${Date.now()}.png`;
+      await page.screenshot({ path: join(SHOT_DIR, fname), fullPage: true });
+      log(`📸 スクリーンショット: /screenshots/${fname}`);
+      log(`   ブラウザで確認: ${process.env.API_BASE || 'http://localhost:3333'}/screenshots/${fname}`);
     } catch {}
     log('  Chromeを確認して、問題なければ手動で「次へ」「送信」を押してください');
     log('  残: 商品選択(⑰) → 内容確認 → 本登録送信');
