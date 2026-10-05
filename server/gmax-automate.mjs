@@ -282,15 +282,15 @@ export async function automateGmax({ invitationUrl, assistant, customer, items, 
     await page.waitForTimeout(1500);
 
     // Step 1: 確認項目 (チェックボックス2つ)
-    log('Step 1: 確認項目にチェック');
-    await page.check('#policy_check7').catch(() => {});
-    await page.check('#policy_check8').catch(() => {});
+    log(`Step 1: 確認項目にチェック (title: ${await page.title().catch(() => '?')})`);
+    await page.check('#policy_check7', { timeout: 3000 }).then(() => log('  ✓ policy_check7')).catch(e => log(`  - policy_check7 skip: ${e.message.slice(0,40)}`));
+    await page.check('#policy_check8', { timeout: 3000 }).then(() => log('  ✓ policy_check8')).catch(e => log(`  - policy_check8 skip: ${e.message.slice(0,40)}`));
     await page.waitForTimeout(300);
-    await Promise.all([
-      page.waitForLoadState('domcontentloaded'),
-      page.evaluate(() => { if (typeof formBunki_next === 'function') formBunki_next(); }),
-    ]);
+    log('  formBunki_next 呼び出し');
+    await page.evaluate(() => { if (typeof formBunki_next === 'function') formBunki_next(); }).catch(e => log(`  ! formBunki_next error: ${e.message.slice(0,40)}`));
+    await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => log('  (domcontentloaded timeout)'));
     await page.waitForTimeout(1500);
+    log(`  → 次ページ到達 (title: ${await page.title().catch(() => '?')})`);
 
     // ビジネス覚書テスト ページ判定 (ビジネス会員のみ)
     const title2 = await page.title().catch(() => '');
