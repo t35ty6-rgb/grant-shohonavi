@@ -88,10 +88,10 @@ fi
 echo ""
 echo " [次] Chrome の G-MAX タブでログイン → 処方ナビで処方開く → ボタン"
 echo ""
-echo " ※ このウィンドウは閉じないでください (閉じるとサーバー停止)"
-echo " ※ 停止は Ctrl+C"
+echo " このウィンドウは閉じてOKです (サーバーは裏で動き続けます)"
+echo " 止めるときは サーバー停止.command をダブルクリック"
 echo ""
 
-# サーバー + tunnel を foreground で待つ (このウィンドウ閉じたら全部止まる)
-trap 'echo ""; echo "停止中…"; kill $SERVER_PID $TUNNEL_PID 2>/dev/null; exit 0' INT TERM
-wait $SERVER_PID
+# shell から 子プロセスを切り離す (ウィンドウ閉じても動き続ける)
+disown -a 2>/dev/null || true
+exit 0
