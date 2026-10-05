@@ -1069,6 +1069,108 @@ const IMG=id=>id.startsWith("g")?`img/${id}.jpg`:`img/${id}.jpg`;
 
 function orderText(r){return (r.items||[]).map(i=>`${i.gm||GM[i.id]?.c||""} ${i.name}${i.color?" / "+i.color:""}${i.size?" / "+i.size:""} ×${i.qty||1}`).join("\n")}
 const API=(location.hostname==='localhost'||location.hostname==='127.0.0.1'||location.protocol==='file:')?'http://localhost:3333/api':'https://hindu-css-catalog-spider.trycloudflare.com/api';
+
+/* ---------- アシスタント管理 (localStorage) ---------- */
+const AKEY='grant_assistants_v1';
+const ASEL='grant_selected_assistant_v1';
+const DEFAULT_ASSISTANTS=[
+  {id:'262776',name:'浅川 友香',zip1:'921',zip2:'8042',pref:'石川県',city:'金沢市',addr:'泉本町５丁目４０−１',bldg:'1410号室',tel:'09051768999',photo:'img/assistants/asakawa-yuka.jpg'}
+];
+function getAssistants(){
+  try{
+    const raw=localStorage.getItem(AKEY);
+    if(!raw){localStorage.setItem(AKEY,JSON.stringify(DEFAULT_ASSISTANTS));return [...DEFAULT_ASSISTANTS];}
+    return JSON.parse(raw);
+  }catch{return [...DEFAULT_ASSISTANTS];}
+}
+function saveAssistants(list){try{localStorage.setItem(AKEY,JSON.stringify(list));}catch{}}
+function selectedAssistantId(){return localStorage.getItem(ASEL)||getAssistants()[0]?.id||'';}
+function setSelectedAssistantId(id){try{localStorage.setItem(ASEL,id);}catch{}}
+function findAssistant(id){return getAssistants().find(a=>a.id===id);}
+const SVG_SETTINGS='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
+const SVG_PLUS='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+const SVG_TRASH='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>';
+const SVG_CLOSE='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+function renderAssistantOptions(){
+  const list=getAssistants(),sel=selectedAssistantId();
+  return list.map(a=>`<option value="${esc(a.id)}"${a.id===sel?' selected':''}>${esc(a.name)}（ID: ${esc(a.id)}）</option>`).join('')+'<option value="__manage__">アシスタント管理…</option>';
+}
+function openAssistantManager(){
+  const inputS="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px;background:var(--surface);color:var(--ink);min-height:40px";
+  const labelS="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px";
+  const body=`<p style="font-size:13px;color:var(--muted);margin:0 0 16px;line-height:1.6">処方作成時に選んだアシスタントの情報が、G-MAX自動入力の「紹介者情報」ステップに自動セットされます。</p>
+    <div id="asst-list" role="list" style="display:flex;flex-direction:column;gap:14px;margin-bottom:14px"></div>
+    <button type="button" id="asst-add" class="btn ghost" style="width:100%;display:flex;align-items:center;justify-content:center;gap:6px;min-height:44px">${SVG_PLUS}<span>新しいアシスタントを追加</span></button>`;
+  openModal('アシスタント管理',body);
+  const render=()=>{
+    const list=getAssistants();
+    document.getElementById('asst-list').innerHTML=list.map((a,i)=>`
+      <div role="listitem" style="border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--surface)">
+        <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
+          <div style="width:52px;height:52px;border-radius:50%;background:#f1f5f9;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#64748b;font-weight:600;font-size:17px">${a.photo?`<img src="${esc(a.photo)}" alt="${esc(a.name)}" style="width:100%;height:100%;object-fit:cover" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${esc((a.name||'?').slice(0,1))}'}))">`:esc((a.name||'?').slice(0,1))}</div>
+          <b style="flex:1;font-size:14px">${esc(a.name||'(名前未設定)')}</b>
+          <button type="button" data-asst-del="${i}" aria-label="${esc(a.name||'')}を削除" style="display:inline-flex;align-items:center;gap:4px;background:none;border:1px solid #fecaca;color:#dc2626;cursor:pointer;font-size:12px;padding:7px 10px;border-radius:6px;min-height:36px">${SVG_TRASH}<span>削除</span></button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div><label style="${labelS}">名前</label><input data-asst-f="${i}:name" value="${esc(a.name||'')}" style="${inputS}"></div>
+          <div><label style="${labelS}">BNR_ID（アシスタント番号）</label><input data-asst-f="${i}:id" value="${esc(a.id||'')}" inputmode="numeric" style="${inputS}"></div>
+          <div><label style="${labelS}">郵便番号（前3桁）</label><input data-asst-f="${i}:zip1" value="${esc(a.zip1||'')}" maxlength="3" inputmode="numeric" style="${inputS}"></div>
+          <div><label style="${labelS}">郵便番号（後4桁）</label><input data-asst-f="${i}:zip2" value="${esc(a.zip2||'')}" maxlength="4" inputmode="numeric" style="${inputS}"></div>
+          <div><label style="${labelS}">都道府県</label><input data-asst-f="${i}:pref" value="${esc(a.pref||'')}" style="${inputS}"></div>
+          <div><label style="${labelS}">市区町村</label><input data-asst-f="${i}:city" value="${esc(a.city||'')}" style="${inputS}"></div>
+          <div style="grid-column:1/-1"><label style="${labelS}">番地</label><input data-asst-f="${i}:addr" value="${esc(a.addr||'')}" style="${inputS}"></div>
+          <div style="grid-column:1/-1"><label style="${labelS}">建物名・部屋番号（任意）</label><input data-asst-f="${i}:bldg" value="${esc(a.bldg||'')}" style="${inputS}"></div>
+          <div><label style="${labelS}">電話番号</label><input data-asst-f="${i}:tel" value="${esc(a.tel||'')}" inputmode="tel" style="${inputS}"></div>
+          <div><label style="${labelS}">写真パス（任意）</label><input data-asst-f="${i}:photo" value="${esc(a.photo||'')}" placeholder="img/assistants/name.jpg" style="${inputS}"></div>
+        </div>
+      </div>`).join('');
+    document.querySelectorAll('[data-asst-f]').forEach(el=>{
+      el.oninput=()=>{
+        const [i,key]=el.dataset.asstF.split(':');
+        const l=getAssistants();
+        if(l[+i]){l[+i][key]=el.value;saveAssistants(l);}
+      };
+    });
+    document.querySelectorAll('[data-asst-del]').forEach(el=>{
+      el.onclick=()=>{
+        const i=+el.dataset.asstDel;const l=getAssistants();
+        if(!confirm(`「${l[i]?.name||'(無名)'}」を削除しますか？この操作は取り消せません。`))return;
+        l.splice(i,1);saveAssistants(l);render();
+        const selEl=document.getElementById('c-assistant');if(selEl)selEl.innerHTML=renderAssistantOptions();
+      };
+    });
+  };
+  render();
+  document.getElementById('asst-add').onclick=()=>{
+    const l=getAssistants();
+    l.push({id:'',name:'新規アシスタント',zip1:'',zip2:'',pref:'',city:'',addr:'',bldg:'',tel:'',photo:''});
+    saveAssistants(l);render();
+    const selEl=document.getElementById('c-assistant');if(selEl)selEl.innerHTML=renderAssistantOptions();
+  };
+}
+function openModal(title,html){
+  let m=document.getElementById('__modal');
+  if(!m){
+    m=document.createElement('div');m.id='__modal';
+    m.setAttribute('role','dialog');m.setAttribute('aria-modal','true');
+    m.style.cssText='position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto';
+    document.body.appendChild(m);
+  }
+  m.innerHTML=`<div style="background:var(--surface);border-radius:14px;padding:22px;max-width:620px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3)" role="document">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">
+      <h3 style="margin:0;flex:1;font-size:16px;font-weight:600">${esc(title)}</h3>
+      <button type="button" id="__mclose" aria-label="閉じる" style="background:none;border:1px solid var(--line);cursor:pointer;color:var(--muted);line-height:1;padding:8px;border-radius:8px;min-width:40px;min-height:40px;display:inline-flex;align-items:center;justify-content:center">${SVG_CLOSE}</button>
+    </div>
+    ${html}
+  </div>`;
+  m.style.display='flex';
+  const close=()=>{m.style.display='none';document.removeEventListener('keydown',esckey);};
+  const esckey=e=>{if(e.key==='Escape')close();};
+  document.addEventListener('keydown',esckey);
+  document.getElementById('__mclose').onclick=close;
+  m.onclick=(e)=>{if(e.target===m)close();};
+}
+
 let _srvOk=null;
 function apiKey(){return (localStorage.getItem('grantApiKey')||'').trim();}
 function apiHeaders(){const h={'Content-Type':'application/json'};const k=apiKey();if(k)h['X-API-Key']=k;return h;}
@@ -1100,11 +1202,14 @@ async function startGmaxRegister(r){
   if(!email){alert('お客様のメールアドレスを入力してください。');$('c-mail')?.focus();return;}
   const customer={lastName:($('c-sei')?.value||'').trim(),firstName:($('c-mei')?.value||'').trim(),phone:($('c-tel')?.value||'').trim(),password:($('c-pass')?.value||'').trim()};
   const items=(r.items||[]).map(i=>({code:String(i.gm||GM[i.id]?.c||''),name:String(i.name||''),color:String(i.color||''),size:String(i.size||''),qty:Number(i.qty)||1}));
+  const asstId=($('c-assistant')?.value||selectedAssistantId());
+  const assistant=findAssistant(asstId);
+  if(!assistant||!assistant.id){alert('アシスタントが選択されていません。アシスタント管理から追加してください。');return;}
   $('reg-start').disabled=true;$('reg-start').textContent='実行中…';
   $('reg-log').hidden=false;$('reg-log').innerHTML='';
   let jobId;
   try{
-    const res=await fetch(API+'/invite-and-cart',{method:'POST',headers:apiHeaders(),body:JSON.stringify({customerEmail:email,customer,items})});
+    const res=await fetch(API+'/invite-and-cart',{method:'POST',headers:apiHeaders(),body:JSON.stringify({customerEmail:email,customer,items,assistant})});
     const d=await res.json();
     if(!d.ok){
       if(res.status===401){localStorage.removeItem('grantApiKey');throw new Error('APIキーが違います。設定ボタンから入力し直してください。');}
@@ -1153,10 +1258,16 @@ function openOrder(r){$("sheet-t").textContent="G-MAX 注文リスト";
   return `<div class="s-line" style="align-items:start"><img src="img/${i.id}.jpg" alt=""><div><b>${n+1}点目</b><ol style="margin:4px 0 0;padding-left:1.3em;font-size:13.5px">${steps.map(([k,v])=>`<li><span style="color:var(--muted)">${k}：</span><b style="display:inline">${esc(v)}</b></li>`).join("")}</ol></div></div>`}).join("")}</div>
  <div class="s-say"><h4>コピー用</h4><pre id="ordtxt" style="white-space:pre-wrap;margin:0;font:inherit">${esc(orderText(r))}</pre></div>
  <div class="stack"><button class="btn" type="button" id="ordcopy">注文リストをコピー</button></div>
- <div class="s-sec" style="margin-top:12px"><h4 style="display:flex;align-items:center;gap:8px">G-MAX 自動カート設定<span id="srv-badge" style="font-size:11px;font-weight:500;padding:2px 10px;border-radius:999px;background:#f1f5f9;color:#64748b">確認中…</span><button type="button" id="apikey-btn" title="APIキー設定" style="margin-left:auto;background:none;border:1px solid var(--line);color:var(--muted);font-size:11px;padding:2px 8px;border-radius:999px;cursor:pointer">キー設定</button></h4><p style="font-size:13px;color:var(--muted);margin:0 0 10px">ボタンを押すとブラウザが開くので、ご自身のG-MAXアカウントでログインしてください。ログイン後は自動で招待メール送信とカート設定が進みます。</p><div><label style="font-size:12px;font-weight:600;color:var(--muted)">お客様のメールアドレス</label><input id="c-mail" type="email" placeholder="hanako@example.com" style="${inputS};margin-bottom:10px"><details style="margin-bottom:10px"><summary style="cursor:pointer;font-size:13px;color:var(--muted);user-select:none">お客様情報（名前・電話・パスワード）</summary><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px"><div><label style="font-size:12px;color:var(--muted)">姓</label><input id="c-sei" type="text" placeholder="山田" style="${inputS}"></div><div><label style="font-size:12px;color:var(--muted)">名</label><input id="c-mei" type="text" placeholder="花子" style="${inputS}"></div><div><label style="font-size:12px;color:var(--muted)">電話番号</label><input id="c-tel" type="tel" placeholder="09012345678" style="${inputS}"></div><div><label style="font-size:12px;color:var(--muted)">パスワード（お客様に伝える）</label><input id="c-pass" type="text" placeholder="例: Grant2026!" style="${inputS}"></div></div></details><button id="reg-start" class="btn" type="button" style="width:100%;font-size:15px;padding:12px">招待を送って自動カート設定</button></div><div id="reg-log" hidden style="margin-top:10px;max-height:180px;overflow-y:auto;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;font-family:monospace"></div><p style="font-size:11px;color:var(--muted);margin:8px 0 0">※ サーバーが「停止中」の場合は「サーバー起動.command」をダブルクリックしてください</p></div>
+ <div class="s-sec" style="margin-top:12px"><h4 style="display:flex;align-items:center;gap:8px">G-MAX 自動カート設定<span id="srv-badge" style="font-size:11px;font-weight:500;padding:2px 10px;border-radius:999px;background:#f1f5f9;color:#64748b">確認中…</span><button type="button" id="apikey-btn" title="APIキー設定" style="margin-left:auto;background:none;border:1px solid var(--line);color:var(--muted);font-size:11px;padding:2px 8px;border-radius:999px;cursor:pointer">キー設定</button></h4><p style="font-size:13px;color:var(--muted);margin:0 0 10px">ボタンを押すとブラウザが開くので、ご自身のG-MAXアカウントでログインしてください。ログイン後は自動で招待メール送信とカート設定が進みます。</p><div><label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px">アシスタント<span style="color:#dc2626;margin-left:2px">*</span></label><div style="display:flex;gap:6px;margin-bottom:12px"><select id="c-assistant" style="${inputS};flex:1;min-height:44px">${renderAssistantOptions()}</select><button type="button" id="c-asst-manage" aria-label="アシスタント管理" title="アシスタント管理" style="display:inline-flex;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--line);color:var(--muted);padding:0 12px;border-radius:8px;cursor:pointer;min-height:44px;min-width:44px">${SVG_SETTINGS}</button></div><label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px">お客様のメールアドレス<span style="color:#dc2626;margin-left:2px">*</span></label><input id="c-mail" type="email" placeholder="hanako@example.com" autocomplete="email" style="${inputS};margin-bottom:10px;min-height:44px"><details style="margin-bottom:10px"><summary style="cursor:pointer;font-size:13px;color:var(--muted);user-select:none">お客様情報（名前・電話・パスワード）</summary><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px"><div><label style="font-size:12px;color:var(--muted)">姓</label><input id="c-sei" type="text" placeholder="山田" style="${inputS}"></div><div><label style="font-size:12px;color:var(--muted)">名</label><input id="c-mei" type="text" placeholder="花子" style="${inputS}"></div><div><label style="font-size:12px;color:var(--muted)">電話番号</label><input id="c-tel" type="tel" placeholder="09012345678" style="${inputS}"></div><div><label style="font-size:12px;color:var(--muted)">パスワード（お客様に伝える）</label><input id="c-pass" type="text" placeholder="例: Grant2026!" style="${inputS}"></div></div></details><button id="reg-start" class="btn" type="button" style="width:100%;font-size:15px;padding:12px">招待を送って自動カート設定</button></div><div id="reg-log" hidden style="margin-top:10px;max-height:180px;overflow-y:auto;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;font-family:monospace"></div><p style="font-size:11px;color:var(--muted);margin:8px 0 0">※ サーバーが「停止中」の場合は「サーバー起動.command」をダブルクリックしてください</p></div>
  <div class="s-sec" style="margin-top:10px"><h4>手動でG-MAXを使う場合（オンラインサインアップ）</h4><ul><li>G-MAX トップ →「招待メール」でお客様のメールアドレスに送る</li><li>お客様がメールのURLから登録（3時間以内・本人が入力）</li><li>商品選択の画面で、このリストどおりにカートへ</li><li>ビジネス会員の初回は、税率が違う商品（下着とサプリなど）を一緒に注文できない</li></ul></div>`;
  $("ordcopy").onclick=async()=>{try{await navigator.clipboard.writeText(orderText(r));$("ordcopy").textContent="コピーしました"}catch(e){const sel=getSelection(),rg=document.createRange();rg.selectNodeContents($("ordtxt"));sel.removeAllRanges();sel.addRange(rg);$("ordcopy").textContent="選択しました（長押しでコピー）"}};
  $("reg-start").onclick=()=>startGmaxRegister(r);
+ const asstSel=$('c-assistant');
+ if(asstSel){
+   asstSel.onchange=()=>{if(asstSel.value==='__manage__'){asstSel.value=selectedAssistantId();openAssistantManager();}else{setSelectedAssistantId(asstSel.value);}};
+ }
+ const asstBtn=$('c-asst-manage');
+ if(asstBtn){asstBtn.onclick=()=>openAssistantManager();}
  $("apikey-btn").onclick=()=>{const cur=apiKey();const k=prompt('APIキーを入力/変更：\n（Mac mini側 server/api-key.txt の内容）',cur);if(k!==null){if(k.trim())localStorage.setItem('grantApiKey',k.trim());else localStorage.removeItem('grantApiKey');alert('保存しました');}};
  pingSrv();
  $("sheet").hidden=false;$("sheet").querySelector(".sheet").scrollTop=0}
