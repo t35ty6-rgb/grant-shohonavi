@@ -253,7 +253,7 @@ export async function sendInviteAndAutomate({ customerEmail, assistant, stylist,
  *   - 以降 Step 3+ はお客様入力 (姓名/メール/生年月日/住所/電話/PW) を一部プリフィル
  *   - 商品選択ページ (⑰) で items を順にカートに追加
  */
-export async function automateGmax({ invitationUrl, assistant, customer, items, stylist, onProgress, _page }) {
+export async function automateGmax({ invitationUrl, assistant, customer, items, stylist, onProgress, onNeedSerial, _page }) {
   const log = (msg) => { onProgress?.({ time: new Date().toISOString(), msg }); };
 
   let context = null;
@@ -304,10 +304,24 @@ export async function automateGmax({ invitationUrl, assistant, customer, items, 
       }
       // 3. シリアル番号確認
       else if (title.includes('シリアル番号')) {
-        log(`  → シリアル番号: ${customer?.serial || '(空)'} 入力`);
-        if (customer?.serial) {
-          await page.fill('input[name="NINSYOU_ID"]', customer.serial, { timeout: 2000 }).catch(e => log(`  ! シリアル入力失敗: ${e.message.slice(0,40)}`));
-        } else {
+        let serial = customer?.serial;
+        if (!serial && typeof onNeedSerial === 'function') {
+          log(`  → シリアル番号 必要。処方ナビ側で入力を待ちます (最大5分)`);
+          try {
+            serial = await Promise.race([
+              onNeedSerial(),
+              new Promise((_, rej) => setTimeout(() => rej(new Error('タイムアウト')), 300000)),
+            ]);
+            log(`  → シリアル受信: ${serial}`);
+          } catch (e) {
+            log(`  ⚠ シリアル待機失敗: ${e.message} → 停止`);
+            shouldStop = true;
+          }
+        }
+        if (serial && !shouldStop) {
+          log(`  → シリアル番号 入力: ${serial}`);
+          await page.fill('input[name="NINSYOU_ID"]', serial, { timeout: 2000 }).catch(e => log(`  ! シリアル入力失敗: ${e.message.slice(0,40)}`));
+        } else if (!serial) {
           log(`  ⚠ シリアル番号 未入力 → ここで停止`);
           shouldStop = true;
         }

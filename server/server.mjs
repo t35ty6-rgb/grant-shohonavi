@@ -129,6 +129,10 @@ app.post('/api/signup-automate', async (req, res) => {
   automateGmax({
     invitationUrl, customer, items, assistant, stylist,
     onProgress: (entry) => { logs.push(entry); console.log(`[${jobId.slice(0, 8)}]`, entry.msg); },
+    onNeedSerial: () => new Promise((resolve) => {
+      const job = jobs.get(jobId);
+      if (job) { job.needsSerial = true; job.serialResolver = resolve; }
+    }),
   })
     .then(result => { jobs.get(jobId).status = result.ok ? 'done' : 'failed'; jobs.get(jobId).result = result; })
     .catch(err => { jobs.get(jobId).status = 'failed'; jobs.get(jobId).result = { ok: false, error: err.message }; });
@@ -140,7 +144,22 @@ app.post('/api/signup-automate', async (req, res) => {
 app.get('/api/status/:jobId', (req, res) => {
   const job = jobs.get(req.params.jobId);
   if (!job) return res.status(404).json({ ok: false, error: 'ジョブが見つかりません' });
-  res.json({ ok: true, status: job.status, logs: job.logs, result: job.result, startedAt: job.startedAt });
+  res.json({ ok: true, status: job.status, logs: job.logs, result: job.result, startedAt: job.startedAt, needsSerial: !!job.needsSerial });
+});
+
+// -----------------------------------------------------------
+// POST /api/jobs/:jobId/provide-serial  — 実行中にシリアル番号を渡す
+// -----------------------------------------------------------
+app.post('/api/jobs/:jobId/provide-serial', (req, res) => {
+  const job = jobs.get(req.params.jobId);
+  if (!job) return res.status(404).json({ ok: false, error: 'ジョブが見つかりません' });
+  if (!job.serialResolver) return res.status(400).json({ ok: false, error: 'このジョブは現在シリアルを待っていません' });
+  const { serial } = req.body;
+  if (!serial) return res.status(400).json({ ok: false, error: 'serial が空です' });
+  job.serialResolver(serial);
+  job.needsSerial = false;
+  job.serialResolver = null;
+  res.json({ ok: true });
 });
 
 const PORT = 3333;
