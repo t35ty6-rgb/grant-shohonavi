@@ -329,6 +329,23 @@ export async function automateGmax({ invitationUrl, assistant, customer, items, 
       }
       // 4. 覚書テスト (業績会員クイズ)
       else if (title.includes('覚書テスト') || title.includes('会員テスト')) {
+        // エラー画面 (前回不合格) → 戻るボタン or リンク で 再受験
+        if (title.includes('エラー') || title.includes('合格していません')) {
+          log('  → 覚書テスト エラー画面 (前回不合格): 戻るクリックで再受験');
+          const backLink = await page.$('a:has-text("戻る"), button:has-text("戻る")').catch(() => null);
+          if (backLink) {
+            await backLink.click({ timeout: 2000 }).catch(e => log(`  ! 戻るクリック失敗: ${e.message.slice(0,40)}`));
+            await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
+            await page.waitForTimeout(1500);
+            log(`  → 戻った後 title: ${await page.title().catch(() => '?')}`);
+          } else {
+            // formBunki_back を試す
+            await page.evaluate(() => { if (typeof formBunki_back === 'function') formBunki_back(); }).catch(() => {});
+            await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
+            await page.waitForTimeout(1500);
+          }
+          continue;
+        }
         if (title.includes('テスト結果') || title.includes('結果')) {
           // テスト結果ページ: 「次へ進む」リンクをクリック (ページ内の全リンク dump → 判定)
           log('  → テスト結果: 次へ進むリンクを探す');
