@@ -330,15 +330,27 @@ export async function automateGmax({ invitationUrl, assistant, customer, items, 
       // 4. 覚書テスト (業績会員クイズ)
       else if (title.includes('覚書テスト') || title.includes('会員テスト')) {
         if (title.includes('テスト結果') || title.includes('結果')) {
-          // テスト結果ページ: 次へ進む リンク
-          log('  → テスト結果: 次へ進むリンクをクリック');
-          const nextHref = await page.$eval('a[href*="signup_class_check"], a[href*="javascript:formBunki_next"]', a => a.href).catch(() => null);
-          if (nextHref && !nextHref.startsWith('javascript:')) {
-            await page.goto(nextHref, { waitUntil: 'domcontentloaded', timeout: 15000 });
+          // テスト結果ページ: 「次へ進む」リンクをクリック (ページ内の全リンク dump → 判定)
+          log('  → テスト結果: 次へ進むリンクを探す');
+          const links = await page.$$eval('a', as => as.map(a => ({ href: a.href, text: (a.textContent || '').trim().slice(0, 40) })));
+          log(`  リンク数: ${links.length}`);
+          links.slice(0, 20).forEach((l, i) => log(`    [${i}] "${l.text}" → ${l.href.slice(0, 80)}`));
+          // 「次へ進む」というテキストのリンクを優先
+          const nextLink = links.find(l => l.text.includes('次へ進む')) || links.find(l => l.text.includes('次へ'));
+          if (nextLink && nextLink.href && !nextLink.href.startsWith('javascript:')) {
+            log(`  → クリック: "${nextLink.text}" → ${nextLink.href.slice(0, 80)}`);
+            await page.goto(nextLink.href, { waitUntil: 'domcontentloaded', timeout: 15000 });
             await page.waitForTimeout(1500);
-            continue; // ループ継続 (handled=false のまま、次回判定へ)
+            continue;
+          } else if (nextLink && nextLink.href.startsWith('javascript:')) {
+            log(`  → JS関数 実行: ${nextLink.href}`);
+            await page.click(`a:has-text("${nextLink.text}")`).catch(e => log(`    click失敗: ${e.message.slice(0,40)}`));
+            await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
+            await page.waitForTimeout(1500);
+            continue;
           }
-          handled = true;
+          log('  ⚠ 次へ進むリンクが見つからない → 停止');
+          shouldStop = true;
         } else {
           log('  → 覚書テスト: 13問自動解答 → 採点');
           const quizAnswers = { 1:'1', 2:'2', 3:'2', 4:'2', 5:'1', 6:'1', 7:'2', 8:'1', 9:'1', 10:'2', 11:'2', 12:'2', 13:'1' };
