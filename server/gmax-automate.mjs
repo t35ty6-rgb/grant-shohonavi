@@ -257,9 +257,13 @@ export async function automateGmax({ invitationUrl, assistant, customer, items, 
       log(`  → ${filled} 項目入力しました`);
     }
 
-    log('✓ お客様情報まで自動入力完了。残り: 内容確認 → 商品選択(⑰) → 送信');
-    log('  G-MAX画面はこのまま開いたままにしておきます (owner で確認してから次へ進めてください)');
-    return { ok: true, phase: 2, note: 'アシスタント + お客様情報 まで入力完了' };
+    log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    log('✓ お客様情報まで自動入力完了');
+    log('⚠ テストモード: 最終送信ボタンは押しません');
+    log('  Chromeを確認して、問題なければ手動で「次へ」「送信」を押してください');
+    log('  残: 商品選択(⑰) → 内容確認 → 本登録送信');
+    log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    return { ok: true, phase: 2, testMode: true, note: 'テストモード: アシスタント+お客様情報まで入力して停止' };
   } catch (err) {
     log(`エラー: ${err.message}`);
     return { ok: false, error: err.message };
