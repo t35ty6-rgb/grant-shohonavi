@@ -70,11 +70,12 @@ app.get('/api/ping', (_req, res) => {
 const GMAX_LOGIN_URL = 'https://sslgw.jns-asp.jp/granteones/';
 
 app.post('/api/invite-and-cart', async (req, res) => {
-  const { customerEmail, customer, items, assistant } = req.body;
+  const { customerEmail, customer, items, assistant, stylist } = req.body;
 
   if (!customerEmail) return res.status(400).json({ ok: false, error: 'お客様のメールアドレスが必要です' });
   if (!items?.length) return res.status(400).json({ ok: false, error: '商品リストが空です' });
   if (!assistant?.id) return res.status(400).json({ ok: false, error: 'アシスタント情報が必要です' });
+  if (!stylist?.id || !stylist?.gmaxId || !stylist?.gmaxPass) return res.status(400).json({ ok: false, error: 'スタイリスト G-MAX ログイン情報が不足しています' });
 
   const jobId = randomUUID();
   const logs = [];
@@ -87,6 +88,7 @@ app.post('/api/invite-and-cart', async (req, res) => {
     customer: { ...customer, email: customerEmail },
     items,
     assistant,
+    stylist,
     onProgress: (entry) => {
       logs.push(entry);
       console.log(`[${jobId.slice(0, 8)}]`, entry.msg);

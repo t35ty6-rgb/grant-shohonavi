@@ -1083,6 +1083,70 @@ function initApi(){
 }
 initApi();
 
+/* ---------- スタイリスト管理 (G-MAX ログインクレデンシャル) ---------- */
+const SKEY='grant_stylists_v1';
+const SSEL='grant_selected_stylist_v1';
+function getStylists(){
+  try{const raw=localStorage.getItem(SKEY);return raw?JSON.parse(raw):[];}catch{return [];}
+}
+function saveStylists(list){try{localStorage.setItem(SKEY,JSON.stringify(list));}catch{}}
+function selectedStylistId(){return localStorage.getItem(SSEL)||getStylists()[0]?.id||'';}
+function setSelectedStylistId(id){try{localStorage.setItem(SSEL,id);}catch{}}
+function findStylist(id){return getStylists().find(s=>s.id===id);}
+function renderStylistOptions(){
+  const list=getStylists(),sel=selectedStylistId();
+  if(!list.length)return '<option value="__manage__">スタイリストを登録してください</option>';
+  return list.map(s=>`<option value="${esc(s.id)}"${s.id===sel?' selected':''}>${esc(s.name)}</option>`).join('')+'<option value="__manage__">スタイリスト管理…</option>';
+}
+function openStylistManager(){
+  const inputS="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px;background:var(--surface);color:var(--ink);min-height:40px";
+  const labelS="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px";
+  const body=`<p style="font-size:13px;color:var(--muted);margin:0 0 12px;line-height:1.6">スタイリストごとの G-MAX ログイン情報を登録します。処方作成時に自分を選ぶと、サーバーがその情報で G-MAX に自動ログイン・自動入力します。</p>
+    <div style="padding:9px 11px;background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;font-size:11.5px;color:#92400e;margin-bottom:12px"><strong>セキュリティ注意:</strong> パスワードは このスマホの中 と Mac mini サーバー にだけ保存されます。他人の端末からは見えません。</div>
+    <div id="styl-list" role="list" style="display:flex;flex-direction:column;gap:14px;margin-bottom:14px"></div>
+    <button type="button" id="styl-add" class="btn ghost" style="width:100%;display:flex;align-items:center;justify-content:center;gap:6px;min-height:44px">${SVG_PLUS}<span>新しいスタイリストを追加</span></button>`;
+  openModal('スタイリスト管理',body);
+  const render=()=>{
+    const list=getStylists();
+    document.getElementById('styl-list').innerHTML=list.length?list.map((s,i)=>`
+      <div role="listitem" style="border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--surface)">
+        <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
+          <div style="width:52px;height:52px;border-radius:50%;background:#f1f5f9;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#64748b;font-weight:600;font-size:17px">${s.photo?`<img src="${esc(s.photo)}" alt="${esc(s.name)}" style="width:100%;height:100%;object-fit:cover">`:esc((s.name||'?').slice(0,1))}</div>
+          <b style="flex:1;font-size:14px">${esc(s.name||'(名前未設定)')}</b>
+          <button type="button" data-styl-del="${i}" aria-label="${esc(s.name||'')}を削除" style="display:inline-flex;align-items:center;gap:4px;background:none;border:1px solid #fecaca;color:#dc2626;cursor:pointer;font-size:12px;padding:7px 10px;border-radius:6px;min-height:36px">${SVG_TRASH}<span>削除</span></button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div style="grid-column:1/-1"><label style="${labelS}">名前</label><input data-styl-f="${i}:name" value="${esc(s.name||'')}" style="${inputS}"></div>
+          <div><label style="${labelS}">G-MAX ID</label><input data-styl-f="${i}:gmaxId" value="${esc(s.gmaxId||'')}" autocomplete="off" style="${inputS}"></div>
+          <div><label style="${labelS}">G-MAX パスワード</label><input data-styl-f="${i}:gmaxPass" type="password" value="${esc(s.gmaxPass||'')}" autocomplete="new-password" style="${inputS}"></div>
+          <div><label style="${labelS}">写真パス（任意）</label><input data-styl-f="${i}:photo" value="${esc(s.photo||'')}" placeholder="img/stylists/name.jpg" style="${inputS}"></div>
+        </div>
+      </div>`).join(''):'<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;border:1px dashed var(--line);border-radius:10px">まだスタイリストが登録されていません</div>';
+    document.querySelectorAll('[data-styl-f]').forEach(el=>{
+      el.oninput=()=>{
+        const [i,key]=el.dataset.stylF.split(':');
+        const l=getStylists();
+        if(l[+i]){l[+i][key]=el.value;saveStylists(l);}
+      };
+    });
+    document.querySelectorAll('[data-styl-del]').forEach(el=>{
+      el.onclick=()=>{
+        const i=+el.dataset.stylDel;const l=getStylists();
+        if(!confirm(`「${l[i]?.name||'(無名)'}」を削除しますか？パスワードも消えます。`))return;
+        l.splice(i,1);saveStylists(l);render();
+        const selEl=document.getElementById('c-stylist');if(selEl)selEl.innerHTML=renderStylistOptions();
+      };
+    });
+  };
+  render();
+  document.getElementById('styl-add').onclick=()=>{
+    const l=getStylists();
+    l.push({id:'s'+Date.now(),name:'新規スタイリスト',gmaxId:'',gmaxPass:'',photo:''});
+    saveStylists(l);render();
+    const selEl=document.getElementById('c-stylist');if(selEl)selEl.innerHTML=renderStylistOptions();
+  };
+}
+
 /* ---------- アシスタント管理 (localStorage) ---------- */
 const AKEY='grant_assistants_v1';
 const ASEL='grant_selected_assistant_v1';
@@ -1248,6 +1312,10 @@ async function startGmaxRegister(r){
   if(!customer.addr)missing.push('番地');
   if(missing.length){alert('お客様情報を全部入力してください：\n'+missing.join('、'));return;}
   const items=(r.items||[]).map(i=>({code:String(i.gm||GM[i.id]?.c||''),name:String(i.name||''),color:String(i.color||''),size:String(i.size||''),qty:Number(i.qty)||1}));
+  const stylId=($('c-stylist')?.value||selectedStylistId());
+  const stylist=findStylist(stylId);
+  if(!stylist||!stylist.id){alert('スタイリスト（あなた）が登録されていません。歯車ボタンから登録してください。');return;}
+  if(!stylist.gmaxId||!stylist.gmaxPass){alert('G-MAX ログイン情報（ID と パスワード）が未入力です。スタイリスト管理から設定してください。');return;}
   const asstId=($('c-assistant')?.value||selectedAssistantId());
   const assistant=findAssistant(asstId);
   if(!assistant||!assistant.id){alert('アシスタントが選択されていません。アシスタント管理から追加してください。');return;}
@@ -1255,7 +1323,7 @@ async function startGmaxRegister(r){
   $('reg-log').hidden=false;$('reg-log').innerHTML='';
   let jobId;
   try{
-    const res=await fetch(API+'/invite-and-cart',{method:'POST',headers:apiHeaders(),body:JSON.stringify({customerEmail:email,customer,items,assistant})});
+    const res=await fetch(API+'/invite-and-cart',{method:'POST',headers:apiHeaders(),body:JSON.stringify({customerEmail:email,customer,items,assistant,stylist})});
     const d=await res.json();
     if(!d.ok){
       if(res.status===401){localStorage.removeItem('grantApiKey');throw new Error('APIキーが違います。設定ボタンから入力し直してください。');}
@@ -1304,7 +1372,7 @@ function openOrder(r){$("sheet-t").textContent="G-MAX 注文リスト";
   return `<div class="s-line" style="align-items:start"><img src="img/${i.id}.jpg" alt=""><div><b>${n+1}点目</b><ol style="margin:4px 0 0;padding-left:1.3em;font-size:13.5px">${steps.map(([k,v])=>`<li><span style="color:var(--muted)">${k}：</span><b style="display:inline">${esc(v)}</b></li>`).join("")}</ol></div></div>`}).join("")}</div>
  <div class="s-say"><h4>コピー用</h4><pre id="ordtxt" style="white-space:pre-wrap;margin:0;font:inherit">${esc(orderText(r))}</pre></div>
  <div class="stack"><button class="btn" type="button" id="ordcopy">注文リストをコピー</button></div>
- <div class="s-sec" style="margin-top:12px"><h4 style="display:flex;align-items:center;gap:8px">G-MAX 自動カート設定<span id="srv-badge" style="font-size:11px;font-weight:500;padding:2px 10px;border-radius:999px;background:#f1f5f9;color:#64748b">確認中…</span><button type="button" id="apikey-btn" title="APIキー設定" style="margin-left:auto;background:none;border:1px solid var(--line);color:var(--muted);font-size:11px;padding:2px 8px;border-radius:999px;cursor:pointer">キー設定</button></h4><p style="font-size:13px;color:var(--muted);margin:0 0 10px">ボタンを押すとブラウザが開くので、ご自身のG-MAXアカウントでログインしてください。ログイン後は自動で招待メール送信とカート設定が進みます。</p><div><label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px">アシスタント<span style="color:#dc2626;margin-left:2px">*</span></label><div style="display:flex;gap:6px;margin-bottom:8px"><select id="c-assistant" style="${inputS};flex:1;min-height:44px">${renderAssistantOptions()}</select><button type="button" id="c-asst-manage" aria-label="アシスタント管理" title="アシスタント管理" style="display:inline-flex;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--line);color:var(--muted);padding:0 12px;border-radius:8px;cursor:pointer;min-height:44px;min-width:44px">${SVG_SETTINGS}</button></div><div id="c-assistant-card" style="margin-bottom:12px"></div><label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px">お客様のメールアドレス<span style="color:#dc2626;margin-left:2px">*</span></label><input id="c-mail" type="email" placeholder="hanako@example.com" autocomplete="email" style="${inputS};margin-bottom:10px;min-height:44px"><details style="margin-bottom:10px" open><summary style="cursor:pointer;font-size:13px;color:var(--muted);user-select:none;padding:6px 0">お客様情報（G-MAX登録に自動入力されます）</summary><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px"><div><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">姓<span style="color:#dc2626">*</span></label><input id="c-sei" type="text" placeholder="山田" autocomplete="family-name" style="${inputS};min-height:40px"></div><div><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">名<span style="color:#dc2626">*</span></label><input id="c-mei" type="text" placeholder="花子" autocomplete="given-name" style="${inputS};min-height:40px"></div><div><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">セイ（カナ）<span style="color:#dc2626">*</span></label><input id="c-sei-kana" type="text" placeholder="ヤマダ" style="${inputS};min-height:40px"></div><div><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">メイ（カナ）<span style="color:#dc2626">*</span></label><input id="c-mei-kana" type="text" placeholder="ハナコ" style="${inputS};min-height:40px"></div><div style="grid-column:1/-1"><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">生年月日<span style="color:#dc2626">*</span></label><input id="c-birth" type="date" min="1900-01-01" max="2026-12-31" style="${inputS};min-height:40px"></div><div><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">電話番号<span style="color:#dc2626">*</span></label><input id="c-tel" type="tel" placeholder="09012345678" autocomplete="tel" inputmode="tel" style="${inputS};min-height:40px"></div><div><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">パスワード<span style="color:#dc2626">*</span></label><input id="c-pass" type="text" placeholder="例: Grant2026!" style="${inputS};min-height:40px"></div><div style="grid-column:1/-1"><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">郵便番号<span style="color:#dc2626">*</span>（7桁、ハイフンなし）<span id="c-zip-status" style="margin-left:8px;font-weight:400;font-size:10px;color:var(--muted)"></span></label><input id="c-zip" type="text" maxlength="8" placeholder="9218042" inputmode="numeric" autocomplete="postal-code" style="${inputS};min-height:40px"></div><div><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">都道府県<span style="color:#dc2626">*</span></label><input id="c-pref" type="text" placeholder="石川県" autocomplete="address-level1" style="${inputS};min-height:40px"></div><div><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">市区町村<span style="color:#dc2626">*</span></label><input id="c-city" type="text" placeholder="金沢市" autocomplete="address-level2" style="${inputS};min-height:40px"></div><div style="grid-column:1/-1"><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">番地<span style="color:#dc2626">*</span></label><input id="c-addr" type="text" placeholder="泉本町５丁目４０−１" style="${inputS};min-height:40px"></div><div style="grid-column:1/-1"><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">建物名・部屋番号（任意）</label><input id="c-bldg" type="text" placeholder="〇〇マンション１０１号室" style="${inputS};min-height:40px"></div></div></details><div style="display:flex;gap:8px;align-items:center;padding:8px 10px;background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;font-size:11.5px;color:#92400e;margin-bottom:10px"><strong>テストモード</strong><span>最終送信ボタンは押しません。入力完了後にG-MAXで確認してください。</span></div><button id="reg-start" class="btn" type="button" style="width:100%;font-size:15px;padding:12px;min-height:44px">招待を送って自動入力（テストモード）</button></div><div id="reg-log" hidden style="margin-top:10px;max-height:180px;overflow-y:auto;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;font-family:monospace"></div><p style="font-size:11px;color:var(--muted);margin:8px 0 0">※ サーバーが「停止中」の場合は「サーバー起動.command」をダブルクリックしてください</p></div>
+ <div class="s-sec" style="margin-top:12px"><h4 style="display:flex;align-items:center;gap:8px">G-MAX 自動カート設定<span id="srv-badge" style="font-size:11px;font-weight:500;padding:2px 10px;border-radius:999px;background:#f1f5f9;color:#64748b">確認中…</span><button type="button" id="apikey-btn" title="APIキー設定" style="margin-left:auto;background:none;border:1px solid var(--line);color:var(--muted);font-size:11px;padding:2px 8px;border-radius:999px;cursor:pointer">キー設定</button></h4><p style="font-size:13px;color:var(--muted);margin:0 0 10px">ボタンを押すとブラウザが開くので、ご自身のG-MAXアカウントでログインしてください。ログイン後は自動で招待メール送信とカート設定が進みます。</p><div><label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px">スタイリスト（あなた）<span style="color:#dc2626;margin-left:2px">*</span></label><div style="display:flex;gap:6px;margin-bottom:8px"><select id="c-stylist" style="${inputS};flex:1;min-height:44px">${renderStylistOptions()}</select><button type="button" id="c-styl-manage" aria-label="スタイリスト管理" title="スタイリスト管理" style="display:inline-flex;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--line);color:var(--muted);padding:0 12px;border-radius:8px;cursor:pointer;min-height:44px;min-width:44px">${SVG_SETTINGS}</button></div><div id="c-stylist-card" style="margin-bottom:12px"></div><label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px">アシスタント<span style="color:#dc2626;margin-left:2px">*</span></label><div style="display:flex;gap:6px;margin-bottom:8px"><select id="c-assistant" style="${inputS};flex:1;min-height:44px">${renderAssistantOptions()}</select><button type="button" id="c-asst-manage" aria-label="アシスタント管理" title="アシスタント管理" style="display:inline-flex;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--line);color:var(--muted);padding:0 12px;border-radius:8px;cursor:pointer;min-height:44px;min-width:44px">${SVG_SETTINGS}</button></div><div id="c-assistant-card" style="margin-bottom:12px"></div><label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px">お客様のメールアドレス<span style="color:#dc2626;margin-left:2px">*</span></label><input id="c-mail" type="email" placeholder="hanako@example.com" autocomplete="email" style="${inputS};margin-bottom:10px;min-height:44px"><details style="margin-bottom:10px" open><summary style="cursor:pointer;font-size:13px;color:var(--muted);user-select:none;padding:6px 0">お客様情報（G-MAX登録に自動入力されます）</summary><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px"><div><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">姓<span style="color:#dc2626">*</span></label><input id="c-sei" type="text" placeholder="山田" autocomplete="family-name" style="${inputS};min-height:40px"></div><div><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">名<span style="color:#dc2626">*</span></label><input id="c-mei" type="text" placeholder="花子" autocomplete="given-name" style="${inputS};min-height:40px"></div><div><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">セイ（カナ）<span style="color:#dc2626">*</span></label><input id="c-sei-kana" type="text" placeholder="ヤマダ" style="${inputS};min-height:40px"></div><div><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">メイ（カナ）<span style="color:#dc2626">*</span></label><input id="c-mei-kana" type="text" placeholder="ハナコ" style="${inputS};min-height:40px"></div><div style="grid-column:1/-1"><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">生年月日<span style="color:#dc2626">*</span></label><input id="c-birth" type="date" min="1900-01-01" max="2026-12-31" style="${inputS};min-height:40px"></div><div><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">電話番号<span style="color:#dc2626">*</span></label><input id="c-tel" type="tel" placeholder="09012345678" autocomplete="tel" inputmode="tel" style="${inputS};min-height:40px"></div><div><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">パスワード<span style="color:#dc2626">*</span></label><input id="c-pass" type="text" placeholder="例: Grant2026!" style="${inputS};min-height:40px"></div><div style="grid-column:1/-1"><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">郵便番号<span style="color:#dc2626">*</span>（7桁、ハイフンなし）<span id="c-zip-status" style="margin-left:8px;font-weight:400;font-size:10px;color:var(--muted)"></span></label><input id="c-zip" type="text" maxlength="8" placeholder="9218042" inputmode="numeric" autocomplete="postal-code" style="${inputS};min-height:40px"></div><div><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">都道府県<span style="color:#dc2626">*</span></label><input id="c-pref" type="text" placeholder="石川県" autocomplete="address-level1" style="${inputS};min-height:40px"></div><div><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">市区町村<span style="color:#dc2626">*</span></label><input id="c-city" type="text" placeholder="金沢市" autocomplete="address-level2" style="${inputS};min-height:40px"></div><div style="grid-column:1/-1"><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">番地<span style="color:#dc2626">*</span></label><input id="c-addr" type="text" placeholder="泉本町５丁目４０−１" style="${inputS};min-height:40px"></div><div style="grid-column:1/-1"><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">建物名・部屋番号（任意）</label><input id="c-bldg" type="text" placeholder="〇〇マンション１０１号室" style="${inputS};min-height:40px"></div></div></details><div style="display:flex;gap:8px;align-items:center;padding:8px 10px;background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;font-size:11.5px;color:#92400e;margin-bottom:10px"><strong>テストモード</strong><span>最終送信ボタンは押しません。入力完了後にG-MAXで確認してください。</span></div><button id="reg-start" class="btn" type="button" style="width:100%;font-size:15px;padding:12px;min-height:44px">招待を送って自動入力（テストモード）</button></div><div id="reg-log" hidden style="margin-top:10px;max-height:180px;overflow-y:auto;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;font-family:monospace"></div><p style="font-size:11px;color:var(--muted);margin:8px 0 0">※ サーバーが「停止中」の場合は「サーバー起動.command」をダブルクリックしてください</p></div>
  <div class="s-sec" style="margin-top:10px"><h4>手動でG-MAXを使う場合（オンラインサインアップ）</h4><ul><li>G-MAX トップ →「招待メール」でお客様のメールアドレスに送る</li><li>お客様がメールのURLから登録（3時間以内・本人が入力）</li><li>商品選択の画面で、このリストどおりにカートへ</li><li>ビジネス会員の初回は、税率が違う商品（下着とサプリなど）を一緒に注文できない</li></ul></div>`;
  $("ordcopy").onclick=async()=>{try{await navigator.clipboard.writeText(orderText(r));$("ordcopy").textContent="コピーしました"}catch(e){const sel=getSelection(),rg=document.createRange();rg.selectNodeContents($("ordtxt"));sel.removeAllRanges();sel.addRange(rg);$("ordcopy").textContent="選択しました（長押しでコピー）"}};
  $("reg-start").onclick=()=>startGmaxRegister(r);
@@ -1323,6 +1391,23 @@ function openOrder(r){$("sheet-t").textContent="G-MAX 注文リスト";
  const asstBtn=$('c-asst-manage');
  if(asstBtn){asstBtn.onclick=()=>openAssistantManager();}
  renderAssistantCard();
+ function renderStylistCard(){
+   const card=$('c-stylist-card');if(!card)return;
+   const s=findStylist(selectedStylistId());
+   if(!s){card.innerHTML='<div style="padding:10px;background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;font-size:12px;color:#92400e">スタイリスト未登録。歯車ボタンから自分の情報と G-MAX ログイン情報を登録してください。</div>';return;}
+   const initial=esc((s.name||'?').slice(0,1));
+   const photo=s.photo?`<img src="${esc(s.photo)}" alt="${esc(s.name)}" style="width:100%;height:100%;object-fit:cover">`:initial;
+   const idOk=s.gmaxId&&s.gmaxPass;
+   const statusBg=idOk?'#dcfce7':'#fef3c7';const statusCol=idOk?'#166534':'#92400e';const statusTxt=idOk?'G-MAXログイン情報 設定済み':'G-MAXログイン情報 未設定';
+   card.innerHTML=`<div style="display:flex;gap:10px;align-items:center;padding:10px;background:var(--bg);border:1px solid var(--line);border-radius:8px"><div style="width:44px;height:44px;border-radius:50%;background:#f1f5f9;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#64748b;font-weight:600;font-size:16px">${photo}</div><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px;color:var(--ink)">${esc(s.name)}</div><div style="font-size:11px;color:${statusCol};background:${statusBg};display:inline-block;padding:2px 8px;border-radius:999px;margin-top:3px">${statusTxt}</div></div></div>`;
+ }
+ const stylSel=$('c-stylist');
+ if(stylSel){
+   stylSel.onchange=()=>{if(stylSel.value==='__manage__'){stylSel.value=selectedStylistId();openStylistManager();}else{setSelectedStylistId(stylSel.value);renderStylistCard();}};
+ }
+ const stylBtn=$('c-styl-manage');
+ if(stylBtn){stylBtn.onclick=()=>openStylistManager();}
+ renderStylistCard();
  const zipEl=$('c-zip');
  if(zipEl){
    let zipTimer=null;

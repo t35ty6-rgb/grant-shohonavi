@@ -134,47 +134,85 @@ async function sendInvite({ page, customerEmail, log }) {
  * Phase 2 以降 (お客様登録ページでのアシスタント情報自動入力 + カート投入) は
  * 招待URL を オーナーがアプリに貼り付けた後に別エンドポイントで走る (automateGmax 側)。
  */
-export async function sendInviteAndAutomate({ customerEmail, assistant, items, onProgress }) {
+/**
+ * スタイリストごとの Chrome プロファイルで G-MAX にログイン・自動入力
+ * 各スタイリストに専用プロファイル (~/.skeleton-granteones-stylist-{id})
+ * 2回目以降はセッションcookie保持で自動ログイン
+ */
+async function launchStylistBrowser(stylist, log) {
+  const profileDir = `${process.env.HOME}/.skeleton-granteones-stylist-${stylist.id}`;
+  log(`スタイリスト「${stylist.name}」用のChromeを起動`);
+  const context = await chromium.launchPersistentContext(profileDir, {
+    headless: true,
+    viewport: { width: 1280, height: 800 },
+    locale: 'ja-JP',
+  });
+  return context;
+}
+
+async function ensureLoggedIn(page, stylist, log) {
+  await page.goto('https://sslgw.jns-asp.jp/granteones/', { waitUntil: 'domcontentloaded', timeout: 15000 });
+  await page.waitForTimeout(1500);
+  // 既にログイン済みなら ARGUMENTS 付き URL にリダイレクト
+  if (extractArguments(page.url())) {
+    log('✓ 既存セッションで G-MAX ログイン済み');
+    return true;
+  }
+  // ログイン画面 → ID/PW 入力
+  log(`G-MAX ログイン: ID=${stylist.gmaxId.slice(0, 3)}***`);
+  try {
+    await page.fill('input[name="sendid"]', stylist.gmaxId);
+    await page.fill('input[name="sendpass"]', stylist.gmaxPass);
+    await Promise.all([
+      page.waitForLoadState('domcontentloaded', { timeout: 15000 }),
+      page.click('#LoginSubmit'),
+    ]);
+    await page.waitForTimeout(2000);
+    if (extractArguments(page.url())) {
+      log('✓ ログイン成功');
+      return true;
+    }
+    // 失敗
+    const errText = await page.innerText('body').catch(() => '');
+    if (errText.includes('パスワード') || errText.includes('ID') || errText.includes('エラー')) {
+      log('❌ ログイン失敗（ID/パスワードが違う可能性）');
+    }
+    return false;
+  } catch (err) {
+    log(`❌ ログイン処理エラー: ${err.message}`);
+    return false;
+  }
+}
+
+export async function sendInviteAndAutomate({ customerEmail, assistant, stylist, items, onProgress }) {
   const log = (msg) => { onProgress?.({ time: new Date().toISOString(), msg }); };
 
   log('G-MAX自動化を開始します');
-  const browser = await connectChrome(log);
-  const ctx = browser.contexts()[0];
-  if (!ctx) {
-    try { await browser.close(); } catch {}
-    return { ok: false, error: 'Chromeコンテキストが見つかりません' };
-  }
-
-  let page = pickLoggedInPage(ctx);
-  // G-MAX タブが無い (owner が 閉じた 等) → 自動で開く
-  if (!page || !page.url().includes('granteones')) {
-    log('G-MAXタブが見つからないので新しく開きます');
-    page = await ctx.newPage();
-    await page.goto('https://sslgw.jns-asp.jp/granteones/', { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {});
-    await page.waitForTimeout(1500);
-    page.bringToFront?.().catch(() => {});
-  }
-
-  // ログインチェック: ARGUMENTS が URL に無い → 未ログイン
-  const curUrl = page.url();
-  if (!extractArguments(curUrl)) {
-    try { await browser.close(); } catch {}
-    return { ok: false, error: 'G-MAXにログインしてください。Mac mini の Chrome で G-MAX タブを開いて、ID/パスワードでログインしてから、もう一度このボタンを押してください。' };
-  }
-
+  let context;
   try {
+    context = await launchStylistBrowser(stylist, log);
+  } catch (err) {
+    return { ok: false, error: `Chrome起動エラー: ${err.message}` };
+  }
+
+  const page = await context.newPage();
+  try {
+    const loggedIn = await ensureLoggedIn(page, stylist, log);
+    if (!loggedIn) {
+      return { ok: false, error: `G-MAX ログインに失敗しました。スタイリスト管理で「${stylist.name}」の G-MAX ID/パスワードを確認してください。` };
+    }
+
     const result = await sendInvite({ page, customerEmail, log });
     log(`✓ 招待メール送信完了 → ${customerEmail}`);
-    log(`お客様がメールのURLをクリックして「初回注文/簡易登録書」ページに到達したら、そのURLを「URL入力」欄に貼り付けて次のステップに進んでください`);
-    log(`アシスタント: ${assistant.name} (ID: ${assistant.id}) が自動入力されます`);
-    log(`商品: ${items.length}点 がカート投入予定`);
-    return { ok: true, phase: 1, customerEmail, args: result.args, note: '招待送信完了。お客様からURLを受け取ったらPhase 2を実行してください' };
+    log(`アシスタント: ${assistant.name} (ID: ${assistant.id})`);
+    log(`商品: ${items.length}点 の自動投入予定`);
+    log('ℹ 現在 Phase 1 (招待送信) のみ稼働中。Phase 2 (お客様登録フォーム自動入力) は 次バージョンで対応');
+    return { ok: true, phase: 1, customerEmail, args: result.args, note: '招待送信完了' };
   } catch (err) {
     log(`エラー: ${err.message}`);
     return { ok: false, error: err.message };
   } finally {
-    // CDP接続は切るがChromeは閉じない
-    try { await browser.close(); } catch {}
+    try { await context.close(); } catch {}
   }
 }
 
