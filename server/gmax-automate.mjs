@@ -273,209 +273,173 @@ export async function automateGmax({ invitationUrl, assistant, customer, items, 
     await page.goto(invitationUrl, { waitUntil: 'domcontentloaded', timeout: 20000 });
     await page.waitForTimeout(1500);
 
-    // Step 0: 利用規約 → formBunki_next
-    log('Step 0: 利用規約ページ → 次へ');
-    await Promise.all([
-      page.waitForLoadState('domcontentloaded'),
-      page.evaluate(() => { if (typeof formBunki_next === 'function') formBunki_next(); }),
-    ]);
-    await page.waitForTimeout(1500);
+    // ------------ タイトル駆動 ページハンドラ ループ ------------
+    // 各ページで title を見て適切な処理 → formBunki_next → 次ページ
+    const seen = new Set();
+    for (let step = 0; step < 20; step++) {
+      const title = await page.title().catch(() => '');
+      const url = page.url();
+      const key = title + '|' + url;
+      log(`[Step ${step}] title: ${title}`);
+      if (seen.has(key)) {
+        log(`  ⚠ 同じページに戻った (ループ検知) → 停止`);
+        break;
+      }
+      seen.add(key);
 
-    // Step 1: 確認項目 (チェックボックス2つ)
-    log(`Step 1: 確認項目にチェック (title: ${await page.title().catch(() => '?')})`);
-    await page.check('#policy_check7', { timeout: 3000 }).then(() => log('  ✓ policy_check7')).catch(e => log(`  - policy_check7 skip: ${e.message.slice(0,40)}`));
-    await page.check('#policy_check8', { timeout: 3000 }).then(() => log('  ✓ policy_check8')).catch(e => log(`  - policy_check8 skip: ${e.message.slice(0,40)}`));
-    await page.waitForTimeout(300);
-    log('  formBunki_next 呼び出し');
-    await page.evaluate(() => { if (typeof formBunki_next === 'function') formBunki_next(); }).catch(e => log(`  ! formBunki_next error: ${e.message.slice(0,40)}`));
-    await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => log('  (domcontentloaded timeout)'));
-    await page.waitForTimeout(1500);
-    log(`  → 次ページ到達 (title: ${await page.title().catch(() => '?')})`);
+      let handled = false;
+      let shouldStop = false;
 
-    // ビジネス覚書テスト ページ判定 (ビジネス会員のみ)
-    const title2 = await page.title().catch(() => '');
-    if (title2.includes('覚書テスト') || title2.includes('会員テスト')) {
-      log('Step 2a: ビジネス覚書テスト (13問) を自動解答');
-      const quizAnswers = {
-        1: '1', 2: '2', 3: '2', 4: '2', 5: '1', 6: '1', 7: '2',
-        8: '1', 9: '1', 10: '2', 11: '2', 12: '2', 13: '1',
-      };
-      for (const [q, v] of Object.entries(quizAnswers)) {
-        try {
-          await page.check(`input[name="question${q}"][value="${v}"]`, { timeout: 1500 });
-          log(`  Q${q}=${v === '1' ? 'はい' : 'いいえ'}`);
-        } catch (e) {
-          log(`  ! Q${q} 選択失敗`);
+      // 1. 利用規約
+      if (title.includes('利用規約') || title.includes('注意事項')) {
+        log('  → 利用規約: 次へ');
+        handled = true;
+      }
+      // 2. 確認項目 (policy checkbox)
+      else if (title.includes('確認項目')) {
+        log('  → 確認項目: policy_check7/8 → 次へ');
+        await page.check('#policy_check7', { timeout: 2000 }).catch(() => {});
+        await page.check('#policy_check8', { timeout: 2000 }).catch(() => {});
+        handled = true;
+      }
+      // 3. シリアル番号確認
+      else if (title.includes('シリアル番号')) {
+        log(`  → シリアル番号: ${customer?.serial || '(空)'} 入力`);
+        if (customer?.serial) {
+          await page.fill('input[name="NINSYOU_ID"]', customer.serial, { timeout: 2000 }).catch(e => log(`  ! シリアル入力失敗: ${e.message.slice(0,40)}`));
+        } else {
+          log(`  ⚠ シリアル番号 未入力 → ここで停止`);
+          shouldStop = true;
+        }
+        handled = true;
+      }
+      // 4. 覚書テスト (業績会員クイズ)
+      else if (title.includes('覚書テスト') || title.includes('会員テスト')) {
+        if (title.includes('テスト結果') || title.includes('結果')) {
+          // テスト結果ページ: 次へ進む リンク
+          log('  → テスト結果: 次へ進むリンクをクリック');
+          const nextHref = await page.$eval('a[href*="signup_class_check"], a[href*="javascript:formBunki_next"]', a => a.href).catch(() => null);
+          if (nextHref && !nextHref.startsWith('javascript:')) {
+            await page.goto(nextHref, { waitUntil: 'domcontentloaded', timeout: 15000 });
+            await page.waitForTimeout(1500);
+            continue; // ループ継続 (handled=false のまま、次回判定へ)
+          }
+          handled = true;
+        } else {
+          log('  → 覚書テスト: 13問自動解答 → 採点');
+          const quizAnswers = { 1:'1', 2:'2', 3:'2', 4:'2', 5:'1', 6:'1', 7:'2', 8:'1', 9:'1', 10:'2', 11:'2', 12:'2', 13:'1' };
+          for (const [q, v] of Object.entries(quizAnswers)) {
+            await page.check(`input[name="question${q}"][value="${v}"]`, { timeout: 1500 }).catch(() => {});
+          }
+          log('  → scoring() 実行');
+          await page.evaluate(() => { if (typeof scoring === 'function') scoring(); }).catch(() => {});
+          await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
+          await page.waitForTimeout(2000);
+          continue;
         }
       }
-      // 覚書テスト は scoring() 関数 で 採点 → テスト結果 ページ
-      await Promise.all([
-        page.waitForLoadState('domcontentloaded'),
-        page.evaluate(() => { if (typeof scoring === 'function') scoring(); }),
-      ]);
-      await page.waitForTimeout(2500);
-      log(`→ テスト結果 (title: ${await page.title().catch(() => '?')})`);
-      // テスト結果ページ → 「次へ進む」リンクをクリック
-      try {
-        const nextHref = await page.$eval('a[href*="signup_class_check"], a:has-text("次へ進む")', a => a.href).catch(() => null);
-        if (nextHref) {
-          log(`→ 次へ進む: ${nextHref.slice(0, 80)}...`);
-          await page.goto(nextHref, { waitUntil: 'domcontentloaded', timeout: 15000 });
-          await page.waitForTimeout(1500);
-        }
-      } catch (e) {
-        log(`⚠ 次へ進むリンク失敗: ${e.message.slice(0, 80)}`);
-      }
-      log(`覚書テスト完了 → 次 (title: ${await page.title().catch(() => '?')})`);
-    }
-
-    // Step 2: 紹介者情報 → アシスタント情報を入力
-    log(`Step 2: アシスタント情報を入力 (${assistant.name})`);
-    await page.check('input[name="BNR_SELECT"]', { timeout: 1000 }).catch(() => {});
-    const fillMap = {
-      BNR_ID: assistant.id,
-      BNR_NAME: assistant.name,
-      BNR_add1p1: assistant.zip1,
-      BNR_add1p2: assistant.zip2,
-      BNR_add2: assistant.pref,
-      BNR_add3: assistant.city,
-      BNR_add4: assistant.addr,
-      BNR_add5: assistant.bldg || '',
-      BNR_TEL: assistant.tel,
-    };
-    for (const [name, value] of Object.entries(fillMap)) {
-      if (value === undefined || value === null) continue;
-      try {
-        const el = await page.$(`input[name="${name}"]`);
-        if (!el) { log(`  - ${name} field なし (skip)`); continue; }
-        await el.fill(String(value), { timeout: 1500 });
-        log(`  ${name} = ${value}`);
-      } catch (e) {
-        log(`  ! ${name} 入力失敗: ${e.message.slice(0, 60)}`);
-      }
-    }
-
-    log('Step 2 完了 → 次へ');
-    await Promise.all([
-      page.waitForLoadState('domcontentloaded'),
-      page.evaluate(() => { if (typeof formBunki_next === 'function') formBunki_next(); }),
-    ]);
-    await page.waitForTimeout(1500);
-
-    // Step 3 到達確認 + ページ構造 dump
-    log(`Step 3 URL: ${page.url()}`);
-    log(`Step 3 Title: ${await page.title().catch(() => '?')}`);
-    try {
-      const step3Fields = await page.$$eval('input, select, textarea', els => els.slice(0, 60).map(el => ({
-        tag: el.tagName, type: el.type || '', name: el.name || '', id: el.id || '',
-        placeholder: el.placeholder || '', required: el.required || false,
-      })));
-      log(`Step 3 検出フィールド: ${step3Fields.length}`);
-      step3Fields.forEach((f, i) => log(`  [${i}] ${f.tag}${f.type?'['+f.type+']':''} name="${f.name}" id="${f.id}" ph="${f.placeholder}"${f.required?' REQ':''}`));
-      const ts = Date.now();
-      const dumpPath = join(SHOT_DIR, `step3-${ts}.html`);
-      const shotPath = join(SHOT_DIR, `step3-${ts}.png`);
-      const fs = await import('fs');
-      await fs.promises.writeFile(dumpPath, await page.content(), 'utf8');
-      await page.screenshot({ path: shotPath, fullPage: true });
-      log(`📸 Step 3 dump: ${shotPath}`);
-      log(`📄 Step 3 HTML: ${dumpPath}`);
-    } catch (e) {
-      log(`⚠ Step 3 dump エラー: ${e.message}`);
-    }
-
-    // Step 3+: お客様情報を可能な限り入力
-    //   具体的なフィールド名は実機 inspect 済み次第、更新する
-    //   ここでは name 属性で広めに candidate を試す
-    if (customer) {
-      log('Step 3+: お客様情報を自動入力');
-      // 電話番号を 3-4-4 分割 (ハイフンなし 11桁想定)
-      const telDigits = (customer.phone || '').replace(/[^0-9]/g, '');
-      const tel1 = telDigits.slice(0, 3), tel2 = telDigits.slice(3, 7), tel3 = telDigits.slice(7, 11);
-      const custMap = {
-        // 姓名 (漢字)
-        P_NAME_D_F_SEI: customer.lastName, P_NAME_D_F_MEI: customer.firstName,
-        // 姓名 (カナ)
-        P_NAME_D_K_SEI: customer.lastNameKana, P_NAME_D_K_MEI: customer.firstNameKana,
-        // 郵便番号
-        P_POST_3: customer.zip1, P_POST_4: customer.zip2,
-        // 住所
-        P_SHI_ADD2: customer.city,
-        P_CHOU_ADD3: customer.addr,
-        P_BILL_ADD4: customer.bldg || '',
-        // 電話番号
-        P_TEL1: tel1, P_TEL2: tel2, P_TEL3: tel3,
-        // シリアル番号 (QRコード)
-        P_MYNUMBER_C: customer.serial || '',
-      };
-      // 生年月日 (select)
-      if (customer.birth) {
-        const [y, m, d] = customer.birth.split('-');
-        Object.assign(custMap, {
-          P_BIRTH_YEAR: y, P_BIRTH_MONTH: String(+m), P_BIRTH_DAY: String(+d),
-        });
-      }
-      let filled = 0;
-      for (const [name, value] of Object.entries(custMap)) {
-        if (value === undefined || value === null || value === '') continue;
-        try {
-          const el = await page.$(`input[name="${name}"]`);
-          if (!el) continue;
-          const type = await el.getAttribute('type').catch(() => 'text');
-          if (type === 'hidden') continue;
-          await el.fill(String(value), { timeout: 1000 });
-          filled++;
-          log(`  ✓ ${name}=${String(value).slice(0, 30)}`);
-        } catch {}
-      }
-      // 生年月日 select (P_BIRTH_YEAR/MONTH/DAY)
-      if (customer.birth) {
-        const [y, m, d] = customer.birth.split('-');
-        for (const [name, val] of [['P_BIRTH_YEAR', y], ['P_BIRTH_MONTH', String(+m)], ['P_BIRTH_DAY', String(+d)]]) {
+      // 5. 紹介者情報
+      else if (title.includes('紹介者')) {
+        log(`  → 紹介者情報: アシスタント ${assistant.name} 入力`);
+        await page.check('input[name="BNR_SELECT"]', { timeout: 1000 }).catch(() => {});
+        const fillMap = {
+          BNR_ID: assistant.id, BNR_NAME: assistant.name,
+          BNR_add1p1: assistant.zip1, BNR_add1p2: assistant.zip2,
+          BNR_add2: assistant.pref, BNR_add3: assistant.city,
+          BNR_add4: assistant.addr, BNR_add5: assistant.bldg || '', BNR_TEL: assistant.tel,
+        };
+        for (const [n, v] of Object.entries(fillMap)) {
+          if (!v) continue;
           try {
-            const sel = await page.$(`select[name="${name}"]`);
-            if (!sel) continue;
-            await sel.selectOption(val, { timeout: 1000 });
-            filled++;
-            log(`  ✓ ${name}=${val}`);
+            const el = await page.$(`input[name="${n}"]`);
+            if (el) { await el.fill(String(v), { timeout: 1500 }); log(`    ✓ ${n}`); }
           } catch {}
         }
+        handled = true;
       }
-      // 都道府県 select (P_KEN_ADD1)
-      if (customer.pref) {
-        try {
-          const sel = await page.$('select[name="P_KEN_ADD1"]');
-          if (sel) {
-            await sel.selectOption({ label: customer.pref }, { timeout: 1000 });
-            filled++;
-            log(`  ✓ P_KEN_ADD1=${customer.pref}`);
+      // 6. お客様情報 (個人情報入力)
+      else if (title.includes('個人情報') || title.includes('会員登録') || title.includes('基本情報') || await page.$('input[name="P_NAME_D_F_SEI"]')) {
+        log('  → お客様情報入力');
+        if (customer) {
+          const telD = (customer.phone || '').replace(/[^0-9]/g, '');
+          const custMap = {
+            P_NAME_D_F_SEI: customer.lastName, P_NAME_D_F_MEI: customer.firstName,
+            P_NAME_D_K_SEI: customer.lastNameKana, P_NAME_D_K_MEI: customer.firstNameKana,
+            P_POST_3: customer.zip1, P_POST_4: customer.zip2,
+            P_SHI_ADD2: customer.city, P_CHOU_ADD3: customer.addr, P_BILL_ADD4: customer.bldg || '',
+            P_TEL1: telD.slice(0,3), P_TEL2: telD.slice(3,7), P_TEL3: telD.slice(7,11),
+            P_MYNUMBER_C: customer.serial || '',
+          };
+          let filled = 0;
+          for (const [n, v] of Object.entries(custMap)) {
+            if (!v) continue;
+            try {
+              const el = await page.$(`input[name="${n}"]`);
+              if (el && (await el.getAttribute('type')) !== 'hidden') {
+                await el.fill(String(v), { timeout: 1000 }); filled++; log(`    ✓ ${n}`);
+              }
+            } catch {}
           }
-        } catch {}
+          if (customer.birth) {
+            const [y, m, d] = customer.birth.split('-');
+            for (const [n, v] of [['P_BIRTH_YEAR', y], ['P_BIRTH_MONTH', String(+m)], ['P_BIRTH_DAY', String(+d)]]) {
+              try { const s = await page.$(`select[name="${n}"]`); if (s) { await s.selectOption(v, { timeout: 1000 }); filled++; } } catch {}
+            }
+          }
+          if (customer.pref) {
+            try { const s = await page.$('select[name="P_KEN_ADD1"]'); if (s) { await s.selectOption({ label: customer.pref }, { timeout: 1000 }); filled++; } } catch {}
+          }
+          if (customer.sex) {
+            await page.check(`input[name="P_SEX"][value="${customer.sex}"]`, { timeout: 1000 }).catch(() => {});
+          }
+          log(`  → ${filled} 項目入力`);
+        }
+        handled = true;
       }
-      // 性別 radio (P_SEX: 1=男, 2=女)
-      if (customer.sex) {
-        try {
-          await page.check(`input[name="P_SEX"][value="${customer.sex}"]`, { timeout: 1000 });
-          filled++;
-          log(`  ✓ P_SEX=${customer.sex}`);
-        } catch {}
+      // 7. 商品選択 (⑰ カート)
+      else if (title.includes('商品') || title.includes('カート') || title.includes('注文')) {
+        log(`  → 商品選択: ${items?.length || 0} 点 投入予定 (未実装、ここで停止)`);
+        shouldStop = true;
       }
-      log(`  → 合計 ${filled} 項目入力しました`);
-    }
+      // 8. 確認・最終送信
+      else if (title.includes('確認') || title.includes('最終')) {
+        log('  → 最終確認ページ: テストモードで送信せず停止');
+        shouldStop = true;
+      }
+      // 9. その他 → dump + 停止
+      else {
+        log(`  ⚠ 未知のページ: 停止`);
+        shouldStop = true;
+      }
 
-    log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    log('✓ お客様情報まで自動入力完了');
+      // ページ dump
+      try {
+        const ts = Date.now();
+        const dp = join(SHOT_DIR, `step-${step}-${ts}.html`);
+        const sp = join(SHOT_DIR, `step-${step}-${ts}.png`);
+        const fs = await import('fs');
+        await fs.promises.writeFile(dp, await page.content(), 'utf8');
+        await page.screenshot({ path: sp, fullPage: true });
+        log(`  📸 /screenshots/step-${step}-${ts}.png`);
+      } catch {}
+
+      if (shouldStop) break;
+      if (!handled) break;
+
+      // 次へ (formBunki_next)
+      log('  → formBunki_next');
+      await page.evaluate(() => { if (typeof formBunki_next === 'function') formBunki_next(); }).catch(() => {});
+      await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
+      await page.waitForTimeout(1500);
+    }
     log('⚠ テストモード: 最終送信ボタンは押しません');
     try {
-      const fname = `signup-${Date.now()}.png`;
+      const fname = `signup-final-${Date.now()}.png`;
       await page.screenshot({ path: join(SHOT_DIR, fname), fullPage: true });
-      log(`📸 スクリーンショット: /screenshots/${fname}`);
-      log(`   ブラウザで確認: ${process.env.API_BASE || 'http://localhost:3333'}/screenshots/${fname}`);
+      log(`📸 最終スクリーンショット: /screenshots/${fname}`);
     } catch {}
-    log('  Chromeを確認して、問題なければ手動で「次へ」「送信」を押してください');
-    log('  残: 商品選択(⑰) → 内容確認 → 本登録送信');
     log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    return { ok: true, phase: 2, testMode: true, note: 'テストモード: アシスタント+お客様情報まで入力して停止' };
+    return { ok: true, phase: 2, testMode: true, note: 'テストモード: 自動入力ループ 完走' };
   } catch (err) {
     log(`エラー: ${err.message}`);
     return { ok: false, error: err.message };
