@@ -146,37 +146,59 @@ async function launchStylistBrowser(stylist, log) {
     headless: true,
     viewport: { width: 1280, height: 800 },
     locale: 'ja-JP',
+    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36',
   });
   return context;
 }
 
 async function ensureLoggedIn(page, stylist, log) {
-  await page.goto('https://sslgw.jns-asp.jp/granteones/', { waitUntil: 'domcontentloaded', timeout: 15000 });
+  log('G-MAX トップページを開きます');
+  try {
+    await page.goto('https://sslgw.jns-asp.jp/granteones/', { waitUntil: 'domcontentloaded', timeout: 20000 });
+  } catch (e) {
+    log(`❌ G-MAX トップ読み込み失敗: ${e.message}`);
+    return false;
+  }
   await page.waitForTimeout(1500);
-  // 既にログイン済みなら ARGUMENTS 付き URL にリダイレクト
+  log(`現在のURL: ${page.url()}`);
+  log(`ページタイトル: ${await page.title().catch(() => '?')}`);
+
   if (extractArguments(page.url())) {
     log('✓ 既存セッションで G-MAX ログイン済み');
     return true;
   }
-  // ログイン画面 → ID/PW 入力
+
   log(`G-MAX ログイン: ID=${stylist.gmaxId.slice(0, 3)}***`);
   try {
+    const idField = await page.waitForSelector('input[name="sendid"]', { timeout: 5000 }).catch(() => null);
+    if (!idField) {
+      // dump失敗時ページ
+      const shotPath = `/tmp/gmax-login-fail-${Date.now()}.png`;
+      await page.screenshot({ path: shotPath, fullPage: true }).catch(() => {});
+      log(`❌ ログインフォームが見つかりません (sendid 無し)`);
+      log(`📸 失敗時スクリーンショット: ${shotPath}`);
+      return false;
+    }
     await page.fill('input[name="sendid"]', stylist.gmaxId);
+    log('  ID 入力完了');
     await page.fill('input[name="sendpass"]', stylist.gmaxPass);
-    await Promise.all([
-      page.waitForLoadState('domcontentloaded', { timeout: 15000 }),
-      page.click('#LoginSubmit'),
-    ]);
-    await page.waitForTimeout(2000);
+    log('  PW 入力完了');
+
+    await page.click('#LoginSubmit');
+    log('  ログインボタン click');
+    await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => {});
+    await page.waitForTimeout(2500);
+    log(`送信後URL: ${page.url()}`);
+
     if (extractArguments(page.url())) {
       log('✓ ログイン成功');
       return true;
     }
-    // 失敗
     const errText = await page.innerText('body').catch(() => '');
-    if (errText.includes('パスワード') || errText.includes('ID') || errText.includes('エラー')) {
-      log('❌ ログイン失敗（ID/パスワードが違う可能性）');
-    }
+    const shotPath = `/tmp/gmax-login-fail-${Date.now()}.png`;
+    await page.screenshot({ path: shotPath, fullPage: true }).catch(() => {});
+    log(`📸 失敗時スクリーンショット: ${shotPath}`);
+    log(`応答抜粋: ${errText.replace(/\s+/g, ' ').slice(0, 200)}`);
     return false;
   } catch (err) {
     log(`❌ ログイン処理エラー: ${err.message}`);
