@@ -292,9 +292,33 @@ export async function automateGmax({ invitationUrl, assistant, customer, items, 
     ]);
     await page.waitForTimeout(1500);
 
+    // ビジネス覚書テスト ページ判定 (ビジネス会員のみ)
+    const title2 = await page.title().catch(() => '');
+    if (title2.includes('覚書テスト') || title2.includes('会員テスト')) {
+      log('Step 2a: ビジネス覚書テスト (13問) を自動解答');
+      const quizAnswers = {
+        1: '1', 2: '2', 3: '2', 4: '2', 5: '1', 6: '1', 7: '2',
+        8: '1', 9: '1', 10: '2', 11: '2', 12: '2', 13: '1',
+      };
+      for (const [q, v] of Object.entries(quizAnswers)) {
+        try {
+          await page.check(`input[name="question${q}"][value="${v}"]`, { timeout: 1500 });
+          log(`  Q${q}=${v === '1' ? 'はい' : 'いいえ'}`);
+        } catch (e) {
+          log(`  ! Q${q} 選択失敗`);
+        }
+      }
+      await Promise.all([
+        page.waitForLoadState('domcontentloaded'),
+        page.evaluate(() => { if (typeof formBunki_next === 'function') formBunki_next(); }),
+      ]);
+      await page.waitForTimeout(1500);
+      log(`覚書テスト完了 → 次へ (title: ${await page.title().catch(() => '?')})`);
+    }
+
     // Step 2: 紹介者情報 → アシスタント情報を入力
     log(`Step 2: アシスタント情報を入力 (${assistant.name})`);
-    await page.check('input[name="BNR_SELECT"]').catch(() => {});
+    await page.check('input[name="BNR_SELECT"]', { timeout: 1000 }).catch(() => {});
     const fillMap = {
       BNR_ID: assistant.id,
       BNR_NAME: assistant.name,
@@ -309,7 +333,9 @@ export async function automateGmax({ invitationUrl, assistant, customer, items, 
     for (const [name, value] of Object.entries(fillMap)) {
       if (value === undefined || value === null) continue;
       try {
-        await page.fill(`input[name="${name}"]`, String(value));
+        const el = await page.$(`input[name="${name}"]`);
+        if (!el) { log(`  - ${name} field なし (skip)`); continue; }
+        await el.fill(String(value), { timeout: 1500 });
         log(`  ${name} = ${value}`);
       } catch (e) {
         log(`  ! ${name} 入力失敗: ${e.message.slice(0, 60)}`);
