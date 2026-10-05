@@ -276,7 +276,7 @@ export async function automateGmax({ invitationUrl, assistant, customer, items, 
     // ------------ タイトル駆動 ページハンドラ ループ ------------
     // 各ページで title を見て適切な処理 → formBunki_next → 次ページ
     const seen = new Set();
-    for (let step = 0; step < 20; step++) {
+    for (let step = 0; step < 30; step++) {
       const title = await page.title().catch(() => '');
       const url = page.url();
       const key = title + '|' + url;
@@ -484,23 +484,30 @@ export async function automateGmax({ invitationUrl, assistant, customer, items, 
         }
         handled = true;
       }
-      // 7. 商品選択 (⑰ カート)
+      // 7. 商品選択 (⑰ カート) → とりあえず次へ (カート実装は後)
       else if (title.includes('商品') || title.includes('カート') || title.includes('注文')) {
-        log(`  → 商品選択: ${items?.length || 0} 点 投入予定 (未実装、ここで停止)`);
-        shouldStop = true;
+        log(`  → 商品選択ページ: ${items?.length || 0} 点 (カート自動投入は未実装、スキップして次へ)`);
+        handled = true;
       }
-      // 8. 確認・最終送信
-      else if (title.includes('確認') || title.includes('最終')) {
-        log('  → 最終確認ページ: テストモードで送信せず停止');
-        shouldStop = true;
-      }
-      // 9. その他 → dump + 停止
+      // 8. 未知のページ → dump → formBunki_next で次へ試行
       else {
-        log(`  ⚠ 未知のページ: 停止`);
-        shouldStop = true;
+        log(`  → 未知のページ: dumpして次へ試行`);
+        handled = true;
       }
 
-      // ページ dump
+      // 最終送信ボタン検知 (登録確定/本登録/完了送信 など 不可逆アクション 直前 = STOP)
+      const finalBtnText = await page.evaluate(() => {
+        const btns = Array.from(document.querySelectorAll('button, input[type="submit"], input[type="button"], a.btn'));
+        const texts = btns.map(b => (b.textContent || b.value || '').trim()).filter(Boolean);
+        // 「送信」単独ではなく、「本登録」「登録確定」「申込完了」「登録を完了」等の 不可逆 wording
+        const dangerPatterns = [/本登録(する|送信|完了)/, /登録(を)?確定/, /申込(を)?完了/, /登録(を)?完了/, /注文(を)?確定/, /購入(を)?確定/, /支払/, /決済/];
+        for (const t of texts) {
+          for (const p of dangerPatterns) if (p.test(t)) return t;
+        }
+        return null;
+      }).catch(() => null);
+
+      // ページ dump (全step 常に)
       try {
         const ts = Date.now();
         const dp = join(SHOT_DIR, `step-${step}-${ts}.html`);
@@ -511,6 +518,10 @@ export async function automateGmax({ invitationUrl, assistant, customer, items, 
         log(`  📸 /screenshots/step-${step}-${ts}.png`);
       } catch {}
 
+      if (finalBtnText) {
+        log(`  🛑 最終確定ボタン検知: "${finalBtnText}" → ここで停止 (テストモード)`);
+        break;
+      }
       if (shouldStop) break;
       if (!handled) break;
 
