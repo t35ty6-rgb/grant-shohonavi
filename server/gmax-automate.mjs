@@ -373,21 +373,29 @@ export async function automateGmax({ invitationUrl, assistant, customer, items, 
             { kw: ['個人情報', 'グラント以外'], ans: '1' },
             { kw: ['ビジネス活動', '継続的'], ans: '1' },
           ];
-          // 全質問の text を 取る
+          // 全質問の text を 取る (G-MAX 構造: div.questionbox > p.p-question > 問題文)
           const quizData = await page.$$eval('input[name^="question"][type="radio"]', radios => {
             const map = {};
             for (const r of radios) {
               const qname = r.name;
-              if (!map[qname]) {
-                // 問題文 は 近くの text (親 or 兄弟 要素)
-                let el = r.closest('tr, div, li, td');
-                let text = '';
-                while (el && text.length < 10) {
-                  text = (el.textContent || '').trim();
+              if (map[qname]) continue;
+              // 1. 近い questionbox を探す → その中の p.p-question の text
+              const qbox = r.closest('.questionbox, div, fieldset, tr');
+              let text = '';
+              if (qbox) {
+                const pQ = qbox.querySelector('.p-question, p');
+                if (pQ) text = (pQ.textContent || '').trim();
+              }
+              // 2. 見つからなければ 親を 上に辿る
+              if (text.length < 10) {
+                let el = r.parentElement;
+                for (let i = 0; i < 6 && el; i++) {
+                  const t = (el.textContent || '').replace(/\s+/g, ' ').trim();
+                  if (t.length > 20 && (t.includes('問') || t.includes('。'))) { text = t; break; }
                   el = el.parentElement;
                 }
-                map[qname] = text.slice(0, 300);
               }
+              map[qname] = text.slice(0, 300);
             }
             return map;
           });
