@@ -107,10 +107,21 @@ export async function sendInviteAndAutomate({ customerEmail, assistant, items, o
     return { ok: false, error: 'Chromeコンテキストが見つかりません' };
   }
 
-  const page = pickLoggedInPage(ctx);
-  if (!page) {
+  let page = pickLoggedInPage(ctx);
+  // G-MAX タブが無い (owner が 閉じた 等) → 自動で開く
+  if (!page || !page.url().includes('granteones')) {
+    log('G-MAXタブが見つからないので新しく開きます');
+    page = await ctx.newPage();
+    await page.goto('https://sslgw.jns-asp.jp/granteones/', { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {});
+    await page.waitForTimeout(1500);
+    page.bringToFront?.().catch(() => {});
+  }
+
+  // ログインチェック: ARGUMENTS が URL に無い → 未ログイン
+  const curUrl = page.url();
+  if (!extractArguments(curUrl)) {
     try { await browser.close(); } catch {}
-    return { ok: false, error: 'G-MAXのタブが見つかりません。Chromeで https://sslgw.jns-asp.jp/granteones/ を開いてログインしてください' };
+    return { ok: false, error: 'G-MAXにログインしてください。Mac mini の Chrome で G-MAX タブを開いて、ID/パスワードでログインしてから、もう一度このボタンを押してください。' };
   }
 
   try {
