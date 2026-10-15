@@ -13,11 +13,15 @@ import { dirname, join } from 'path';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const KEY_PATH = join(__dir, 'api-key.txt');
-if (!existsSync(KEY_PATH)) {
-  console.error(`\n⚠ api-key.txt が見つかりません: ${KEY_PATH}\n生成: node -e "require('fs').writeFileSync('${KEY_PATH}', require('crypto').randomBytes(32).toString('hex'))"\n`);
-  process.exit(1);
+// 優先順: env API_KEY > ファイル api-key.txt
+let API_KEY = process.env.API_KEY?.trim();
+if (!API_KEY) {
+  if (!existsSync(KEY_PATH)) {
+    console.error(`\n⚠ api-key.txt が見つかりません: ${KEY_PATH}\n生成: node -e "require('fs').writeFileSync('${KEY_PATH}', require('crypto').randomBytes(32).toString('hex'))"\n`);
+    process.exit(1);
+  }
+  API_KEY = readFileSync(KEY_PATH, 'utf8').trim();
 }
-const API_KEY = readFileSync(KEY_PATH, 'utf8').trim();
 
 const app = express();
 app.use(express.json({ limit: '1mb' }));
@@ -162,7 +166,8 @@ app.post('/api/jobs/:jobId/provide-serial', (req, res) => {
   res.json({ ok: true });
 });
 
-const PORT = 3333;
-app.listen(PORT, '127.0.0.1', () => {
-  console.log(`\n処方ナビ自動化サーバー 起動\nhttp://localhost:${PORT}/api/ping\n`);
+const PORT = Number(process.env.PORT || 3333);
+const HOST = process.env.HOST || (process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1');
+app.listen(PORT, HOST, () => {
+  console.log(`\n処方ナビ自動化サーバー 起動\nhttp://${HOST}:${PORT}/api/ping\n`);
 });
