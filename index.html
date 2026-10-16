@@ -1585,7 +1585,8 @@ function pollSignupJob(jobId){
       if(d.status==='done'||d.status==='failed'){
         clearInterval(iv);
         const ok=d.result?.ok;
-        appendSignupLog(ok?'完了: 登録フォームへの自動入力が終わりました！':'失敗しました。ログを確認してください。',ok?'ok':'error');
+        if(ok){appendSignupLog('完了: 登録フォームへの自動入力が終わりました！','ok');}
+        else{const errMsg=d.result?.error||'(詳細不明)';appendSignupLog('失敗: '+errMsg,'error');}
         $('signup-start').disabled=false;
         $('signup-start').textContent=ok?'もう一度実行':'再試行';
         const wn=$('wiz-next');if(wn){wn.disabled=false;wn.textContent=ok?'完了':'再試行';}
@@ -1716,7 +1717,8 @@ async function pollJob(jobId,r){
       if(d.status==='done'||d.status==='failed'){
         clearInterval(iv);
         const ok=d.result?.ok;
-        appendLog(ok?'完了: 招待メール送信が終わりました！':'失敗しました。ログを確認してください。',ok?'ok':'error');
+        if(ok){appendLog('完了: 招待メール送信が終わりました！','ok');}
+        else{const errMsg=d.result?.error||'(詳細不明)';appendLog('失敗: '+errMsg,'error');appendLog('→ サーバーログを確認: flyctl logs -a grant-shohonavi','error');}
         if(ok){try{if(typeof wizGoto==='function')wizGoto(6);}catch{}const s=$('signup-section');if(s){s.hidden=false;}}
         $('reg-start').disabled=false;
         $('reg-start').textContent=ok?'もう一度実行':'再試行';
