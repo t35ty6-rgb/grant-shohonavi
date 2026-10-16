@@ -1817,6 +1817,8 @@ function openOrder(r){$("sheet-t").textContent="G-MAX 注文リスト";
    <div id="reg-log" hidden class="wiz-log"></div>
    <div id="signup-log" hidden class="wiz-log"></div>
    <p class="wiz-foot">※ サーバーは Fly.io で 常時起動。 停止中 表示 の 場合 は 数秒 待って 再度 お試しください</p>
+   <button type="button" id="dev-explore-cart" style="margin-top:12px;width:100%;background:var(--surface-2);border:1px dashed var(--muted-2);color:var(--muted);padding:10px;border-radius:10px;font-size:12px;cursor:pointer">🔍 開発: カート UI 構造 探索 を 走らせる (Jobs 専用)</button>
+   <div id="dev-explore-log" hidden class="wiz-log"></div>
    <button id="reg-start" type="button" hidden></button>
    <button id="signup-start" type="button" hidden></button>
    <div id="signup-section" hidden></div>
@@ -1926,6 +1928,25 @@ function openOrder(r){$("sheet-t").textContent="G-MAX 注文リスト";
  document.querySelectorAll('#gmax-wiz .wiz-choice-card[data-ut]').forEach(c=>{c.onclick=()=>{const val=c.dataset.ut;document.querySelectorAll('#gmax-wiz .wiz-choice-card[data-ut]').forEach(x=>x.setAttribute('aria-pressed',x===c?'true':'false'));$('c-usertype').value=val;saveDraft();};});
  document.querySelectorAll('#gmax-wiz .wiz-choice-card[data-sx]').forEach(c=>{c.onclick=()=>{const val=c.dataset.sx;document.querySelectorAll('#gmax-wiz .wiz-choice-card[data-sx]').forEach(x=>x.setAttribute('aria-pressed',x===c?'true':'false'));$('c-sex').value=val;saveDraft();};});
  const serialManual=$('c-serial-manual-btn');if(serialManual){serialManual.onclick=()=>{const s=$('c-serial');if(s){s.focus();s.scrollIntoView({block:'center',behavior:'smooth'});}};}
+ /* ---- 開発用: カート UI 探索 ---- */
+ const devExplore=$('dev-explore-cart');
+ if(devExplore){devExplore.onclick=async()=>{
+   const styl=findStylist(selectedStylistId());
+   if(!styl||!styl.gmaxId||!styl.gmaxPass){alert('スタイリスト G-MAX ログイン情報 未設定');return;}
+   const dlog=$('dev-explore-log');dlog.hidden=false;dlog.innerHTML='探索開始…';
+   devExplore.disabled=true;devExplore.textContent='探索中…';
+   try{
+     const r=await fetch(API+'/explore-cart',{method:'POST',headers:apiHeaders(),body:JSON.stringify({stylist:{id:styl.id,gmaxId:styl.gmaxId,gmaxPass:styl.gmaxPass,name:styl.name}})});
+     const d=await r.json();
+     if(!d.ok){dlog.innerHTML='エラー: '+esc(d.error);devExplore.disabled=false;devExplore.textContent='🔍 再試行';return;}
+     const jid=d.jobId;
+     const iv=setInterval(async()=>{
+       const sr=await fetch(API+'/status/'+jid,{headers:apiHeaders()});const sd=await sr.json();
+       dlog.innerHTML=(sd.logs||[]).map(l=>'<div>'+esc(l.msg)+'</div>').join('');dlog.scrollTop=9999;
+       if(sd.status==='done'||sd.status==='failed'){clearInterval(iv);devExplore.disabled=false;devExplore.textContent='🔍 再実行';dlog.innerHTML+='<hr><b>完了</b> status='+esc(sd.status);}
+     },2000);
+   }catch(e){dlog.innerHTML='例外: '+esc(e.message);devExplore.disabled=false;devExplore.textContent='🔍 再試行';}
+ };}
  /* ---- カナ 入力 自動変換 + バリデーション (G-MAX「使用できない文字」エラー 防止) ---- */
  function kanaValidate(id){const el=$(id);const help=$(id+'-help');if(!el||!help)return true;
    let v=el.value;
