@@ -1355,7 +1355,7 @@ function openStylistManager(){
   const inputS="width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px;background:var(--surface);color:var(--ink);min-height:40px";
   const labelS="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px";
   const body=`<p style="font-size:13px;color:var(--muted);margin:0 0 12px;line-height:1.6">スタイリストごとの G-MAX ログイン情報を登録します。処方作成時に自分を選ぶと、サーバーがその情報で G-MAX に自動ログイン・自動入力します。</p>
-    <div style="padding:9px 11px;background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;font-size:11.5px;color:#92400e;margin-bottom:12px"><strong>セキュリティ注意:</strong> パスワードは このスマホの中 と Mac mini サーバー にだけ保存されます。他人の端末からは見えません。</div>
+    <div style="padding:9px 11px;background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;font-size:11.5px;color:#92400e;margin-bottom:12px"><strong>セキュリティ注意:</strong> パスワードは このスマホの中 と サーバー にだけ保存されます。他人の端末からは見えません。</div>
     <div id="styl-list" role="list" style="display:flex;flex-direction:column;gap:14px;margin-bottom:14px"></div>
     <button type="button" id="styl-add" class="btn ghost" style="width:100%;display:flex;align-items:center;justify-content:center;gap:6px;min-height:44px">${SVG_PLUS}<span>新しいスタイリストを追加</span></button>`;
   openModal('スタイリスト管理',body);
@@ -1508,27 +1508,38 @@ function apiHeaders(){const h={'Content-Type':'application/json'};const k=apiKey
 function requireApiKey(){
   let k=apiKey();
   if(k)return k;
-  k=prompt('初回のみ：サーバーのAPIキーを入力してください\n（Mac mini側 server/api-key.txt の内容）');
+  k=prompt('初回のみ：サーバーのAPIキーを入力してください');
   if(k&&k.trim()){localStorage.setItem('grantApiKey',k.trim());return k.trim();}
   return null;
 }
-async function pingSrv(){
+async function pingSrv(timeoutMs){
   try{
-    const r=await fetch(API+'/ping',{signal:AbortSignal.timeout(2000)});
+    const r=await fetch(API+'/ping',{signal:AbortSignal.timeout(timeoutMs||10000)});
     _srvOk=r.ok;
-    const b=$('srv-badge');if(!b)return;
+    const b=$('srv-badge');if(!b)return _srvOk;
     b.textContent=_srvOk?'起動中':'停止中';
     b.style.background=_srvOk?'#dcfce7':'#fee2e2';
     b.style.color=_srvOk?'#166534':'#991b1b';
+    return _srvOk;
   }catch{
     _srvOk=false;
-    const b=$('srv-badge');if(!b)return;
-    b.textContent='停止中';b.style.background='#fee2e2';b.style.color='#991b1b';
+    const b=$('srv-badge');if(b){b.textContent='停止中';b.style.background='#fee2e2';b.style.color='#991b1b';}
+    return false;
   }
+}
+async function ensureSrv(){
+  if(_srvOk)return true;
+  const b=$('srv-badge');if(b){b.textContent='起動中…';b.style.background='#fef3c7';b.style.color='#92400e';}
+  for(let i=0;i<3;i++){
+    const ok=await pingSrv(15000);
+    if(ok)return true;
+    await new Promise(r=>setTimeout(r,1500));
+  }
+  return false;
 }
 async function startSignupAutomate(r){
   if(!API_READY){await initApi();}
-  if(!_srvOk){alert('自動化サーバーが起動していません。\nMac mini で「サーバー起動.command」をダブルクリックしてから再試行してください。');return;}
+  if(!_srvOk){const ok=await ensureSrv();if(!ok){alert('サーバーが起動していません。少し待ってから もう一度 お試しください。');return;}}
   const url=($('signup-url')?.value||'').trim();
   if(!url||!url.includes('PRGNAME=signup_start')){alert('招待URLを貼ってください（signup_startを含むURL）');return;}
   const stylId=($('c-stylist')?.value||selectedStylistId());
@@ -1633,7 +1644,7 @@ function appendSignupLog(msg,type){
 }
 async function startGmaxRegister(r){
   if(!API_READY){await initApi();}
-  if(!_srvOk){alert('自動化サーバーが起動していません。\nMac mini で「サーバー起動.command」をダブルクリックしてから再試行してください。');return;}
+  if(!_srvOk){const ok=await ensureSrv();if(!ok){alert('サーバーが起動していません。少し待ってから もう一度 お試しください。');return;}}
   if(!requireApiKey()){alert('APIキーが未設定です。処理を中止しました。');return;}
   const email=($('c-mail')?.value||'').trim();
   if(!email){alert('お客様のメールアドレスを入力してください。');$('c-mail')?.focus();return;}
@@ -1805,7 +1816,7 @@ function openOrder(r){$("sheet-t").textContent="G-MAX 注文リスト";
 
    <div id="reg-log" hidden class="wiz-log"></div>
    <div id="signup-log" hidden class="wiz-log"></div>
-   <p class="wiz-foot">※ サーバーが「停止中」の場合は「サーバー起動.command」をダブルクリック</p>
+   <p class="wiz-foot">※ サーバーは Fly.io で 常時起動。 停止中 表示 の 場合 は 数秒 待って 再度 お試しください</p>
    <button id="reg-start" type="button" hidden></button>
    <button id="signup-start" type="button" hidden></button>
    <div id="signup-section" hidden></div>
@@ -1882,7 +1893,7 @@ function openOrder(r){$("sheet-t").textContent="G-MAX 注文リスト";
      }
    };
  }
- $("apikey-btn").onclick=()=>{const cur=apiKey();const k=prompt('APIキーを入力/変更：\n（Mac mini側 server/api-key.txt の内容）',cur);if(k!==null){if(k.trim())localStorage.setItem('grantApiKey',k.trim());else localStorage.removeItem('grantApiKey');alert('保存しました');}};
+ $("apikey-btn").onclick=()=>{const cur=apiKey();const k=prompt('APIキーを入力/変更',cur);if(k!==null){if(k.trim())localStorage.setItem('grantApiKey',k.trim());else localStorage.removeItem('grantApiKey');alert('保存しました');}};
  /* ---- Wizard state ---- */
  let wizStep=1;const WIZ_TOTAL=5;
  function wizValidate(step){const miss=[];const v=id=>($(id)?.value||'').trim();
