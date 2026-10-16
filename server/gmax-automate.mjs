@@ -213,6 +213,93 @@ async function ensureLoggedIn(page, stylist, log) {
   }
 }
 
+/**
+ * 探索モード: owner の stylist アカウントで G-MAX にログイン → main_menu から
+ * 「商品」「カート」「注文」 系メニューを 探索 → 各ページの title/URL/HTML を dump
+ * 結果は .screenshots/explore-N-TIMESTAMP.{html,png} に保存
+ */
+export async function exploreGmaxCart({ stylist, onProgress }) {
+  const log = (msg) => { onProgress?.({ time: new Date().toISOString(), msg }); };
+  const findings = [];
+  let context;
+  try { context = await launchStylistBrowser(stylist, log); }
+  catch (err) { return { ok: false, error: `Chrome起動エラー: ${err.message}` }; }
+  const page = await context.newPage();
+  try {
+    const loggedIn = await ensureLoggedIn(page, stylist, log);
+    if (!loggedIn) return { ok: false, error: 'ログイン失敗' };
+    log(`✓ ログイン済 URL=${page.url()}`);
+    // dump main_menu
+    const dumpPage = async (tag) => {
+      const ts = Date.now();
+      const pageTitle = await page.title().catch(() => '');
+      const pageUrl = page.url();
+      const htmlPath = join(SHOT_DIR, `explore-${tag}-${ts}.html`);
+      const pngPath = join(SHOT_DIR, `explore-${tag}-${ts}.png`);
+      const fs = await import('fs');
+      await fs.promises.writeFile(htmlPath, await page.content(), 'utf8');
+      await page.screenshot({ path: pngPath, fullPage: true });
+      findings.push({ tag, title: pageTitle, url: pageUrl, html: `explore-${tag}-${ts}.html`, png: `explore-${tag}-${ts}.png` });
+      log(`  📸 ${tag}: ${pageTitle}`);
+    };
+    await dumpPage('mainmenu');
+    // 全リンクを収集
+    const links = await page.evaluate(() => {
+      return Array.from(document.querySelectorAll('a, button, input[type="button"], input[type="submit"]')).map(el => ({
+        tag: el.tagName.toLowerCase(),
+        text: (el.textContent || el.value || '').trim().slice(0, 80),
+        href: el.href || '',
+        onclick: (el.getAttribute('onclick') || '').slice(0, 200),
+        name: el.getAttribute('name') || '',
+      })).filter(x => x.text);
+    }).catch(() => []);
+    log(`  → links on main_menu: ${links.length}`);
+    const shopKeywords = /商品|カート|注文|購入|買物|買い物|ショッピング|オーダー|マイページ|サイト|shop|cart|order/i;
+    const shopLinks = links.filter(l => shopKeywords.test(l.text));
+    log(`  → shop候補 ${shopLinks.length}: ${shopLinks.map(l => l.text).join(' / ')}`);
+    findings.push({ tag: 'links', all: links, shopLinks });
+    // 候補を1つずつクリックして遷移先 dump (戻れない場合もあるので 最初の 3 件のみ)
+    for (let i = 0; i < Math.min(shopLinks.length, 5); i++) {
+      const target = shopLinks[i];
+      log(`  → 探索 #${i}: 「${target.text}」クリック`);
+      try {
+        if (target.href && target.href.startsWith('http')) {
+          await page.goto(target.href, { waitUntil: 'domcontentloaded', timeout: 15000 });
+        } else if (target.onclick) {
+          await page.evaluate((ocode) => { try { eval(ocode); } catch {} }, target.onclick);
+          await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
+        } else {
+          await page.getByText(target.text, { exact: false }).first().click({ timeout: 3000 }).catch(() => {});
+        }
+        await page.waitForTimeout(1500);
+        await dumpPage(`cand${i}`);
+        // 遷移先の 商品/カート リンクも 収集
+        const subLinks = await page.evaluate((kwRegexStr) => {
+          const re = new RegExp(kwRegexStr, 'i');
+          return Array.from(document.querySelectorAll('a, button')).map(el => ({
+            tag: el.tagName.toLowerCase(),
+            text: (el.textContent || '').trim().slice(0, 80),
+            href: el.href || '',
+            onclick: (el.getAttribute('onclick') || '').slice(0, 200),
+          })).filter(x => x.text && re.test(x.text));
+        }, shopKeywords.source).catch(() => []);
+        findings.push({ tag: `cand${i}_sublinks`, sublinks: subLinks });
+        log(`    → sub shop候補 ${subLinks.length}: ${subLinks.slice(0, 5).map(l => l.text).join(' / ')}`);
+        // main_menu に戻る
+        await page.goto('https://sslgw.jns-asp.jp/granteones/Magic94Scripts/mgrqispi94.dll?APPNAME=granteones&PRGNAME=main_menu', { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {});
+        await page.waitForTimeout(1000);
+      } catch (e) {
+        log(`    ✗ 候補#${i} 失敗: ${e.message.slice(0, 80)}`);
+      }
+    }
+    return { ok: true, phase: 'explore', findings };
+  } catch (err) {
+    return { ok: false, error: err.message, findings };
+  } finally {
+    try { await context.close(); } catch {}
+  }
+}
+
 export async function sendInviteAndAutomate({ customerEmail, assistant, stylist, items, userType, onProgress }) {
   const log = (msg) => { onProgress?.({ time: new Date().toISOString(), msg }); };
 

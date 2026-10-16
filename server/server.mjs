@@ -5,7 +5,7 @@
  */
 
 import express from 'express';
-import { automateGmax, sendInviteAndAutomate } from './gmax-automate.mjs';
+import { automateGmax, sendInviteAndAutomate, exploreGmaxCart } from './gmax-automate.mjs';
 import { randomUUID } from 'crypto';
 import { readFileSync, existsSync } from 'fs';
 import { fileURLToPath } from 'url';
@@ -138,6 +138,22 @@ app.post('/api/signup-automate', async (req, res) => {
       if (job) { job.needsSerial = true; job.serialResolver = resolve; }
     }),
   })
+    .then(result => { jobs.get(jobId).status = result.ok ? 'done' : 'failed'; jobs.get(jobId).result = result; })
+    .catch(err => { jobs.get(jobId).status = 'failed'; jobs.get(jobId).result = { ok: false, error: err.message }; });
+});
+
+// -----------------------------------------------------------
+// POST /api/explore-cart  — 探索モード: カート UI 構造 を 学習
+// Body: { stylist: { id, gmaxId, gmaxPass, name } }
+// -----------------------------------------------------------
+app.post('/api/explore-cart', async (req, res) => {
+  const { stylist } = req.body;
+  if (!stylist?.id || !stylist?.gmaxId || !stylist?.gmaxPass) return res.status(400).json({ ok: false, error: 'stylist G-MAX ログイン情報が不足' });
+  const jobId = randomUUID();
+  const logs = [];
+  jobs.set(jobId, { status: 'running', logs, result: null, startedAt: new Date().toISOString() });
+  res.json({ ok: true, jobId });
+  exploreGmaxCart({ stylist, onProgress: (entry) => { logs.push(entry); console.log(`[${jobId.slice(0,8)}][EXPLORE]`, entry.msg); } })
     .then(result => { jobs.get(jobId).status = result.ok ? 'done' : 'failed'; jobs.get(jobId).result = result; })
     .catch(err => { jobs.get(jobId).status = 'failed'; jobs.get(jobId).result = { ok: false, error: err.message }; });
 });
