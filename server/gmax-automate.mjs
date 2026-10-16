@@ -277,7 +277,14 @@ export async function automateGmax({ invitationUrl, assistant, customer, items, 
     // 各ページで title を見て適切な処理 → formBunki_next → 次ページ
     const seen = new Set();
     for (let step = 0; step < 30; step++) {
-      const title = await page.title().catch(() => '');
+      // 遷移中 (title="Loading ...") の 場合 は 落ち着く まで 待つ
+      let title = '';
+      for (let r = 0; r < 10; r++) {
+        title = await page.title().catch(() => '');
+        if (title && !title.startsWith('Loading ')) break;
+        await page.waitForLoadState('domcontentloaded', { timeout: 3000 }).catch(() => {});
+        await page.waitForTimeout(800);
+      }
       const url = page.url();
       const key = title + '|' + url;
       log(`[Step ${step}] title: ${title}`);
@@ -463,7 +470,7 @@ export async function automateGmax({ invitationUrl, assistant, customer, items, 
         handled = true;
       }
       // 6. お客様情報 (個人情報入力)
-      else if (title.includes('個人情報') || title.includes('会員登録') || title.includes('基本情報') || await page.$('input[name="P_NAME_D_F_SEI"]')) {
+      else if (title.includes('個人情報') || title.includes('会員登録') || title.includes('基本情報') || await page.$('input[name="P_NAME_D_F_SEI"]').catch(() => null)) {
         log('  → お客様情報入力');
         if (customer) {
           const telD = (customer.phone || '').replace(/[^0-9]/g, '');
@@ -544,7 +551,9 @@ export async function automateGmax({ invitationUrl, assistant, customer, items, 
 
       // 次へ (formBunki_next)
       log('  → formBunki_next');
+      const navP = page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => null);
       await page.evaluate(() => { if (typeof formBunki_next === 'function') formBunki_next(); }).catch(() => {});
+      await navP;
       await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
       await page.waitForTimeout(1500);
     }
