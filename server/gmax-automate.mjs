@@ -136,6 +136,115 @@ async function sendInvite({ page, customerEmail, userType = '2', log }) {
 }
 
 /**
+ * Phase 3: カート自動投入 (本登録 後 の 商品購入)
+ * 2026-10-17 探索結果 (dumps /tmp/gmax-explore-dumps):
+ *   - 商品詳細 URL: PRGNAME=order_item_info&ARGUMENTS=-A{SID},-A{session},-N1,-A{code},-N0
+ *   - 色/サイズ 選択 肢: .color-list li[id="color-{CD}"] の 中 の <a> の テキスト = 表示名
+ *                      .size-list  li[id="size-{CD}"]  の 中 の <a> の テキスト = 表示名
+ *   - カート追加 AJAX: PRGNAME=order_add_cart&ARGUMENTS=-A{SID},-A{session},-N1,-A{code},-A{colorCd},-A{sizeCd},-N{qty}
+ *     レスポンス: {errCode:0,errMsg:"",cartNum:N}
+ *   - カート URL: PRGNAME=order_cart&ARGUMENTS=-A{SID},-A{session}
+ *   - カート 項目 削除: PRGNAME=order_cancel&ARGUMENTS=-A{SID},-A{session},-N{index}
+ *   - 本注文 ボタン: 「レジへ行く」 button-yellow btn-submit  ← 絶対クリックしない
+ *
+ * owner 明示 (2026-10-17): 「実際に決済はやらないで」
+ *   → この関数 は カート に 入れて カート画面 を 開く ところ まで、
+ *     「レジへ行く」 以降 は 絶対 自動化しない。
+ */
+export async function addItemsToCart({ stylist, items, onProgress }) {
+  const log = (msg) => { onProgress?.({ time: new Date().toISOString(), msg }); };
+  let context;
+  try { context = await launchStylistBrowser(stylist, log); }
+  catch (err) { return { ok: false, error: `Chrome起動エラー: ${err.message}` }; }
+  const page = await context.newPage();
+  try {
+    const loggedIn = await ensureLoggedIn(page, stylist, log);
+    if (!loggedIn) return { ok: false, error: 'ログイン失敗' };
+    const args = extractArguments(page.url());
+    if (!args) return { ok: false, error: 'セッション取得失敗' };
+    const sess = args;
+    log(`✓ ログイン済 (セッション: ${sess})`);
+
+    const added = [];
+    const failed = [];
+    for (const item of items) {
+      const code = String(item.gm || item.code || item.id || '').trim();
+      if (!code) { failed.push({ item, reason: 'コード無し' }); continue; }
+      log(`\n[${added.length + failed.length + 1}/${items.length}] 商品コード ${code} (${item.color || ''}/${item.size || ''}/${item.qty || 1}個)`);
+      try {
+        const detailUrl = `https://sslgw.jns-asp.jp/granteones/Magic94Scripts/mgrqispi94.dll?APPNAME=granteones&PRGNAME=order_item_info&ARGUMENTS=${encodeURIComponent(sess)},-N1,-A${code},-N0`;
+        await page.goto(detailUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
+        await page.waitForTimeout(1500);
+        const title = await page.title().catch(() => '');
+        log(`  → 商品ページ: ${title.slice(0, 50)}`);
+
+        // 色/サイズ の 表示名 → 内部コード map 抽出
+        const codeMap = await page.evaluate(() => {
+          const colorMap = {};
+          document.querySelectorAll('.color-list li').forEach(li => {
+            const m = li.id.match(/color-(.+)/);
+            if (m) { const txt = (li.querySelector('a')?.textContent || '').trim(); if (txt) colorMap[txt] = m[1]; }
+          });
+          const sizeMap = {};
+          document.querySelectorAll('.size-list li').forEach(li => {
+            const m = li.id.match(/size-(.+)/);
+            if (m) { const txt = (li.querySelector('a')?.textContent || '').trim(); if (txt) sizeMap[txt] = m[1]; }
+          });
+          return { colorMap, sizeMap };
+        });
+
+        const colorInput = (item.color || '').trim();
+        const sizeInput = (item.size || '').trim();
+        const colorCd = codeMap.colorMap[colorInput] || colorInput || '';
+        const sizeCd = codeMap.sizeMap[sizeInput] || sizeInput || '';
+        const qty = Math.max(1, Number(item.qty) || 1);
+        log(`  → 色コード: "${colorInput}" → ${colorCd || '(なし)'}`);
+        log(`  → サイズコード: "${sizeInput}" → ${sizeCd || '(なし)'}`);
+        if (colorInput && !codeMap.colorMap[colorInput]) log(`  ⚠ 色 "${colorInput}" が 商品の 選択肢 に ない (候補: ${Object.keys(codeMap.colorMap).join('/') || 'なし'})`);
+        if (sizeInput && !codeMap.sizeMap[sizeInput]) log(`  ⚠ サイズ "${sizeInput}" が 商品の 選択肢 に ない (候補: ${Object.keys(codeMap.sizeMap).join('/') || 'なし'})`);
+
+        const addUrl = `https://sslgw.jns-asp.jp/granteones/Magic94Scripts/mgrqispi94.dll?APPNAME=granteones&PRGNAME=order_add_cart&ARGUMENTS=${encodeURIComponent(sess)},-N1,-A${code},-A${colorCd},-A${sizeCd},-N${qty}`;
+        const result = await page.evaluate(async (u) => {
+          try { const r = await fetch(u, { credentials: 'include' }); return { status: r.status, body: await r.text() }; }
+          catch (e) { return { status: 0, body: 'FETCH_ERR: ' + e.message }; }
+        }, addUrl);
+        let parsed = null; try { parsed = JSON.parse(result.body); } catch {}
+        if (parsed && parsed.errCode === 0) {
+          log(`  ✓ カート追加 (現在 ${parsed.cartNum}個)`);
+          added.push({ code, color: colorInput, size: sizeInput, qty, cartNum: parsed.cartNum });
+        } else {
+          log(`  ✗ カート追加 失敗: ${result.body.slice(0, 200)}`);
+          failed.push({ item, reason: 'add_cart err', body: result.body.slice(0, 300) });
+        }
+      } catch (e) {
+        log(`  ✗ 例外: ${e.message.slice(0, 100)}`);
+        failed.push({ item, reason: 'exception', msg: e.message });
+      }
+    }
+
+    // カート 画面 を 開いて 確認 (ここ で 自動停止、 「レジへ行く」 は 押さない)
+    log(`\n→ カート画面を開きます (owner が 内容確認 → 手動で レジへ行く)`);
+    const cartUrl = `https://sslgw.jns-asp.jp/granteones/Magic94Scripts/mgrqispi94.dll?APPNAME=granteones&PRGNAME=order_cart&ARGUMENTS=${encodeURIComponent(sess)}`;
+    await page.goto(cartUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
+    await page.waitForTimeout(1500);
+    try {
+      const shotPath = join(SHOT_DIR, `cart-final-${Date.now()}.png`);
+      await page.screenshot({ path: shotPath, fullPage: true });
+      log(`📸 カート画面 スクリーンショット: /screenshots/${shotPath.split('/').pop()}`);
+    } catch {}
+    log(`\n✓ 完了: ${added.length}/${items.length} 件 投入成功`);
+    if (failed.length) log(`⚠ 失敗 ${failed.length} 件: ${failed.map(f => f.item.gm || f.item.code || '?').join(', ')}`);
+    log(`⚠ テストモード: 「レジへ行く」ボタンは押しません。 owner が G-MAX画面 で 内容確認 → 手動で レジ → 決済`);
+    return { ok: true, phase: 3, added, failed, cartUrl };
+  } catch (err) {
+    log(`エラー: ${err.message}`);
+    return { ok: false, error: err.message };
+  } finally {
+    try { await context.close(); } catch {}
+  }
+}
+
+/**
  * メイン: 招待送信のみを行う (Phase 1)
  *
  * Phase 2 以降 (お客様登録ページでのアシスタント情報自動入力 + カート投入) は

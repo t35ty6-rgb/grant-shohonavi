@@ -5,7 +5,7 @@
  */
 
 import express from 'express';
-import { automateGmax, sendInviteAndAutomate, exploreGmaxCart } from './gmax-automate.mjs';
+import { automateGmax, sendInviteAndAutomate, exploreGmaxCart, addItemsToCart } from './gmax-automate.mjs';
 import { randomUUID } from 'crypto';
 import { readFileSync, existsSync } from 'fs';
 import { fileURLToPath } from 'url';
@@ -138,6 +138,24 @@ app.post('/api/signup-automate', async (req, res) => {
       if (job) { job.needsSerial = true; job.serialResolver = resolve; }
     }),
   })
+    .then(result => { jobs.get(jobId).status = result.ok ? 'done' : 'failed'; jobs.get(jobId).result = result; })
+    .catch(err => { jobs.get(jobId).status = 'failed'; jobs.get(jobId).result = { ok: false, error: err.message }; });
+});
+
+// -----------------------------------------------------------
+// POST /api/add-to-cart  — Phase 3: カート自動投入 (本登録 後、 商品選択)
+// Body: { stylist: {...}, items: [{ gm, color, size, qty }, ...] }
+// レジ 以降 (決済) は 絶対 自動化しない: owner 明示 2026-10-17
+// -----------------------------------------------------------
+app.post('/api/add-to-cart', async (req, res) => {
+  const { stylist, items } = req.body;
+  if (!stylist?.id || !stylist?.gmaxId || !stylist?.gmaxPass) return res.status(400).json({ ok: false, error: 'stylist G-MAX ログイン情報が不足' });
+  if (!items?.length) return res.status(400).json({ ok: false, error: '商品 リスト が 空' });
+  const jobId = randomUUID();
+  const logs = [];
+  jobs.set(jobId, { status: 'running', logs, result: null, startedAt: new Date().toISOString() });
+  res.json({ ok: true, jobId });
+  addItemsToCart({ stylist, items, onProgress: (entry) => { logs.push(entry); console.log(`[${jobId.slice(0,8)}][CART]`, entry.msg); } })
     .then(result => { jobs.get(jobId).status = result.ok ? 'done' : 'failed'; jobs.get(jobId).result = result; })
     .catch(err => { jobs.get(jobId).status = 'failed'; jobs.get(jobId).result = { ok: false, error: err.message }; });
 });

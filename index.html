@@ -1817,7 +1817,10 @@ function openOrder(r){$("sheet-t").textContent="G-MAX 注文リスト";
    <div id="reg-log" hidden class="wiz-log"></div>
    <div id="signup-log" hidden class="wiz-log"></div>
    <p class="wiz-foot">※ サーバーは Fly.io で 常時起動。 停止中 表示 の 場合 は 数秒 待って 再度 お試しください</p>
-   <button type="button" id="dev-explore-cart" style="margin-top:12px;width:100%;background:var(--surface-2);border:1px dashed var(--muted-2);color:var(--muted);padding:10px;border-radius:10px;font-size:12px;cursor:pointer">🔍 開発: カート UI 構造 探索 を 走らせる (Jobs 専用)</button>
+   <button type="button" id="add-to-cart-btn" style="margin-top:14px;width:100%;background:linear-gradient(135deg,var(--accent),var(--accent-pressed));color:#fff;border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 3px 10px rgba(226,71,122,.25);min-height:52px">🛒 本登録 後 の カート に 商品 を 自動投入</button>
+   <p class="wiz-foot">※ 本登録 を 完了 した 後 に 押す。 商品 (注文リスト) を カート に 入れて カート画面 で 止まる (レジ以降 は owner 手動)</p>
+   <div id="add-cart-log" hidden class="wiz-log"></div>
+   <button type="button" id="dev-explore-cart" hidden></button>
    <div id="dev-explore-log" hidden class="wiz-log"></div>
    <button id="reg-start" type="button" hidden></button>
    <button id="signup-start" type="button" hidden></button>
@@ -1928,6 +1931,28 @@ function openOrder(r){$("sheet-t").textContent="G-MAX 注文リスト";
  document.querySelectorAll('#gmax-wiz .wiz-choice-card[data-ut]').forEach(c=>{c.onclick=()=>{const val=c.dataset.ut;document.querySelectorAll('#gmax-wiz .wiz-choice-card[data-ut]').forEach(x=>x.setAttribute('aria-pressed',x===c?'true':'false'));$('c-usertype').value=val;saveDraft();};});
  document.querySelectorAll('#gmax-wiz .wiz-choice-card[data-sx]').forEach(c=>{c.onclick=()=>{const val=c.dataset.sx;document.querySelectorAll('#gmax-wiz .wiz-choice-card[data-sx]').forEach(x=>x.setAttribute('aria-pressed',x===c?'true':'false'));$('c-sex').value=val;saveDraft();};});
  const serialManual=$('c-serial-manual-btn');if(serialManual){serialManual.onclick=()=>{const s=$('c-serial');if(s){s.focus();s.scrollIntoView({block:'center',behavior:'smooth'});}};}
+ /* ---- カート 自動投入 (Phase 3) ---- */
+ const addCartBtn=$('add-to-cart-btn');
+ if(addCartBtn){addCartBtn.onclick=async()=>{
+   const styl=findStylist(selectedStylistId());
+   if(!styl||!styl.gmaxId||!styl.gmaxPass){alert('スタイリスト G-MAX ログイン情報 未設定');return;}
+   const items=(r.items||[]).map(i=>({gm:String(i.gm||GM[i.id]?.c||''),color:String(i.color||''),size:String(i.size||''),qty:Number(i.qty)||1})).filter(x=>x.gm);
+   if(!items.length){alert('商品 リスト が 空');return;}
+   if(!confirm(`${items.length} 件 の 商品 を カート に 自動投入します。 (決済 は 自動化 しません)\n続けますか?`))return;
+   const dlog=$('add-cart-log');dlog.hidden=false;dlog.innerHTML='カート 投入 開始…';
+   addCartBtn.disabled=true;addCartBtn.textContent='処理中…';
+   try{
+     const req=await fetch(API+'/add-to-cart',{method:'POST',headers:apiHeaders(),body:JSON.stringify({stylist:{id:styl.id,gmaxId:styl.gmaxId,gmaxPass:styl.gmaxPass,name:styl.name},items})});
+     const d=await req.json();
+     if(!d.ok){dlog.innerHTML='エラー: '+esc(d.error);addCartBtn.disabled=false;addCartBtn.textContent='🛒 再試行';return;}
+     const jid=d.jobId;
+     const iv=setInterval(async()=>{
+       const sr=await fetch(API+'/status/'+jid,{headers:apiHeaders()});const sd=await sr.json();
+       dlog.innerHTML=(sd.logs||[]).map(l=>'<div>'+esc(l.msg)+'</div>').join('');dlog.scrollTop=9999;
+       if(sd.status==='done'||sd.status==='failed'){clearInterval(iv);addCartBtn.disabled=false;const ok=sd.status==='done'&&sd.result?.ok;addCartBtn.textContent=ok?'🛒 もう一度 カート 追加':'🛒 再試行';if(ok){const added=sd.result?.added?.length||0;dlog.innerHTML+='<hr><b>完了: '+added+' 件 カート 投入</b><br>G-MAX の カート画面 で 確認 → レジへ行く は owner が 手動';}}
+     },2000);
+   }catch(e){dlog.innerHTML='例外: '+esc(e.message);addCartBtn.disabled=false;addCartBtn.textContent='🛒 再試行';}
+ };}
  /* ---- 開発用: カート UI 探索 ---- */
  const devExplore=$('dev-explore-cart');
  if(devExplore){devExplore.onclick=async()=>{
