@@ -1921,9 +1921,25 @@ function openOrder(r){$("sheet-t").textContent="G-MAX 注文リスト";
    if(wizStep===6){startSignupAutomate(r);return;}
    wizGoto(wizStep+1);};}
  if(wizBack){wizBack.onclick=()=>{if(wizStep>1&&wizStep<=WIZ_TOTAL)wizGoto(wizStep-1);};}
- document.querySelectorAll('#gmax-wiz .wiz-choice-card[data-ut]').forEach(c=>{c.onclick=()=>{const val=c.dataset.ut;document.querySelectorAll('#gmax-wiz .wiz-choice-card[data-ut]').forEach(x=>x.setAttribute('aria-pressed',x===c?'true':'false'));$('c-usertype').value=val;};});
- document.querySelectorAll('#gmax-wiz .wiz-choice-card[data-sx]').forEach(c=>{c.onclick=()=>{const val=c.dataset.sx;document.querySelectorAll('#gmax-wiz .wiz-choice-card[data-sx]').forEach(x=>x.setAttribute('aria-pressed',x===c?'true':'false'));$('c-sex').value=val;};});
+ document.querySelectorAll('#gmax-wiz .wiz-choice-card[data-ut]').forEach(c=>{c.onclick=()=>{const val=c.dataset.ut;document.querySelectorAll('#gmax-wiz .wiz-choice-card[data-ut]').forEach(x=>x.setAttribute('aria-pressed',x===c?'true':'false'));$('c-usertype').value=val;saveDraft();};});
+ document.querySelectorAll('#gmax-wiz .wiz-choice-card[data-sx]').forEach(c=>{c.onclick=()=>{const val=c.dataset.sx;document.querySelectorAll('#gmax-wiz .wiz-choice-card[data-sx]').forEach(x=>x.setAttribute('aria-pressed',x===c?'true':'false'));$('c-sex').value=val;saveDraft();};});
  const serialManual=$('c-serial-manual-btn');if(serialManual){serialManual.onclick=()=>{const s=$('c-serial');if(s){s.focus();s.scrollIntoView({block:'center',behavior:'smooth'});}};}
+ /* ---- 下書き autosave: 毎回 デモで 打ち直し を 無くす ---- */
+ const DRAFT_KEY='grantCustomerDraft';
+ const DRAFT_FIELDS=['c-mail','c-pass','c-sei','c-mei','c-sei-kana','c-mei-kana','c-birth','c-sex','c-tel','c-zip','c-pref','c-city','c-addr','c-bldg','c-serial','c-usertype'];
+ function saveDraft(){const d={};DRAFT_FIELDS.forEach(id=>{const el=$(id);if(el)d[id]=el.value||'';});try{localStorage.setItem(DRAFT_KEY,JSON.stringify(d));}catch{}}
+ function loadDraft(){try{const d=JSON.parse(localStorage.getItem(DRAFT_KEY)||'{}');DRAFT_FIELDS.forEach(id=>{const el=$(id);if(el&&d[id]!=null&&d[id]!=='')el.value=d[id];});
+   const sx=d['c-sex'];if(sx)document.querySelectorAll('#gmax-wiz .wiz-choice-card[data-sx]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.sx===sx?'true':'false'));
+   const ut=d['c-usertype']||'1';document.querySelectorAll('#gmax-wiz .wiz-choice-card[data-ut]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.ut===ut?'true':'false'));
+   return !!(d['c-mail']||d['c-sei']);
+ }catch{return false;}}
+ DRAFT_FIELDS.forEach(id=>{const el=$(id);if(el&&el.tagName!=='INPUT'||(el&&el.type!=='hidden'))el?.addEventListener('input',saveDraft);});
+ const hadDraft=loadDraft();
+ if(hadDraft){const bar=document.createElement('div');bar.style.cssText='margin:0 2px 12px;padding:9px 12px;background:var(--accent-soft);border:1px solid var(--accent);border-radius:10px;font-size:12.5px;color:var(--accent-pressed);display:flex;align-items:center;gap:8px;line-height:1.5';
+   bar.innerHTML='<strong>前回の入力 を 復元 しました</strong><button type="button" style="margin-left:auto;background:none;border:none;color:var(--accent-pressed);font-weight:700;cursor:pointer;text-decoration:underline;font-size:12px;padding:4px 6px">クリア</button>';
+   bar.querySelector('button').onclick=()=>{if(confirm('入力を すべて 消して よろしい ですか?')){localStorage.removeItem(DRAFT_KEY);DRAFT_FIELDS.forEach(id=>{const el=$(id);if(el)el.value=(id==='c-usertype'?'1':'');});document.querySelectorAll('#gmax-wiz .wiz-choice-card[data-sx]').forEach(x=>x.setAttribute('aria-pressed','false'));document.querySelectorAll('#gmax-wiz .wiz-choice-card[data-ut]').forEach((x,i)=>x.setAttribute('aria-pressed',i===0?'true':'false'));bar.remove();}};
+   const prog=$('wiz-progress');if(prog&&prog.parentNode)prog.parentNode.insertBefore(bar,prog);
+ }
  wizGoto(1);
  pingSrv();
  $("sheet").hidden=false;$("sheet").querySelector(".sheet").scrollTop=0}
