@@ -235,7 +235,7 @@ export async function sendInviteAndAutomate({ customerEmail, assistant, stylist,
     log(`✓ 招待メール送信完了 → ${customerEmail}`);
     log(`アシスタント: ${assistant.name} (ID: ${assistant.id})`);
     log(`商品: ${items.length}点 の自動投入予定`);
-    log('ℹ 現在 Phase 1 (招待送信) のみ稼働中。Phase 2 (お客様登録フォーム自動入力) は 次バージョンで対応');
+    log('ℹ 次のステップ: 画面を 上に スクロール して 「6. 招待URLを貼付」 に 進んでください');
     return { ok: true, phase: 1, customerEmail, args: result.args, note: '招待送信完了' };
   } catch (err) {
     log(`エラー: ${err.message}`);
