@@ -1895,7 +1895,7 @@ function openOrder(r){$("sheet-t").textContent="G-MAX 注文リスト";
  }
  $("apikey-btn").onclick=()=>{const cur=apiKey();const k=prompt('APIキーを入力/変更',cur);if(k!==null){if(k.trim())localStorage.setItem('grantApiKey',k.trim());else localStorage.removeItem('grantApiKey');alert('保存しました');}};
  /* ---- Wizard state ---- */
- let wizStep=1;const WIZ_TOTAL=5;
+ window.wizStep=1;const WIZ_TOTAL=5;let wizStep=1;
  function wizValidate(step){const miss=[];const v=id=>($(id)?.value||'').trim();
    if(step===1){if(!v('c-stylist')||v('c-stylist')==='__manage__')miss.push('スタイリスト');if(!v('c-assistant')||v('c-assistant')==='__manage__')miss.push('アシスタント');if(!v('c-usertype'))miss.push('登録種別');}
    else if(step===2){const m=v('c-mail');if(!m||!m.includes('@'))miss.push('メールアドレス');if(!v('c-pass'))miss.push('パスワード');}
@@ -1904,8 +1904,8 @@ function openOrder(r){$("sheet-t").textContent="G-MAX 注文リスト";
    else if(step===5){if(!v('c-serial'))miss.push('シリアル');}
    return miss;
  }
- function wizGoto(step){
-   wizStep=step;
+ window.wizGoto=function(step){
+   wizStep=step;window.wizStep=step;
    document.querySelectorAll('#gmax-wiz .wiz-screen').forEach(s=>s.classList.toggle('active',+s.dataset.screen===step));
    document.querySelectorAll('#gmax-wiz .wiz-dot').forEach(d=>{const n=+d.dataset.dot;d.classList.toggle('active',n===step&&step<=WIZ_TOTAL);d.classList.toggle('done',n<step||step>WIZ_TOTAL);});
    document.querySelectorAll('#gmax-wiz .wiz-line').forEach(l=>l.classList.toggle('done',+l.dataset.line<step||step>WIZ_TOTAL));
