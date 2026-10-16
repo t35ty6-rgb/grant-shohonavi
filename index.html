@@ -1775,7 +1775,7 @@ function openOrder(r){$("sheet-t").textContent="G-MAX 注文リスト";
      <h3 class="wiz-h">3. お客様の基本情報</h3>
      <p class="wiz-sub">お名前・生年月日・性別・電話番号</p>
      <div class="wiz-row"><div class="wiz-field"><label class="wiz-label">姓<span class="wiz-req">*</span></label><input id="c-sei" type="text" class="wiz-input" placeholder="山田" autocomplete="family-name"></div><div class="wiz-field"><label class="wiz-label">名<span class="wiz-req">*</span></label><input id="c-mei" type="text" class="wiz-input" placeholder="花子" autocomplete="given-name"></div></div>
-     <div class="wiz-row"><div class="wiz-field"><label class="wiz-label">セイ<span class="wiz-opt">カナ</span></label><input id="c-sei-kana" type="text" class="wiz-input" placeholder="ヤマダ"></div><div class="wiz-field"><label class="wiz-label">メイ<span class="wiz-opt">カナ</span></label><input id="c-mei-kana" type="text" class="wiz-input" placeholder="ハナコ"></div></div>
+     <div class="wiz-row"><div class="wiz-field"><label class="wiz-label">セイ<span class="wiz-opt">全角カナ のみ</span></label><input id="c-sei-kana" type="text" class="wiz-input" placeholder="ヤマダ" lang="ja" autocapitalize="off"><div id="c-sei-kana-help" class="wiz-help"></div></div><div class="wiz-field"><label class="wiz-label">メイ<span class="wiz-opt">全角カナ のみ</span></label><input id="c-mei-kana" type="text" class="wiz-input" placeholder="ハナコ" lang="ja" autocapitalize="off"><div id="c-mei-kana-help" class="wiz-help"></div></div></div>
      <div class="wiz-field"><label class="wiz-label">生年月日<span class="wiz-req">*</span></label><input id="c-birth" type="date" class="wiz-input" min="1900-01-01" max="2026-12-31"></div>
      <div class="wiz-field"><label class="wiz-label">性別<span class="wiz-req">*</span></label><div class="wiz-choice"><button type="button" class="wiz-choice-card" data-sx="1" aria-pressed="false"><div class="wiz-choice-ttl">男性</div></button><button type="button" class="wiz-choice-card" data-sx="2" aria-pressed="false"><div class="wiz-choice-ttl">女性</div></button></div><input type="hidden" id="c-sex" value=""></div>
      <div class="wiz-field"><label class="wiz-label">電話番号<span class="wiz-req">*</span></label><input id="c-tel" type="tel" class="wiz-input" placeholder="09012345678" autocomplete="tel" inputmode="tel"></div>
@@ -1899,7 +1899,9 @@ function openOrder(r){$("sheet-t").textContent="G-MAX 注文リスト";
  function wizValidate(step){const miss=[];const v=id=>($(id)?.value||'').trim();
    if(step===1){if(!v('c-stylist')||v('c-stylist')==='__manage__')miss.push('スタイリスト');if(!v('c-assistant')||v('c-assistant')==='__manage__')miss.push('アシスタント');if(!v('c-usertype'))miss.push('登録種別');}
    else if(step===2){const m=v('c-mail');if(!m||!m.includes('@'))miss.push('メールアドレス');if(!v('c-pass'))miss.push('パスワード');}
-   else if(step===3){['c-sei','c-mei','c-sei-kana','c-mei-kana','c-birth','c-sex','c-tel'].forEach(id=>{if(!v(id))miss.push({'c-sei':'姓','c-mei':'名','c-sei-kana':'セイ','c-mei-kana':'メイ','c-birth':'生年月日','c-sex':'性別','c-tel':'電話'}[id]);});}
+   else if(step===3){['c-sei','c-mei','c-sei-kana','c-mei-kana','c-birth','c-sex','c-tel'].forEach(id=>{if(!v(id))miss.push({'c-sei':'姓','c-mei':'名','c-sei-kana':'セイ','c-mei-kana':'メイ','c-birth':'生年月日','c-sex':'性別','c-tel':'電話'}[id]);});
+     if(typeof kanaValidate==='function'){if(!kanaValidate('c-sei-kana'))miss.push('セイ (カタカナ 以外 の 文字 混入)');if(!kanaValidate('c-mei-kana'))miss.push('メイ (カタカナ 以外 の 文字 混入)');}
+   }
    else if(step===4){['c-zip','c-pref','c-city','c-addr'].forEach(id=>{if(!v(id))miss.push({'c-zip':'郵便番号','c-pref':'都道府県','c-city':'市区町村','c-addr':'番地'}[id]);});}
    else if(step===5){if(!v('c-serial'))miss.push('シリアル');}
    return miss;
@@ -1924,6 +1926,21 @@ function openOrder(r){$("sheet-t").textContent="G-MAX 注文リスト";
  document.querySelectorAll('#gmax-wiz .wiz-choice-card[data-ut]').forEach(c=>{c.onclick=()=>{const val=c.dataset.ut;document.querySelectorAll('#gmax-wiz .wiz-choice-card[data-ut]').forEach(x=>x.setAttribute('aria-pressed',x===c?'true':'false'));$('c-usertype').value=val;saveDraft();};});
  document.querySelectorAll('#gmax-wiz .wiz-choice-card[data-sx]').forEach(c=>{c.onclick=()=>{const val=c.dataset.sx;document.querySelectorAll('#gmax-wiz .wiz-choice-card[data-sx]').forEach(x=>x.setAttribute('aria-pressed',x===c?'true':'false'));$('c-sex').value=val;saveDraft();};});
  const serialManual=$('c-serial-manual-btn');if(serialManual){serialManual.onclick=()=>{const s=$('c-serial');if(s){s.focus();s.scrollIntoView({block:'center',behavior:'smooth'});}};}
+ /* ---- カナ 入力 自動変換 + バリデーション (G-MAX「使用できない文字」エラー 防止) ---- */
+ function kanaValidate(id){const el=$(id);const help=$(id+'-help');if(!el||!help)return true;
+   let v=el.value;
+   // ひらがな → カタカナ 自動変換
+   v=v.replace(/[ぁ-ゖ]/g,c=>String.fromCharCode(c.charCodeAt(0)+0x60));
+   // 半角カナ → 全角カナ (簡易)
+   const halfToFull={'ｱ':'ア','ｲ':'イ','ｳ':'ウ','ｴ':'エ','ｵ':'オ','ｶ':'カ','ｷ':'キ','ｸ':'ク','ｹ':'ケ','ｺ':'コ','ｻ':'サ','ｼ':'シ','ｽ':'ス','ｾ':'セ','ｿ':'ソ','ﾀ':'タ','ﾁ':'チ','ﾂ':'ツ','ﾃ':'テ','ﾄ':'ト','ﾅ':'ナ','ﾆ':'ニ','ﾇ':'ヌ','ﾈ':'ネ','ﾉ':'ノ','ﾊ':'ハ','ﾋ':'ヒ','ﾌ':'フ','ﾍ':'ヘ','ﾎ':'ホ','ﾏ':'マ','ﾐ':'ミ','ﾑ':'ム','ﾒ':'メ','ﾓ':'モ','ﾔ':'ヤ','ﾕ':'ユ','ﾖ':'ヨ','ﾗ':'ラ','ﾘ':'リ','ﾙ':'ル','ﾚ':'レ','ﾛ':'ロ','ﾜ':'ワ','ｦ':'ヲ','ﾝ':'ン','ｰ':'ー','ｧ':'ァ','ｨ':'ィ','ｩ':'ゥ','ｪ':'ェ','ｫ':'ォ','ｬ':'ャ','ｭ':'ュ','ｮ':'ョ','ｯ':'ッ'};
+   v=v.replace(/[｡-ﾟ]/g,c=>halfToFull[c]||c);
+   if(v!==el.value){const pos=el.selectionStart;el.value=v;try{el.setSelectionRange(pos,pos);}catch{}}
+   // 全角カタカナ + 長音 + 中点 + スペース のみ 許可
+   const bad=v.replace(/[゠-ヿ ・　ー]/g,'');
+   if(bad){help.textContent='使用できない文字: '+bad+' (全角カタカナ のみ)';help.style.color='#dc2626';el.style.borderColor='#dc2626';return false;}
+   help.textContent=v?'':'';el.style.borderColor='';return true;
+ }
+ ['c-sei-kana','c-mei-kana'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',()=>kanaValidate(id));el.addEventListener('blur',()=>kanaValidate(id));}});
  /* ---- 下書き autosave: 毎回 デモで 打ち直し を 無くす ---- */
  const DRAFT_KEY='grantCustomerDraft';
  const DRAFT_FIELDS=['c-mail','c-pass','c-sei','c-mei','c-sei-kana','c-mei-kana','c-birth','c-sex','c-tel','c-zip','c-pref','c-city','c-addr','c-bldg','c-serial','c-usertype'];
