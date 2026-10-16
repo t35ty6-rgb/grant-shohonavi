@@ -318,6 +318,73 @@ details.panel>.panel-body{padding:14px}
 .s-line span{font-size:12px;color:var(--muted)}
 .s-say{background:var(--ink);color:var(--bg);border-radius:16px;padding:12px 14px;font-size:14px;margin-bottom:10px}
 .s-say h4{margin:0 0 4px;font-size:12px;color:var(--accent)}
+/* ===== Wizard (G-MAX 自動登録) ===== */
+.wiz{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 12px 10px;margin:12px 0}
+.wiz-header{display:flex;align-items:center;gap:8px;margin:0 2px 14px;flex-wrap:wrap}
+.wiz-title{font-weight:800;font-size:14px;flex:1;min-width:120px}
+.wiz-srv{font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px;background:#f1f5f9;color:#64748b;letter-spacing:.02em}
+.wiz-key{background:var(--surface);border:1px solid var(--line);color:var(--muted);font:inherit;font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px;cursor:pointer}
+.wiz-key:hover{background:var(--surface-hover);color:var(--ink-2)}
+.wiz-progress{display:flex;align-items:center;gap:6px;margin:0 6px 18px}
+.wiz-dot{flex:none;width:30px;height:30px;border-radius:50%;background:var(--line);display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;color:var(--muted-2);transition:background var(--t-base) var(--ease),color var(--t-base) var(--ease),transform var(--t-base) var(--ease),box-shadow var(--t-base) var(--ease);position:relative}
+.wiz-dot.active{background:var(--accent);color:#fff;transform:scale(1.08);box-shadow:0 3px 10px rgba(226,71,122,.25)}
+.wiz-dot.done{background:var(--accent-soft);color:var(--accent)}
+.wiz-line{flex:1;height:2px;background:var(--line);border-radius:999px;transition:background var(--t-base) var(--ease)}
+.wiz-line.done{background:var(--accent)}
+.wiz-screen{display:none}
+.wiz-screen.active{display:block;animation:wizIn .22s cubic-bezier(.2,.8,.2,1)}
+@keyframes wizIn{from{opacity:0;transform:translateX(8px)}to{opacity:1;transform:none}}
+.wiz-h{margin:0 0 4px;font-size:19px;font-weight:800;letter-spacing:.01em}
+.wiz-sub{margin:0 0 18px;font-size:13px;color:var(--muted);line-height:1.55}
+.wiz-field{margin:0 0 14px}
+.wiz-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.wiz-row>.wiz-field{margin:0}
+.wiz-label{display:block;font-size:12px;font-weight:700;color:var(--ink-2);margin:0 0 6px}
+.wiz-opt{font-weight:400;color:var(--muted-2);font-size:11px;margin-left:6px}
+.wiz-req{color:#dc2626;margin-left:3px;font-weight:700}
+.wiz-input{width:100%;box-sizing:border-box;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;font:inherit;font-size:16px;background:var(--surface);color:var(--ink);min-height:48px;transition:border-color var(--t-fast) var(--ease),box-shadow var(--t-fast) var(--ease)}
+.wiz-input:focus{outline:none;border-color:var(--accent);box-shadow:var(--sh-focus)}
+.wiz-input::placeholder{color:var(--muted-2)}
+textarea.wiz-input{min-height:72px;resize:vertical;line-height:1.5}
+.wiz-help{font-size:11.5px;color:var(--muted);margin:5px 2px 0;min-height:14px;line-height:1.4}
+.wiz-row-select{display:flex;gap:8px;align-items:stretch}
+.wiz-select{flex:1;min-height:48px;padding:10px 14px;font:inherit;font-size:15px;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink)}
+.wiz-select:focus{outline:none;border-color:var(--accent);box-shadow:var(--sh-focus)}
+.wiz-mg{min-height:48px;min-width:48px;background:var(--surface);border:1.5px solid var(--line);border-radius:12px;cursor:pointer;color:var(--muted);display:inline-flex;align-items:center;justify-content:center;flex:none}
+.wiz-mg:hover{background:var(--surface-hover);border-color:var(--muted-2);color:var(--ink-2)}
+.wiz-choice{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.wiz-choice-card{padding:14px 14px;text-align:left;border:2px solid var(--line);border-radius:14px;background:var(--surface);cursor:pointer;transition:all var(--t-fast) var(--ease);min-height:72px;font:inherit;color:var(--ink);display:flex;flex-direction:column;justify-content:center;gap:3px}
+.wiz-choice-card:hover{border-color:var(--muted-2);background:var(--surface-hover)}
+.wiz-choice-card:active{transform:scale(.98)}
+.wiz-choice-card[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 2px 10px rgba(226,71,122,.15)}
+.wiz-choice-card[aria-pressed="true"] .wiz-choice-ttl{color:var(--accent-pressed)}
+.wiz-choice-ttl{font-weight:800;font-size:15px;color:var(--ink);line-height:1.3}
+.wiz-choice-sub{font-size:12px;color:var(--muted);line-height:1.4}
+.wiz-serial-actions{display:grid;gap:10px;margin:0 0 14px}
+.wiz-action-card{display:flex;align-items:center;gap:12px;padding:12px 14px;border:2px solid var(--line);border-radius:14px;background:var(--surface);cursor:pointer;text-align:left;min-height:68px;font:inherit;color:var(--ink);transition:all var(--t-fast) var(--ease);width:100%;box-sizing:border-box}
+.wiz-action-card:hover{border-color:var(--accent);background:var(--surface-hover)}
+.wiz-action-card:active{transform:scale(.98)}
+.wiz-action-icon{flex:none;width:42px;height:42px;background:var(--accent-soft);border-radius:12px;display:inline-flex;align-items:center;justify-content:center;color:var(--accent)}
+.wiz-action-icon svg{width:22px;height:22px}
+.wiz-action-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.wiz-action-ttl{display:block;font-weight:700;font-size:14.5px;color:var(--ink);line-height:1.3}
+.wiz-action-sub{display:block;font-size:12px;color:var(--muted);line-height:1.4}
+.wiz-warn{background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:10px 12px;font-size:12.5px;color:#92400e;margin:16px 0 0;line-height:1.5}
+.wiz-info-card{background:var(--surface-2);border:1px dashed var(--line);border-radius:12px;padding:12px 14px;margin:0 0 14px}
+.wiz-nav{display:flex;gap:10px;margin-top:18px;padding:12px 2px 2px;position:sticky;bottom:0;background:linear-gradient(to top,var(--surface) 72%,rgba(255,255,255,0))}
+.wiz-btn{flex:1;font:inherit;font-weight:800;font-size:16px;padding:14px 18px;background:var(--accent);color:#fff;border:none;border-radius:14px;cursor:pointer;min-height:52px;transition:background var(--t-fast) var(--ease),transform var(--t-fast) var(--ease),box-shadow var(--t-fast) var(--ease);box-shadow:0 3px 10px rgba(226,71,122,.25)}
+.wiz-btn:hover:not(:disabled){background:var(--accent-hover);box-shadow:0 5px 14px rgba(226,71,122,.3)}
+.wiz-btn:active:not(:disabled){background:var(--accent-pressed);transform:scale(.98)}
+.wiz-btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+.wiz-btn.ghost{background:var(--surface);color:var(--ink);border:1.5px solid var(--line);flex:0 0 auto;padding:14px 22px;box-shadow:none}
+.wiz-btn.ghost:hover:not(:disabled){background:var(--surface-hover);border-color:var(--muted-2)}
+.wiz-log{margin:14px 2px 0;max-height:220px;overflow-y:auto;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-family:var(--f-mono);font-size:11.5px;line-height:1.55}
+.wiz-foot{font-size:11px;color:var(--muted);margin:12px 2px 0;text-align:center;line-height:1.5}
+.wiz-summary{display:grid;gap:8px;margin:0 0 16px}
+.wiz-summary-row{display:flex;justify-content:space-between;align-items:baseline;padding:10px 12px;background:var(--surface-2);border-radius:10px;font-size:13px;gap:12px}
+.wiz-summary-k{color:var(--muted);font-weight:600;flex:none}
+.wiz-summary-v{color:var(--ink);font-weight:700;text-align:right;word-break:break-all}
+@media (max-width:360px){.wiz-choice{grid-template-columns:1fr}.wiz-row{grid-template-columns:1fr}}
 /* pick (one-flow selection) */
 .pick{margin:10px 12px 0;border:1.5px dashed var(--line);border-radius:12px;padding:10px}
 .pick.on{border-style:solid;border-color:var(--accent);background:var(--accent-soft)}
@@ -1484,6 +1551,7 @@ async function startSignupAutomate(r){
   // シリアル番号は自動化が必要になった時点でモーダルで聞く
   const items=(r.items||[]).map(i=>({code:String(i.gm||GM[i.id]?.c||''),name:String(i.name||''),color:String(i.color||''),size:String(i.size||''),qty:Number(i.qty)||1}));
   $('signup-start').disabled=true;$('signup-start').textContent='実行中…';
+  const wn=$('wiz-next');if(wn){wn.disabled=true;wn.textContent='実行中…';}
   $('signup-log').hidden=false;$('signup-log').innerHTML='';
   let jobId;
   try{
@@ -1494,6 +1562,7 @@ async function startSignupAutomate(r){
   }catch(e){
     appendSignupLog('エラー: '+e.message,'error');
     $('signup-start').disabled=false;$('signup-start').textContent='お客様登録を自動入力（テストモード）';
+    if(wn){wn.disabled=false;wn.textContent='再試行';}
     return;
   }
   appendSignupLog('ジョブ開始 (ID: '+jobId.slice(0,8)+'…)');
@@ -1519,6 +1588,7 @@ function pollSignupJob(jobId){
         appendSignupLog(ok?'完了: 登録フォームへの自動入力が終わりました！':'失敗しました。ログを確認してください。',ok?'ok':'error');
         $('signup-start').disabled=false;
         $('signup-start').textContent=ok?'もう一度実行':'再試行';
+        const wn=$('wiz-next');if(wn){wn.disabled=false;wn.textContent=ok?'完了':'再試行';}
       }
     }catch{}
   },2000);
@@ -1612,6 +1682,7 @@ async function startGmaxRegister(r){
   const assistant=findAssistant(asstId);
   if(!assistant||!assistant.id){alert('アシスタントが選択されていません。アシスタント管理から追加してください。');return;}
   $('reg-start').disabled=true;$('reg-start').textContent='実行中…';
+  const wn=$('wiz-next');if(wn){wn.disabled=true;wn.textContent='実行中…';}
   $('reg-log').hidden=false;$('reg-log').innerHTML='';
   let jobId;
   try{
@@ -1626,6 +1697,7 @@ async function startGmaxRegister(r){
   }catch(e){
     appendLog('エラー: '+e.message,'error');
     $('reg-start').disabled=false;$('reg-start').textContent='招待を送って自動カート設定';
+    if(wn){wn.disabled=false;wn.textContent='再試行';}
     return;
   }
   appendLog('ジョブ開始 (ID: '+jobId.slice(0,8)+'…)');
@@ -1645,9 +1717,10 @@ async function pollJob(jobId,r){
         clearInterval(iv);
         const ok=d.result?.ok;
         appendLog(ok?'完了: 招待メール送信が終わりました！':'失敗しました。ログを確認してください。',ok?'ok':'error');
-        if(ok){const s=$('signup-section');if(s){s.hidden=false;s.scrollIntoView({behavior:'smooth',block:'start'});}}
+        if(ok){try{if(typeof wizGoto==='function')wizGoto(6);}catch{}const s=$('signup-section');if(s){s.hidden=false;}}
         $('reg-start').disabled=false;
         $('reg-start').textContent=ok?'もう一度実行':'再試行';
+        const wn=$('wiz-next');if(wn){wn.disabled=false;if(!ok)wn.textContent='再試行';}
       }
     }catch{}
   },2000);
@@ -1666,7 +1739,75 @@ function openOrder(r){$("sheet-t").textContent="G-MAX 注文リスト";
   return `<div class="s-line" style="align-items:start"><img src="img/${i.id}.jpg" alt=""><div><b>${n+1}点目</b><ol style="margin:4px 0 0;padding-left:1.3em;font-size:13.5px">${steps.map(([k,v])=>`<li><span style="color:var(--muted)">${k}：</span><b style="display:inline">${esc(v)}</b></li>`).join("")}</ol></div></div>`}).join("")}</div>
  <div class="s-say"><h4>コピー用</h4><pre id="ordtxt" style="white-space:pre-wrap;margin:0;font:inherit">${esc(orderText(r))}</pre></div>
  <div class="stack"><button class="btn" type="button" id="ordcopy">注文リストをコピー</button></div>
- <div class="s-sec" style="margin-top:12px"><h4 style="display:flex;align-items:center;gap:8px">G-MAX 自動カート設定<span id="srv-badge" style="font-size:11px;font-weight:500;padding:2px 10px;border-radius:999px;background:#f1f5f9;color:#64748b">確認中…</span><button type="button" id="apikey-btn" title="APIキー設定" style="margin-left:auto;background:none;border:1px solid var(--line);color:var(--muted);font-size:11px;padding:2px 8px;border-radius:999px;cursor:pointer">キー設定</button></h4><p style="font-size:13px;color:var(--muted);margin:0 0 10px">ボタンを押すとブラウザが開くので、ご自身のG-MAXアカウントでログインしてください。ログイン後は自動で招待メール送信とカート設定が進みます。</p><div><label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px">スタイリスト（あなた）<span style="color:#dc2626;margin-left:2px">*</span></label><div style="display:flex;gap:6px;margin-bottom:8px"><select id="c-stylist" style="${inputS};flex:1;min-height:44px">${renderStylistOptions()}</select><button type="button" id="c-styl-manage" aria-label="スタイリスト管理" title="スタイリスト管理" style="display:inline-flex;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--line);color:var(--muted);padding:0 12px;border-radius:8px;cursor:pointer;min-height:44px;min-width:44px">${SVG_SETTINGS}</button></div><div id="c-stylist-card" style="margin-bottom:12px"></div><label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px">登録種別<span style="color:#dc2626;margin-left:2px">*</span></label><select id="c-usertype" style="${inputS};margin-bottom:12px;min-height:44px"><option value="1" selected>ビジネス会員（クリエーター / 販売含む）</option><option value="2">愛用者会員（ユーザー / 購入のみ）</option></select><label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px">アシスタント<span style="color:#dc2626;margin-left:2px">*</span></label><div style="display:flex;gap:6px;margin-bottom:8px"><select id="c-assistant" style="${inputS};flex:1;min-height:44px">${renderAssistantOptions()}</select><button type="button" id="c-asst-manage" aria-label="アシスタント管理" title="アシスタント管理" style="display:inline-flex;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--line);color:var(--muted);padding:0 12px;border-radius:8px;cursor:pointer;min-height:44px;min-width:44px">${SVG_SETTINGS}</button></div><div id="c-assistant-card" style="margin-bottom:12px"></div><label style="font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px">お客様のメールアドレス<span style="color:#dc2626;margin-left:2px">*</span></label><input id="c-mail" type="email" placeholder="hanako@example.com" autocomplete="email" style="${inputS};margin-bottom:10px;min-height:44px"><details style="margin-bottom:10px" open><summary style="cursor:pointer;font-size:13px;color:var(--muted);user-select:none;padding:6px 0">お客様情報（G-MAX登録に自動入力されます）</summary><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px"><div><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">姓<span style="color:#dc2626">*</span></label><input id="c-sei" type="text" placeholder="山田" autocomplete="family-name" style="${inputS};min-height:40px"></div><div><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">名<span style="color:#dc2626">*</span></label><input id="c-mei" type="text" placeholder="花子" autocomplete="given-name" style="${inputS};min-height:40px"></div><div><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">セイ（カナ）<span style="color:#dc2626">*</span></label><input id="c-sei-kana" type="text" placeholder="ヤマダ" style="${inputS};min-height:40px"></div><div><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">メイ（カナ）<span style="color:#dc2626">*</span></label><input id="c-mei-kana" type="text" placeholder="ハナコ" style="${inputS};min-height:40px"></div><div><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">生年月日<span style="color:#dc2626">*</span></label><input id="c-birth" type="date" min="1900-01-01" max="2026-12-31" style="${inputS};min-height:40px"></div><div><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">性別<span style="color:#dc2626">*</span></label><select id="c-sex" style="${inputS};min-height:40px"><option value="">選択してください</option><option value="1">男性</option><option value="2">女性</option></select></div><div><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">電話番号<span style="color:#dc2626">*</span></label><input id="c-tel" type="tel" placeholder="09012345678" autocomplete="tel" inputmode="tel" style="${inputS};min-height:40px"></div><div><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">パスワード<span style="color:#dc2626">*</span></label><input id="c-pass" type="text" placeholder="例: Grant2026!" style="${inputS};min-height:40px"></div><div style="grid-column:1/-1"><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">郵便番号<span style="color:#dc2626">*</span>（7桁、ハイフンなし）<span id="c-zip-status" style="margin-left:8px;font-weight:400;font-size:10px;color:var(--muted)"></span></label><input id="c-zip" type="text" maxlength="8" placeholder="9218042" inputmode="numeric" autocomplete="postal-code" style="${inputS};min-height:40px"></div><div><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">都道府県<span style="color:#dc2626">*</span></label><input id="c-pref" type="text" placeholder="石川県" autocomplete="address-level1" style="${inputS};min-height:40px"></div><div><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">市区町村<span style="color:#dc2626">*</span></label><input id="c-city" type="text" placeholder="金沢市" autocomplete="address-level2" style="${inputS};min-height:40px"></div><div style="grid-column:1/-1"><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">番地<span style="color:#dc2626">*</span></label><input id="c-addr" type="text" placeholder="泉本町５丁目４０−１" style="${inputS};min-height:40px"></div><div style="grid-column:1/-1"><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">建物名・部屋番号（任意）</label><input id="c-bldg" type="text" placeholder="〇〇マンション１０１号室" style="${inputS};min-height:40px"></div><div style="grid-column:1/-1"><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">シリアル番号<span style="color:#dc2626">*</span>（概要書面 右上の QR コード）</label><div style="display:flex;gap:6px;flex-wrap:wrap"><input id="c-serial" type="text" placeholder="QR読取 / 画像 / 手入力" autocomplete="off" style="${inputS};flex:1;min-width:140px;min-height:40px;font-family:monospace"><button type="button" id="c-qr-btn" title="カメラでQR読取" style="min-height:40px;padding:0 12px;background:var(--surface);border:1px solid var(--line);color:var(--ink);border-radius:8px;cursor:pointer;font-size:12px;white-space:nowrap;display:inline-flex;align-items:center;gap:4px">${SVG_CAMERA}<span>カメラ</span></button><label title="画像からQR読取" style="min-height:40px;padding:0 12px;background:var(--surface);border:1px solid var(--line);color:var(--ink);border-radius:8px;cursor:pointer;font-size:12px;white-space:nowrap;display:inline-flex;align-items:center;gap:4px">画像<input id="c-qr-file" type="file" accept="image/*" style="display:none"></label></div></div></div></details><div style="display:flex;gap:8px;align-items:center;padding:8px 10px;background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;font-size:11.5px;color:#92400e;margin-bottom:10px"><strong>テストモード</strong><span>最終送信ボタンは押しません。入力完了後にG-MAXで確認してください。</span></div><button id="reg-start" class="btn" type="button" style="width:100%;font-size:15px;padding:12px;min-height:44px">招待を送って自動入力（テストモード）</button></div><div id="reg-log" hidden style="margin-top:10px;max-height:180px;overflow-y:auto;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;font-family:monospace"></div><p style="font-size:11px;color:var(--muted);margin:8px 0 0">※ サーバーが「停止中」の場合は「サーバー起動.command」をダブルクリックしてください</p><div id="signup-section" hidden><hr style="margin:20px 0;border:none;border-top:1px dashed var(--line)"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="width:22px;height:22px;background:var(--accent);color:#fff;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">2</span><h4 style="margin:0;font-size:14px;font-weight:600">お客様から受け取った登録URLを貼り付け</h4></div><p style="font-size:12.5px;color:var(--muted);margin:0 0 10px;line-height:1.6">お客様のメールに届いた招待URLを下に貼ってボタンを押すと、お客様の会員登録情報とアシスタント情報が自動入力されます。</p><label style="font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px">招待URL</label><textarea id="signup-url" rows="3" placeholder="https://sslgw.jns-asp.jp/granteones/Magic94Scripts/mgrqispi94.dll?APPNAME=granteones&PRGNAME=signup_start&ARGUMENTS=..." style="${inputS};min-height:60px;font-family:monospace;font-size:11px;resize:vertical;word-break:break-all"></textarea><button id="signup-start" class="btn" type="button" style="width:100%;font-size:15px;padding:12px;margin-top:10px;min-height:44px">お客様登録を自動入力（テストモード）</button><div id="signup-log" hidden style="margin-top:10px;max-height:220px;overflow-y:auto;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;font-family:monospace"></div></div></div>
+ <div class="wiz" id="gmax-wiz">
+   <div class="wiz-header"><div class="wiz-title">G-MAX 自動登録</div><span id="srv-badge" class="wiz-srv">確認中…</span><button type="button" id="apikey-btn" class="wiz-key" title="APIキー設定">キー設定</button></div>
+   <div class="wiz-progress" id="wiz-progress"><div class="wiz-dot active" data-dot="1">1</div><div class="wiz-line" data-line="1"></div><div class="wiz-dot" data-dot="2">2</div><div class="wiz-line" data-line="2"></div><div class="wiz-dot" data-dot="3">3</div><div class="wiz-line" data-line="3"></div><div class="wiz-dot" data-dot="4">4</div><div class="wiz-line" data-line="4"></div><div class="wiz-dot" data-dot="5">5</div></div>
+
+   <div class="wiz-screen active" data-screen="1">
+     <h3 class="wiz-h">1. まず準備</h3>
+     <p class="wiz-sub">スタイリスト・アシスタント・登録種別を選びます</p>
+     <div class="wiz-field"><label class="wiz-label">スタイリスト<span class="wiz-opt">あなた</span></label><div class="wiz-row-select"><select id="c-stylist" class="wiz-select">${renderStylistOptions()}</select><button type="button" id="c-styl-manage" class="wiz-mg" aria-label="スタイリスト管理" title="スタイリスト管理">${SVG_SETTINGS}</button></div><div id="c-stylist-card" style="margin-top:8px"></div></div>
+     <div class="wiz-field"><label class="wiz-label">アシスタント<span class="wiz-req">*</span></label><div class="wiz-row-select"><select id="c-assistant" class="wiz-select">${renderAssistantOptions()}</select><button type="button" id="c-asst-manage" class="wiz-mg" aria-label="アシスタント管理" title="アシスタント管理">${SVG_SETTINGS}</button></div><div id="c-assistant-card" style="margin-top:8px"></div></div>
+     <div class="wiz-field"><label class="wiz-label">登録種別<span class="wiz-req">*</span></label><div class="wiz-choice"><button type="button" class="wiz-choice-card" data-ut="1" aria-pressed="true"><div class="wiz-choice-ttl">ビジネス会員</div><div class="wiz-choice-sub">クリエーター / 販売含む</div></button><button type="button" class="wiz-choice-card" data-ut="2" aria-pressed="false"><div class="wiz-choice-ttl">愛用者会員</div><div class="wiz-choice-sub">ユーザー / 購入のみ</div></button></div><input type="hidden" id="c-usertype" value="1"></div>
+   </div>
+
+   <div class="wiz-screen" data-screen="2">
+     <h3 class="wiz-h">2. お客様の連絡先</h3>
+     <p class="wiz-sub">メールアドレスとパスワードを入力します</p>
+     <div class="wiz-field"><label class="wiz-label">メールアドレス<span class="wiz-req">*</span></label><input id="c-mail" type="email" class="wiz-input" placeholder="hanako@example.com" autocomplete="email"></div>
+     <div class="wiz-field"><label class="wiz-label">初期パスワード<span class="wiz-req">*</span><span class="wiz-opt">お客様が後で変更できます</span></label><input id="c-pass" type="text" class="wiz-input" placeholder="例: Grant2026!"></div>
+   </div>
+
+   <div class="wiz-screen" data-screen="3">
+     <h3 class="wiz-h">3. お客様の基本情報</h3>
+     <p class="wiz-sub">お名前・生年月日・性別・電話番号</p>
+     <div class="wiz-row"><div class="wiz-field"><label class="wiz-label">姓<span class="wiz-req">*</span></label><input id="c-sei" type="text" class="wiz-input" placeholder="山田" autocomplete="family-name"></div><div class="wiz-field"><label class="wiz-label">名<span class="wiz-req">*</span></label><input id="c-mei" type="text" class="wiz-input" placeholder="花子" autocomplete="given-name"></div></div>
+     <div class="wiz-row"><div class="wiz-field"><label class="wiz-label">セイ<span class="wiz-opt">カナ</span></label><input id="c-sei-kana" type="text" class="wiz-input" placeholder="ヤマダ"></div><div class="wiz-field"><label class="wiz-label">メイ<span class="wiz-opt">カナ</span></label><input id="c-mei-kana" type="text" class="wiz-input" placeholder="ハナコ"></div></div>
+     <div class="wiz-field"><label class="wiz-label">生年月日<span class="wiz-req">*</span></label><input id="c-birth" type="date" class="wiz-input" min="1900-01-01" max="2026-12-31"></div>
+     <div class="wiz-field"><label class="wiz-label">性別<span class="wiz-req">*</span></label><div class="wiz-choice"><button type="button" class="wiz-choice-card" data-sx="1" aria-pressed="false"><div class="wiz-choice-ttl">男性</div></button><button type="button" class="wiz-choice-card" data-sx="2" aria-pressed="false"><div class="wiz-choice-ttl">女性</div></button></div><input type="hidden" id="c-sex" value=""></div>
+     <div class="wiz-field"><label class="wiz-label">電話番号<span class="wiz-req">*</span></label><input id="c-tel" type="tel" class="wiz-input" placeholder="09012345678" autocomplete="tel" inputmode="tel"></div>
+   </div>
+
+   <div class="wiz-screen" data-screen="4">
+     <h3 class="wiz-h">4. 住所</h3>
+     <p class="wiz-sub">郵便番号を入れると都道府県・市区町村が自動で埋まります</p>
+     <div class="wiz-field"><label class="wiz-label">郵便番号<span class="wiz-req">*</span><span class="wiz-opt">7桁・ハイフンなし</span></label><input id="c-zip" type="text" class="wiz-input" maxlength="8" placeholder="9218042" inputmode="numeric" autocomplete="postal-code"><div id="c-zip-status" class="wiz-help"></div></div>
+     <div class="wiz-row"><div class="wiz-field"><label class="wiz-label">都道府県<span class="wiz-req">*</span></label><input id="c-pref" type="text" class="wiz-input" placeholder="石川県" autocomplete="address-level1"></div><div class="wiz-field"><label class="wiz-label">市区町村<span class="wiz-req">*</span></label><input id="c-city" type="text" class="wiz-input" placeholder="金沢市" autocomplete="address-level2"></div></div>
+     <div class="wiz-field"><label class="wiz-label">番地<span class="wiz-req">*</span></label><input id="c-addr" type="text" class="wiz-input" placeholder="泉本町５丁目４０−１"></div>
+     <div class="wiz-field"><label class="wiz-label">建物名・部屋番号<span class="wiz-opt">任意</span></label><input id="c-bldg" type="text" class="wiz-input" placeholder="〇〇マンション１０１号室"></div>
+   </div>
+
+   <div class="wiz-screen" data-screen="5">
+     <h3 class="wiz-h">5. シリアル番号</h3>
+     <p class="wiz-sub">概要書面の右上にあるQRコードから読み取ります</p>
+     <div class="wiz-serial-actions">
+       <button type="button" id="c-qr-btn" class="wiz-action-card"><span class="wiz-action-icon">${SVG_CAMERA}</span><span class="wiz-action-body"><span class="wiz-action-ttl">カメラで読み取る</span><span class="wiz-action-sub">今その場でQRをスキャン</span></span></button>
+       <label class="wiz-action-card"><span class="wiz-action-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg></span><span class="wiz-action-body"><span class="wiz-action-ttl">画像から読み取る</span><span class="wiz-action-sub">写真を選んで解析</span></span><input id="c-qr-file" type="file" accept="image/*" hidden></label>
+       <button type="button" id="c-serial-manual-btn" class="wiz-action-card"><span class="wiz-action-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z"/></svg></span><span class="wiz-action-body"><span class="wiz-action-ttl">手入力する</span><span class="wiz-action-sub">キーボードで直接入力</span></span></button>
+     </div>
+     <div class="wiz-field"><label class="wiz-label">読み取ったシリアル<span class="wiz-req">*</span></label><input id="c-serial" type="text" class="wiz-input" placeholder="QRを読取すると自動で入ります" autocomplete="off" style="font-family:var(--f-mono)"></div>
+     <div class="wiz-warn"><strong>テストモード</strong>：最終の「本登録送信」ボタンは押しません。確認画面で止まるので、G-MAXの画面で中身を見てから送信してください。</div>
+   </div>
+
+   <div class="wiz-screen" data-screen="6">
+     <h3 class="wiz-h">6. 招待URLを貼付</h3>
+     <p class="wiz-sub">お客様のメールに届いたURLを下に貼ります。貼ったら「自動入力を開始」を押します</p>
+     <div class="wiz-field"><label class="wiz-label">招待URL<span class="wiz-req">*</span></label><textarea id="signup-url" rows="4" class="wiz-input" placeholder="https://sslgw.jns-asp.jp/granteones/Magic94Scripts/mgrqispi94.dll?APPNAME=granteones&PRGNAME=signup_start&ARGUMENTS=..." style="font-family:var(--f-mono);font-size:12px;word-break:break-all"></textarea></div>
+     <div class="wiz-info-card"><strong>手順</strong><ol style="margin:6px 0 0;padding-left:1.3em;font-size:12.5px;color:var(--muted);line-height:1.6"><li>お客様の携帯の受信箱を開く</li><li>「グラント」から届いたメール内のURLを長押しコピー</li><li>上の枠に貼り付け → 下のボタンを押す</li></ol></div>
+   </div>
+
+   <div class="wiz-nav">
+     <button type="button" id="wiz-back" class="wiz-btn ghost" hidden>戻る</button>
+     <button type="button" id="wiz-next" class="wiz-btn">次へ</button>
+   </div>
+
+   <div id="reg-log" hidden class="wiz-log"></div>
+   <div id="signup-log" hidden class="wiz-log"></div>
+   <p class="wiz-foot">※ サーバーが「停止中」の場合は「サーバー起動.command」をダブルクリック</p>
+   <button id="reg-start" type="button" hidden></button>
+   <button id="signup-start" type="button" hidden></button>
+   <div id="signup-section" hidden></div>
+ </div>
  <div class="s-sec" style="margin-top:10px"><h4>手動でG-MAXを使う場合（オンラインサインアップ）</h4><ul><li>G-MAX トップ →「招待メール」でお客様のメールアドレスに送る</li><li>お客様がメールのURLから登録（3時間以内・本人が入力）</li><li>商品選択の画面で、このリストどおりにカートへ</li><li>ビジネス会員の初回は、税率が違う商品（下着とサプリなど）を一緒に注文できない</li></ul></div>`;
  $("ordcopy").onclick=async()=>{try{await navigator.clipboard.writeText(orderText(r));$("ordcopy").textContent="コピーしました"}catch(e){const sel=getSelection(),rg=document.createRange();rg.selectNodeContents($("ordtxt"));sel.removeAllRanges();sel.addRange(rg);$("ordcopy").textContent="選択しました（長押しでコピー）"}};
  $("reg-start").onclick=()=>startGmaxRegister(r);
@@ -1740,6 +1881,37 @@ function openOrder(r){$("sheet-t").textContent="G-MAX 注文リスト";
    };
  }
  $("apikey-btn").onclick=()=>{const cur=apiKey();const k=prompt('APIキーを入力/変更：\n（Mac mini側 server/api-key.txt の内容）',cur);if(k!==null){if(k.trim())localStorage.setItem('grantApiKey',k.trim());else localStorage.removeItem('grantApiKey');alert('保存しました');}};
+ /* ---- Wizard state ---- */
+ let wizStep=1;const WIZ_TOTAL=5;
+ function wizValidate(step){const miss=[];const v=id=>($(id)?.value||'').trim();
+   if(step===1){if(!v('c-stylist')||v('c-stylist')==='__manage__')miss.push('スタイリスト');if(!v('c-assistant')||v('c-assistant')==='__manage__')miss.push('アシスタント');if(!v('c-usertype'))miss.push('登録種別');}
+   else if(step===2){const m=v('c-mail');if(!m||!m.includes('@'))miss.push('メールアドレス');if(!v('c-pass'))miss.push('パスワード');}
+   else if(step===3){['c-sei','c-mei','c-sei-kana','c-mei-kana','c-birth','c-sex','c-tel'].forEach(id=>{if(!v(id))miss.push({'c-sei':'姓','c-mei':'名','c-sei-kana':'セイ','c-mei-kana':'メイ','c-birth':'生年月日','c-sex':'性別','c-tel':'電話'}[id]);});}
+   else if(step===4){['c-zip','c-pref','c-city','c-addr'].forEach(id=>{if(!v(id))miss.push({'c-zip':'郵便番号','c-pref':'都道府県','c-city':'市区町村','c-addr':'番地'}[id]);});}
+   else if(step===5){if(!v('c-serial'))miss.push('シリアル');}
+   return miss;
+ }
+ function wizGoto(step){
+   wizStep=step;
+   document.querySelectorAll('#gmax-wiz .wiz-screen').forEach(s=>s.classList.toggle('active',+s.dataset.screen===step));
+   document.querySelectorAll('#gmax-wiz .wiz-dot').forEach(d=>{const n=+d.dataset.dot;d.classList.toggle('active',n===step&&step<=WIZ_TOTAL);d.classList.toggle('done',n<step||step>WIZ_TOTAL);});
+   document.querySelectorAll('#gmax-wiz .wiz-line').forEach(l=>l.classList.toggle('done',+l.dataset.line<step||step>WIZ_TOTAL));
+   const back=$('wiz-back'),next=$('wiz-next');
+   if(back)back.hidden=(step===1||step===6);
+   if(next)next.textContent=step===WIZ_TOTAL?'招待を送信する':(step===6?'自動入力を開始する':'次へ');
+   const prog=$('wiz-progress');if(prog)prog.style.visibility=(step===6?'hidden':'');
+   const sheet=document.querySelector('#sheet .sheet');if(sheet)setTimeout(()=>{const wiz=$('gmax-wiz');if(wiz)wiz.scrollIntoView({block:'start',behavior:'smooth'});},50);
+ }
+ const wizNext=$('wiz-next'),wizBack=$('wiz-back');
+ if(wizNext){wizNext.onclick=()=>{if(wizStep<=WIZ_TOTAL){const miss=wizValidate(wizStep);if(miss.length){alert('次へ進むには以下の入力が必要です：\n・'+miss.join('\n・'));return;}}
+   if(wizStep===WIZ_TOTAL){startGmaxRegister(r);return;}
+   if(wizStep===6){startSignupAutomate(r);return;}
+   wizGoto(wizStep+1);};}
+ if(wizBack){wizBack.onclick=()=>{if(wizStep>1&&wizStep<=WIZ_TOTAL)wizGoto(wizStep-1);};}
+ document.querySelectorAll('#gmax-wiz .wiz-choice-card[data-ut]').forEach(c=>{c.onclick=()=>{const val=c.dataset.ut;document.querySelectorAll('#gmax-wiz .wiz-choice-card[data-ut]').forEach(x=>x.setAttribute('aria-pressed',x===c?'true':'false'));$('c-usertype').value=val;};});
+ document.querySelectorAll('#gmax-wiz .wiz-choice-card[data-sx]').forEach(c=>{c.onclick=()=>{const val=c.dataset.sx;document.querySelectorAll('#gmax-wiz .wiz-choice-card[data-sx]').forEach(x=>x.setAttribute('aria-pressed',x===c?'true':'false'));$('c-sex').value=val;};});
+ const serialManual=$('c-serial-manual-btn');if(serialManual){serialManual.onclick=()=>{const s=$('c-serial');if(s){s.focus();s.scrollIntoView({block:'center',behavior:'smooth'});}};}
+ wizGoto(1);
  pingSrv();
  $("sheet").hidden=false;$("sheet").querySelector(".sheet").scrollTop=0}
 /* ---------- シリーズ解説 ---------- */
