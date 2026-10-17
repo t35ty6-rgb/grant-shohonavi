@@ -222,20 +222,88 @@ export async function addItemsToCart({ stylist, items, onProgress }) {
       }
     }
 
-    // カート 画面 を 開いて 確認 (ここ で 自動停止、 「レジへ行く」 は 押さない)
-    log(`\n→ カート画面を開きます (owner が 内容確認 → 手動で レジへ行く)`);
-    const cartUrl = `https://sslgw.jns-asp.jp/granteones/Magic94Scripts/mgrqispi94.dll?APPNAME=granteones&PRGNAME=order_cart&ARGUMENTS=${encodeURIComponent(sess)}`;
-    await page.goto(cartUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
+    // Step 2 (配送情報) に 直接 navigate (承知しました checkbox は 省略 可能)
+    log(`\n→ Step 2 配送先情報 を 開く`);
+    await page.goto(`https://sslgw.jns-asp.jp/granteones/Magic94Scripts/mgrqispi94.dll?APPNAME=granteones&PRGNAME=order_input&ARGUMENTS=${encodeURIComponent(sess)}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
     await page.waitForTimeout(1500);
-    try {
-      const shotPath = join(SHOT_DIR, `cart-final-${Date.now()}.png`);
+    const step2Title = await page.title().catch(() => '');
+    log(`  → ${step2Title}`);
+    if (!step2Title.includes('Step 2')) {
+      log(`⚠ Step 2 に 到達 できず、 カート画面 で 停止`);
+      const cartUrl = `https://sslgw.jns-asp.jp/granteones/Magic94Scripts/mgrqispi94.dll?APPNAME=granteones&PRGNAME=order_cart&ARGUMENTS=${encodeURIComponent(sess)}`;
+      await page.goto(cartUrl, { waitUntil: 'domcontentloaded' });
+      const shotPath = join(SHOT_DIR, `cart-step1-${Date.now()}.png`);
       await page.screenshot({ path: shotPath, fullPage: true });
-      log(`📸 カート画面 スクリーンショット: /screenshots/${shotPath.split('/').pop()}`);
-    } catch {}
-    log(`\n✓ 完了: ${added.length}/${items.length} 件 投入成功`);
+      log(`📸 /screenshots/${shotPath.split('/').pop()}`);
+      return { ok: true, phase: 3, added, failed, stoppedAt: 'cart', cartUrl };
+    }
+
+    // Step 2 → Step 3 (#Search = 次へ)
+    log(`→ Step 2 「次へ」 を 押下`);
+    await page.click('#Search').catch(e => log(`  ✗ #Search click: ${e.message.slice(0,60)}`));
+    await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => {});
+    await page.waitForTimeout(2500);
+    const step3Title = await page.title().catch(() => '');
+    log(`  → ${step3Title}`);
+
+    // Step 3: 支払方法 = クレジットカード (18), 一括払い
+    log(`→ Step 3 支払方法 を 選択 (クレジットカード 一括払い)`);
+    const paySelected = await page.evaluate(() => {
+      const amex = document.querySelector('input[name="P_NYUKINSAKI_CD"][value="18"]');
+      if (amex) { amex.checked = true; amex.dispatchEvent(new Event('change', {bubbles:true})); }
+      const lump = document.getElementById('LumpSum');
+      if (lump) { lump.disabled = false; lump.checked = true; lump.dispatchEvent(new Event('change', {bubbles:true})); }
+      return { amex: !!amex, lump: !!lump };
+    });
+    log(`  → クレカ: ${paySelected.amex ? '✓' : '×'} / 一括払い: ${paySelected.lump ? '✓' : '×'}`);
+    await page.waitForTimeout(500);
+    if (!paySelected.amex) {
+      log(`⚠ クレカ 選択肢 なし (未登録 可能性)。 Step 3 で 停止`);
+      const shotPath = join(SHOT_DIR, `cart-step3-${Date.now()}.png`);
+      await page.screenshot({ path: shotPath, fullPage: true });
+      log(`📸 /screenshots/${shotPath.split('/').pop()}`);
+      return { ok: true, phase: 3, added, failed, stoppedAt: 'payment', note: '支払方法 選択 必要' };
+    }
+
+    // Step 3 → Step 4 (#Search = 確認画面へ)
+    log(`→ Step 3 「確認画面へ」 を 押下`);
+    await page.click('#Search').catch(e => log(`  ✗ #Search click: ${e.message.slice(0,60)}`));
+    await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => {});
+    await page.waitForTimeout(3000);
+    const step4Title = await page.title().catch(() => '');
+    log(`  → ${step4Title}`);
+    if (!step4Title.includes('Step 4')) {
+      log(`⚠ Step 4 に 到達 できず`);
+      const shotPath = join(SHOT_DIR, `cart-step3-fail-${Date.now()}.png`);
+      await page.screenshot({ path: shotPath, fullPage: true });
+      log(`📸 /screenshots/${shotPath.split('/').pop()}`);
+      return { ok: true, phase: 3, added, failed, stoppedAt: 'confirm-fail', note: 'Step 3 → 4 で止まった' };
+    }
+
+    // Step 4: ご注文内容 取得 + screenshot + ⚠ STOP (購入を確定する は 絶対 押さない)
+    const summary = await page.evaluate(() => {
+      const bodyTxt = document.body.innerText;
+      const totalMatch = bodyTxt.match(/総合計\s*\(税込\)\s*([\d,]+)\s*円/) || bodyTxt.match(/総合計[^¥]*?([\d,]+)\s*円/);
+      const total = totalMatch ? totalMatch[1] : '?';
+      const items = Array.from(document.querySelectorAll('tr')).map(tr => {
+        const t = tr.innerText.replace(/\s+/g, ' ').trim();
+        if (/サイズ|カラー|単価/.test(t) && t.length < 200) return t;
+      }).filter(Boolean);
+      const final = document.getElementById('QcSearch');
+      return { total, items, hasFinalBtn: !!final, finalBtnText: final ? final.value : '', finalBtnCls: final ? final.className : '' };
+    });
+    log(`\n✓ Step 4 到達 (ご注文内容 確認)`);
+    log(`  総合計: ¥${summary.total}`);
+    summary.items.forEach(it => log(`  ${it}`));
+    log(`  最終ボタン: ${summary.hasFinalBtn ? `#QcSearch "${summary.finalBtnText}" (${summary.finalBtnCls}) ← owner が 手動 click`: 'なし'}`);
+    const shotPath = join(SHOT_DIR, `cart-step4-${Date.now()}.png`);
+    await page.screenshot({ path: shotPath, fullPage: true });
+    log(`📸 /screenshots/${shotPath.split('/').pop()}`);
+
+    log(`\n✓ 完了: ${added.length}/${items.length} 件 投入 + Step 4 到達`);
     if (failed.length) log(`⚠ 失敗 ${failed.length} 件: ${failed.map(f => f.item.gm || f.item.code || '?').join(', ')}`);
-    log(`⚠ テストモード: 「レジへ行く」ボタンは押しません。 owner が G-MAX画面 で 内容確認 → 手動で レジ → 決済`);
-    return { ok: true, phase: 3, added, failed, cartUrl };
+    log(`⚠ 絶対 ルール: 「購入を確定する」ボタンは 自動 では 押しません。 owner が G-MAX画面 で 内容確認 → 自分で 1 click で 確定 → カード 決済`);
+    return { ok: true, phase: 3, added, failed, stoppedAt: 'step4-confirm', summary };
   } catch (err) {
     log(`エラー: ${err.message}`);
     return { ok: false, error: err.message };
