@@ -1822,7 +1822,12 @@ function openOrder(r){$("sheet-t").textContent="G-MAX 注文リスト";
      <h3 class="wiz-h">6. 招待URLを貼付</h3>
      <p class="wiz-sub">お客様のメールに届いたURLを下に貼ります。貼ったら「自動入力を開始」を押します</p>
      <div class="wiz-field"><label class="wiz-label">招待URL<span class="wiz-req">*</span></label><textarea id="signup-url" rows="4" class="wiz-input" placeholder="https://sslgw.jns-asp.jp/granteones/Magic94Scripts/mgrqispi94.dll?APPNAME=granteones&PRGNAME=signup_start&ARGUMENTS=..." style="font-family:var(--f-mono);font-size:12px;word-break:break-all"></textarea></div>
-     <div class="wiz-info-card"><strong>手順</strong><ol style="margin:6px 0 0;padding-left:1.3em;font-size:12.5px;color:var(--muted);line-height:1.6"><li>お客様の携帯の受信箱を開く</li><li>「グラント」から届いたメール内のURLを長押しコピー</li><li>上の枠に貼り付け → 下のボタンを押す</li></ol></div>
+     <div class="wiz-info-card"><strong>手順</strong><ol style="margin:6px 0 0;padding-left:1.3em;font-size:12.5px;color:var(--muted);line-height:1.6"><li>お客様の携帯の受信箱を開く</li><li>「グラント」から届いたメール内のURLを長押しコピー</li><li>上の枠に貼り付け → 下の 同意 を 読んで もらう</li></ol></div>
+     <div style="margin:18px 0 0">
+       <h4 style="font-weight:800;font-size:14px;margin:0 0 10px;color:var(--ink)">お客様 の 同意 事項<span style="color:#dc2626;margin-left:3px">*</span></h4>
+       <p style="font-size:12px;color:var(--muted);margin:0 0 12px;line-height:1.6">以下 を お客様 本人 に 読んで もらい、 1 つ ずつ タップ で 同意 して ください</p>
+       <div id="consent-cards" style="display:grid;gap:10px"></div>
+     </div>
    </div>
 
    <div class="wiz-nav">
@@ -1927,8 +1932,38 @@ function openOrder(r){$("sheet-t").textContent="G-MAX 注文リスト";
    else if(step===5){if(!v('c-serial'))miss.push('シリアル');}
    return miss;
  }
+ /* ---- 同意カード (step 6 で お客様 に 同意 を もらう) ---- */
+ const CONSENT_ITEMS=[
+   {k:'rules',t:'利用規約 に 同意',d:'グラント・イーワンズ の 利用規約 を 読み、 内容 に 同意 します'},
+   {k:'privacy',t:'個人情報 の 取扱 に 同意',d:'氏名・住所・連絡先 等 を 会員管理・配送 の ため に 使用する こと に 同意 します'},
+   {k:'cooloff',t:'クーリングオフ の 説明 を 受けた',d:'8 日間 の クーリングオフ (無条件 解約) 制度 の 説明 を 受けました'},
+   {k:'network',t:'ネットワークビジネス で ある こと を 理解',d:'特定商取引法 上 の 連鎖販売取引 (ネットワーク ビジネス) で ある こと を 理解 して います'},
+   {k:'submit',t:'本登録 を 送信 する こと に 同意',d:'入力 した 内容 で G-MAX に 本登録 を 送信 する こと に 同意 します'},
+ ];
+ function renderConsentCards(){
+   const box=$('consent-cards');if(!box)return;
+   box.innerHTML=CONSENT_ITEMS.map(c=>`<button type="button" class="consent-card" data-ck="${c.k}" aria-pressed="false" style="text-align:left;background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:14px 16px;cursor:pointer;transition:all var(--t-fast) var(--ease);font:inherit;color:var(--ink);display:flex;align-items:flex-start;gap:12px;min-height:72px"><div class="consent-ck" style="flex:none;width:28px;height:28px;border-radius:50%;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;margin-top:1px"></div><div style="flex:1"><div style="font-weight:700;font-size:14.5px;color:var(--ink);line-height:1.35;margin-bottom:4px">${esc(c.t)}</div><div style="font-size:12.5px;color:var(--muted);line-height:1.55">${esc(c.d)}</div></div></button>`).join('');
+   box.querySelectorAll('.consent-card').forEach(c=>{
+     c.onclick=()=>{
+       const now=c.getAttribute('aria-pressed')==='true';
+       c.setAttribute('aria-pressed',now?'false':'true');
+       c.style.borderColor=now?'var(--line)':'var(--accent)';
+       c.style.background=now?'var(--surface)':'var(--accent-soft)';
+       const ck=c.querySelector('.consent-ck');
+       ck.style.background=now?'transparent':'var(--accent)';
+       ck.style.borderColor=now?'var(--line)':'var(--accent)';
+       ck.innerHTML=now?'':'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+     };
+   });
+ }
+ function allConsentsChecked(){
+   const boxes=document.querySelectorAll('#consent-cards .consent-card');
+   if(!boxes.length)return false;
+   return Array.from(boxes).every(b=>b.getAttribute('aria-pressed')==='true');
+ }
  window.wizGoto=function(step){
    wizStep=step;window.wizStep=step;
+   if(step===6){try{renderConsentCards();}catch{}}
    document.querySelectorAll('#gmax-wiz .wiz-screen').forEach(s=>s.classList.toggle('active',+s.dataset.screen===step));
    document.querySelectorAll('#gmax-wiz .wiz-dot').forEach(d=>{const n=+d.dataset.dot;d.classList.toggle('active',n===step&&step<=WIZ_TOTAL);d.classList.toggle('done',n<step||step>WIZ_TOTAL);});
    document.querySelectorAll('#gmax-wiz .wiz-line').forEach(l=>l.classList.toggle('done',+l.dataset.line<step||step>WIZ_TOTAL));
@@ -1941,7 +1976,12 @@ function openOrder(r){$("sheet-t").textContent="G-MAX 注文リスト";
  const wizNext=$('wiz-next'),wizBack=$('wiz-back');
  if(wizNext){wizNext.onclick=()=>{if(wizStep<=WIZ_TOTAL){const miss=wizValidate(wizStep);if(miss.length){alert('次へ進むには以下の入力が必要です：\n・'+miss.join('\n・'));return;}}
    if(wizStep===WIZ_TOTAL){startGmaxRegister(r);return;}
-   if(wizStep===6){startSignupAutomate(r);return;}
+   if(wizStep===6){
+     const urlOk=($('signup-url')?.value||'').trim().includes('signup_start');
+     if(!urlOk){alert('招待URL を 貼り付けて ください');return;}
+     if(!allConsentsChecked()){alert('お客様 に 全て の 同意 項目 を タップ して もらって ください');return;}
+     startSignupAutomate(r);return;
+   }
    wizGoto(wizStep+1);};}
  if(wizBack){wizBack.onclick=()=>{if(wizStep>1&&wizStep<=WIZ_TOTAL)wizGoto(wizStep-1);};}
  document.querySelectorAll('#gmax-wiz .wiz-choice-card[data-ut]').forEach(c=>{c.onclick=()=>{const val=c.dataset.ut;document.querySelectorAll('#gmax-wiz .wiz-choice-card[data-ut]').forEach(x=>x.setAttribute('aria-pressed',x===c?'true':'false'));$('c-usertype').value=val;saveDraft();};});
