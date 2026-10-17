@@ -1833,7 +1833,7 @@ function openOrder(r){$("sheet-t").textContent="G-MAX 注文リスト";
    <div id="reg-log" hidden class="wiz-log"></div>
    <div id="signup-log" hidden class="wiz-log"></div>
    <p class="wiz-foot">※ サーバーは Fly.io で 常時起動。 停止中 表示 の 場合 は 数秒 待って 再度 お試しください</p>
-   <button type="button" id="add-to-cart-btn" style="margin-top:14px;width:100%;background:linear-gradient(135deg,var(--accent),var(--accent-pressed));color:#fff;border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 3px 10px rgba(226,71,122,.25);min-height:52px">🛒 本登録 後 の カート に 商品 を 自動投入</button>
+   <button type="button" id="add-to-cart-btn" style="margin-top:14px;width:100%;background:linear-gradient(135deg,var(--accent),var(--accent-pressed));color:#fff;border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 3px 10px rgba(226,71,122,.25);min-height:52px;display:inline-flex;align-items:center;justify-content:center;gap:8px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><span>本登録 後 の カート に 商品 を 自動投入</span></button>
    <p class="wiz-foot">※ 本登録 を 完了 した 後 に 押す。 商品 (注文リスト) を カート に 入れて カート画面 で 止まる (レジ以降 は owner 手動)</p>
    <div id="add-cart-log" hidden class="wiz-log"></div>
    <button type="button" id="dev-explore-cart" hidden></button>
@@ -1960,14 +1960,14 @@ function openOrder(r){$("sheet-t").textContent="G-MAX 注文リスト";
    try{
      const req=await fetch(API+'/add-to-cart',{method:'POST',headers:apiHeaders(),body:JSON.stringify({stylist:{id:styl.id,gmaxId:styl.gmaxId,gmaxPass:styl.gmaxPass,name:styl.name},items})});
      const d=await req.json();
-     if(!d.ok){dlog.innerHTML='エラー: '+esc(d.error);addCartBtn.disabled=false;addCartBtn.textContent='🛒 再試行';return;}
+     if(!d.ok){dlog.innerHTML='エラー: '+esc(d.error);addCartBtn.disabled=false;addCartBtn.textContent='再試行';return;}
      const jid=d.jobId;
      const iv=setInterval(async()=>{
        const sr=await fetch(API+'/status/'+jid,{headers:apiHeaders()});const sd=await sr.json();
        dlog.innerHTML=(sd.logs||[]).map(l=>'<div>'+esc(l.msg)+'</div>').join('');dlog.scrollTop=9999;
-       if(sd.status==='done'||sd.status==='failed'){clearInterval(iv);addCartBtn.disabled=false;const ok=sd.status==='done'&&sd.result?.ok;addCartBtn.textContent=ok?'🛒 もう一度 カート 追加':'🛒 再試行';if(ok){const added=sd.result?.added?.length||0;dlog.innerHTML+='<hr><b>完了: '+added+' 件 カート 投入</b><br>G-MAX の カート画面 で 確認 → レジへ行く は owner が 手動';}}
+       if(sd.status==='done'||sd.status==='failed'){clearInterval(iv);addCartBtn.disabled=false;const ok=sd.status==='done'&&sd.result?.ok;addCartBtn.textContent=ok?'もう一度 カート に 追加':'再試行';if(ok){const added=sd.result?.added?.length||0;dlog.innerHTML+='<hr><b>完了: '+added+' 件 カート 投入</b><br>G-MAX の カート画面 で 確認 → レジへ行く は owner が 手動';}}
      },2000);
-   }catch(e){dlog.innerHTML='例外: '+esc(e.message);addCartBtn.disabled=false;addCartBtn.textContent='🛒 再試行';}
+   }catch(e){dlog.innerHTML='例外: '+esc(e.message);addCartBtn.disabled=false;addCartBtn.textContent='再試行';}
  };}
  /* ---- 開発用: カート UI 探索 ---- */
  const devExplore=$('dev-explore-cart');
@@ -1979,14 +1979,14 @@ function openOrder(r){$("sheet-t").textContent="G-MAX 注文リスト";
    try{
      const r=await fetch(API+'/explore-cart',{method:'POST',headers:apiHeaders(),body:JSON.stringify({stylist:{id:styl.id,gmaxId:styl.gmaxId,gmaxPass:styl.gmaxPass,name:styl.name}})});
      const d=await r.json();
-     if(!d.ok){dlog.innerHTML='エラー: '+esc(d.error);devExplore.disabled=false;devExplore.textContent='🔍 再試行';return;}
+     if(!d.ok){dlog.innerHTML='エラー: '+esc(d.error);devExplore.disabled=false;devExplore.textContent='再試行';return;}
      const jid=d.jobId;
      const iv=setInterval(async()=>{
        const sr=await fetch(API+'/status/'+jid,{headers:apiHeaders()});const sd=await sr.json();
        dlog.innerHTML=(sd.logs||[]).map(l=>'<div>'+esc(l.msg)+'</div>').join('');dlog.scrollTop=9999;
-       if(sd.status==='done'||sd.status==='failed'){clearInterval(iv);devExplore.disabled=false;devExplore.textContent='🔍 再実行';dlog.innerHTML+='<hr><b>完了</b> status='+esc(sd.status);}
+       if(sd.status==='done'||sd.status==='failed'){clearInterval(iv);devExplore.disabled=false;devExplore.textContent='再実行';dlog.innerHTML+='<hr><b>完了</b> status='+esc(sd.status);}
      },2000);
-   }catch(e){dlog.innerHTML='例外: '+esc(e.message);devExplore.disabled=false;devExplore.textContent='🔍 再試行';}
+   }catch(e){dlog.innerHTML='例外: '+esc(e.message);devExplore.disabled=false;devExplore.textContent='再試行';}
  };}
  /* ---- カナ 入力 自動変換 + バリデーション (G-MAX「使用できない文字」エラー 防止) ---- */
  function kanaValidate(id){const el=$(id);const help=$(id+'-help');if(!el||!help)return true;
@@ -1996,6 +1996,10 @@ function openOrder(r){$("sheet-t").textContent="G-MAX 注文リスト";
    // 半角カナ → 全角カナ (簡易)
    const halfToFull={'ｱ':'ア','ｲ':'イ','ｳ':'ウ','ｴ':'エ','ｵ':'オ','ｶ':'カ','ｷ':'キ','ｸ':'ク','ｹ':'ケ','ｺ':'コ','ｻ':'サ','ｼ':'シ','ｽ':'ス','ｾ':'セ','ｿ':'ソ','ﾀ':'タ','ﾁ':'チ','ﾂ':'ツ','ﾃ':'テ','ﾄ':'ト','ﾅ':'ナ','ﾆ':'ニ','ﾇ':'ヌ','ﾈ':'ネ','ﾉ':'ノ','ﾊ':'ハ','ﾋ':'ヒ','ﾌ':'フ','ﾍ':'ヘ','ﾎ':'ホ','ﾏ':'マ','ﾐ':'ミ','ﾑ':'ム','ﾒ':'メ','ﾓ':'モ','ﾔ':'ヤ','ﾕ':'ユ','ﾖ':'ヨ','ﾗ':'ラ','ﾘ':'リ','ﾙ':'ル','ﾚ':'レ','ﾛ':'ロ','ﾜ':'ワ','ｦ':'ヲ','ﾝ':'ン','ｰ':'ー','ｧ':'ァ','ｨ':'ィ','ｩ':'ゥ','ｪ':'ェ','ｫ':'ォ','ｬ':'ャ','ｭ':'ュ','ｮ':'ョ','ｯ':'ッ'};
    v=v.replace(/[｡-ﾟ]/g,c=>halfToFull[c]||c);
+   // 濁点 ﾞ / 半濁点 ﾟ を 直前 の 文字 と 結合 (BUG-1 fix)
+   const dakuMap={'カ':'ガ','キ':'ギ','ク':'グ','ケ':'ゲ','コ':'ゴ','サ':'ザ','シ':'ジ','ス':'ズ','セ':'ゼ','ソ':'ゾ','タ':'ダ','チ':'ヂ','ツ':'ヅ','テ':'デ','ト':'ド','ハ':'バ','ヒ':'ビ','フ':'ブ','ヘ':'ベ','ホ':'ボ','ウ':'ヴ'};
+   const handakuMap={'ハ':'パ','ヒ':'ピ','フ':'プ','ヘ':'ペ','ホ':'ポ'};
+   v=v.replace(/(.)[ﾞ゛]/g,(_,c)=>dakuMap[c]||c).replace(/(.)[ﾟ゜]/g,(_,c)=>handakuMap[c]||c);
    if(v!==el.value){const pos=el.selectionStart;el.value=v;try{el.setSelectionRange(pos,pos);}catch{}}
    // 全角カタカナ + 長音 + 中点 + スペース のみ 許可
    const bad=v.replace(/[゠-ヿ ・　ー]/g,'');
