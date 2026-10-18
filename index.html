@@ -565,25 +565,12 @@ const mk=()=>`<defs><marker id="a" viewBox="0 0 10 10" refX="5" refY="5" markerW
 const svg=(w,inner)=>`<svg viewBox="0 0 ${w} 440" role="img" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block">${mk()}<rect width="${w}" height="440" rx="18" fill="${C.paper}"/>${inner}</svg>`;
 const T=(x,y,t,c=C.line,s=11,a="middle",w=700)=>`<text x="${x}" y="${y}" font-size="${s}" font-weight="${w}" fill="${c}" text-anchor="${a}" font-family="Zen Kaku Gothic New,sans-serif">${t}</text>`;
 function plumb(x,c){return `<line x1="${x}" y1="14" x2="${x}" y2="404" stroke="${c}" stroke-width="1.6" stroke-dasharray="5 5"/>`}
-function balance(){const ys=[67,116,158,210];const lab=["あご","バストトップ","ウエスト","ヒップトップ"];
- let g=person("ideal",40);
- ys.forEach((y,i)=>{g+=`<line x1="52" y1="${y}" x2="252" y2="${y}" stroke="${C.guide}" stroke-width="1.4" stroke-dasharray="4 4"/>`+T(258,y+4,lab[i],C.line,11,"start")});
- for(let i=0;i<3;i++){const y1=ys[i]+3,y2=ys[i+1]-3;g+=`<line x1="56" y1="${y1}" x2="56" y2="${y2}" stroke="${C.guide}" stroke-width="2"/>`+T(50,(y1+y2)/2+4,"顔1つ分",C.guide,10,"end")}
- g+=`<path d="M176,116 h20" stroke="${C.ok}" stroke-width="3" marker-end="url(#a)"/><path d="M110,212 h-20" stroke="${C.ok}" stroke-width="3" marker-end="url(#a)"/>`;
- g+=T(196,262,"バスト：ヒップ",C.ok,11,"start")+T(196,284,"＝ 1 : 1",C.ok,16,"start",900);
- g+=T(196,314,"顔4つ分で体の半分",C.mute,10,"start",500)+T(196,328,"→ 全身で8頭身",C.mute,10,"start",500);
- return svg(340,g)}
-function compare(){let g="";const L=[["ideal","理想",C.ok],["hunch","猫背・巻き肩",C.ng],["sway","反り腰",C.ng]];
- L.forEach(([k,t,c],i)=>{const ox=i*190;g+=person(k,ox)+`<g opacity=".8">${plumb(ox+100,c)}</g>`+T(ox+100,428,t,c,13)});
- g+=T(285,14,"点線＝耳・肩・骨盤・くるぶしを結ぶ線（理想は一直線）",C.mute,10,"middle",500);
- return svg(570,g)}
-function sag(){let g=person("ideal",10)+person("sag",210);
- g+=T(110,428,"お尻を支えると",C.ok,13)+T(310,428,"お尻が下がると",C.ng,13);
- g+=`<path d="M70,250 q42,24 86,0" stroke="${C.ok}" stroke-width="3.5" fill="none"/>`+T(112,290,"ガードルで持ち上げる",C.ok,10.5);
- g+=`<path d="M278,214 v28" stroke="${C.ng}" stroke-width="3" marker-end="url(#a2)"/>`+T(270,268,"お尻が下がる",C.ng,11,"end");
- g+=`<path d="M352,112 v24" stroke="${C.ng}" stroke-width="3" marker-end="url(#a2)"/>`+T(360,124,"バストが",C.ng,11,"start")+T(360,138,"引っぱられる",C.ng,11,"start");
- g+=`<path d="M282,112 h-24" stroke="${C.ng}" stroke-width="3" marker-end="url(#a2)"/>`+T(254,98,"お肉が背中へ",C.ng,11,"end");
- return svg(440,g)}
+function balance(){
+ return `<div style="background:#FFF8F5;border-radius:18px;padding:14px"><img src="img/materials/balance-8head.png" alt="理想の8頭身バランス" style="width:100%;height:auto;display:block;border-radius:12px"><div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px 14px;justify-content:center;font-size:12.5px;color:#5a6069;line-height:1.5"><span>あご→バスト→ウエスト→ヒップ が 顔 1 つ 分 ずつ</span><span style="color:#2F9E6E;font-weight:700">バスト : ヒップ ＝ 1 : 1</span></div></div>`}
+function compare(){
+ return `<div style="background:#FFF8F5;border-radius:18px;padding:14px"><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px"><figure style="margin:0;text-align:center"><img src="img/materials/posture-ideal.png" alt="理想の姿勢" style="width:100%;height:auto;display:block;border-radius:10px"><figcaption style="margin-top:6px;font-size:12px;font-weight:700;color:#2F9E6E">理想</figcaption></figure><figure style="margin:0;text-align:center"><img src="img/materials/posture-hunch.png" alt="猫背・巻き肩" style="width:100%;height:auto;display:block;border-radius:10px"><figcaption style="margin-top:6px;font-size:12px;font-weight:700;color:#E2477A">猫背・巻き肩</figcaption></figure><figure style="margin:0;text-align:center"><img src="img/materials/posture-sway.png" alt="反り腰" style="width:100%;height:auto;display:block;border-radius:10px"><figcaption style="margin-top:6px;font-size:12px;font-weight:700;color:#E2477A">反り腰</figcaption></figure></div><p style="margin:10px 0 0;font-size:11.5px;color:#5a6069;text-align:center;line-height:1.5">耳・肩・骨盤・くるぶし が 一直線 が 理想。 頭 が 前 に 出る と 猫背、 骨盤 が 前 に 倒れる と 反り腰</p></div>`}
+function sag(){
+ return `<div style="background:#FFF8F5;border-radius:18px;padding:14px"><img src="img/materials/butt-support.png" alt="お尻を支える vs 下がる 比較" style="width:100%;height:auto;display:block;border-radius:12px"><div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px;line-height:1.5"><div style="color:#2F9E6E;font-weight:700;text-align:center">左: ガードル で 支える</div><div style="color:#E2477A;font-weight:700;text-align:center">右: 支えなく 下がる</div></div><p style="margin:10px 0 0;font-size:11.5px;color:#5a6069;line-height:1.5">お尻 が 下がる と バスト が 引っぱられ、 お肉 が 背中 へ 流れます。 お尻 を 支える と 胸 と 背中 も 戻ります</p></div>`}
 function footprint(x,y,good,sc=1,dots=true){const S=v=>v*sc;
  const inner=good?`C${x-S(26)},${y-S(8)} ${x-S(6)},${y-S(2)} ${x-S(6)},${y+S(14)} C${x-S(6)},${y+S(28)} ${x-S(18)},${y+S(30)} ${x-S(17)},${y+S(44)}`:`C${x-S(28)},${y-S(6)} ${x-S(26)},${y+S(14)} ${x-S(22)},${y+S(26)} C${x-S(20)},${y+S(34)} ${x-S(18)},${y+S(38)} ${x-S(17)},${y+S(44)}`;
  let g=`<path d="M${x-S(20)},${y-S(30)} ${inner} C${x-S(16)},${y+S(58)} ${x+S(14)},${y+S(60)} ${x+S(16)},${y+S(44)} C${x+S(20)},${y+S(20)} ${x+S(24)},${y-S(10)} ${x+S(22)},${y-S(30)} C${x+S(18)},${y-S(44)} ${x-S(16)},${y-S(46)} ${x-S(20)},${y-S(30)}Z" fill="${good?C.skin:"#F7D3C6"}" stroke="${C.line}" stroke-width="1.8"/>`;
