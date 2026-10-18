@@ -6,12 +6,12 @@
 <meta http-equiv="Expires" content="0">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Outfit:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap">
 <style>
 /* Layout: スマホアプリ型。上にアプリバー、中央がスクロール画面（ホーム／診断チャット／処方／素材）、下にタブバー。PCでは中央にスマホ幅で表示 */
 :root{
   /* ===== Color: Semantic Tokens (v2 polish) ===== */
-  --bg:#f6f7fb; --surface:#ffffff; --surface-2:#fafbfd; --surface-hover:#f4f5f9;
+  --bg:#ffffff; --surface:#ffffff; --surface-2:#fafbfd; --surface-hover:#f4f5f9;
   --ink:#0f1115; --ink-2:#2a2d35; --muted:#5a6069; --muted-2:#8b919c;
   --line:#e5e7ec; --line-2:#eef0f4; --desk:#eaecf1;
   --accent:#e2477a; --accent-ink:#ffffff; --accent-soft:#fde7ee; --accent-hover:#d13a6c; --accent-pressed:#b92f5e;
@@ -39,32 +39,7 @@
   --f-latin:"Outfit","Zen Kaku Gothic New",system-ui,sans-serif;
   --f-mono:"SF Mono","Menlo","Consolas",monospace;
 }
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0f1115; --surface:#191b21; --surface-2:#1e2027; --surface-hover:#242731;
-  --ink:#f2f3f5; --ink-2:#d0d3d9; --muted:#9ea4af; --muted-2:#6e7482;
-  --line:#2a2d36; --line-2:#20232a; --desk:#07080b;
-  --accent:#ff6f9b; --accent-ink:#1a0b11; --accent-soft:#3a1b26; --accent-hover:#ff85ac; --accent-pressed:#ff5a8c;
-  --blue:#8aa8ff; --blue-soft:#1d2540; --green:#7fd1ab; --green-soft:#15302a;
-  --warn:#fbbf24; --warn-soft:#3a2a0e; --danger:#f87171; --danger-soft:#3a1a1a;
-  --me:#f2f3f5; --me-ink:#0f1115;
-  --sh-sm:0 1px 2px rgba(0,0,0,.3);
-  --sh-md:0 4px 12px rgba(0,0,0,.35);
-  --sh-lg:0 12px 32px rgba(0,0,0,.5);
-  --sh-focus:0 0 0 3px rgba(255,111,155,.35);
-  color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#0f1115; --surface:#191b21; --surface-2:#1e2027; --surface-hover:#242731;
-  --ink:#f2f3f5; --ink-2:#d0d3d9; --muted:#9ea4af; --muted-2:#6e7482;
-  --line:#2a2d36; --line-2:#20232a; --desk:#07080b;
-  --accent:#ff6f9b; --accent-ink:#1a0b11; --accent-soft:#3a1b26; --accent-hover:#ff85ac; --accent-pressed:#ff5a8c;
-  --blue:#8aa8ff; --blue-soft:#1d2540; --green:#7fd1ab; --green-soft:#15302a;
-  --warn:#fbbf24; --warn-soft:#3a2a0e; --danger:#f87171; --danger-soft:#3a1a1a;
-  --me:#f2f3f5; --me-ink:#0f1115;
-  --sh-sm:0 1px 2px rgba(0,0,0,.3);
-  --sh-md:0 4px 12px rgba(0,0,0,.35);
-  --sh-lg:0 12px 32px rgba(0,0,0,.5);
-  --sh-focus:0 0 0 3px rgba(255,111,155,.35);
-  color-scheme:dark}
+:root{color-scheme:light}
 
 /* ===== Component Polish (apply on top of existing rules) ===== */
 .btn{transition:transform var(--t-fast) var(--ease), background var(--t-base) var(--ease), box-shadow var(--t-base) var(--ease);box-shadow:var(--sh-sm);letter-spacing:.01em}
@@ -431,6 +406,16 @@ textarea.wiz-input{min-height:72px;resize:vertical;line-height:1.5}
 .cf{display:grid;grid-template-columns:56px minmax(0,1fr);gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px;margin-bottom:8px}.cf img.pi{width:56px;height:56px;object-fit:cover;border-radius:10px}.cf b{font-size:14px}.cf .spec{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;font-size:13px;align-items:center}.cf .spec span{background:var(--bg);border-radius:8px;padding:2px 8px}.cf .spec img{width:22px;height:22px;object-fit:cover;border-radius:5px;vertical-align:middle;margin-right:4px}.cf .spec .ng{background:#fde8ec;color:#c0284f;font-weight:700}.cf .acts{display:flex;gap:12px;margin-top:6px}.cf .acts button{font:inherit;font-size:12px;border:0;background:none;color:var(--accent,#d6457a);text-decoration:underline;padding:0}.cf-tot{display:flex;justify-content:space-between;font-weight:700;margin:12px 2px}.selbtn{font:inherit;font-weight:700;border:0;background:none;color:var(--ink);text-align:left;padding:0;text-decoration:underline;text-underline-offset:3px}.recsum{border:2px solid var(--accent,#d6457a);border-radius:16px;padding:12px;margin:14px 0}.recsum h3{margin:0 0 8px;font-size:15px}
 .it.miss{border:2px solid #e0234e!important;background:#fff5f7;border-radius:14px}.needmsg{color:#e0234e;font-weight:700;font-size:14px;margin:4px 0}.sw.need{outline:2px solid #e0234e;outline-offset:2px;border-radius:10px}select.need{border:2px solid #e0234e!important;background:#fff0f3!important}.jump{font:inherit;font-weight:700;border:0;background:none;color:#e0234e;text-decoration:underline;padding:0 4px}.miss-p{outline:3px solid #e0234e;outline-offset:2px}
 label[hidden],.fl[hidden]{display:none!important}.sw-big>div{min-width:0;flex:1}
+.rec2{font:inherit;color:var(--ink);width:100%;display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:12px;align-items:center;text-align:left;border:none;background:none;border-top:1px solid var(--line);padding:12px 0;cursor:pointer}
+.rec2:first-of-type{border-top:none}
+.rec2 img,.rec2>i{width:48px;height:48px;border-radius:12px;object-fit:cover;background:var(--bg)}
+.rec2 b{display:block;font-size:15px}
+.rec2 small{display:block;font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rec2 em{font-style:normal;font-size:13px;font-weight:700;color:var(--accent)}
+.panel,.fs,.card,.fig,.fiber,.tip,.kpi,.types li,.s-sec,.prow,.cf,.hero,.mcard,.res-card,.acc,.meas,.log .msg.cur,.choices .chip,.stp-b{border:1px solid var(--line)!important;box-shadow:0 2px 10px rgba(20,22,30,.05)!important}
+.stp-b.on{border-color:var(--ink)!important}
+.appbar{background:#fff}
+.sheet,.sheet-h{background:#fff}
 .flash{animation:fl 1.6s ease}@keyframes fl{0%,40%{box-shadow:0 0 0 3px var(--accent,#d6457a)}100%{box-shadow:0 0 0 0 transparent}}.toast{position:fixed;left:50%;top:64px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transform:translateX(-50%);background:#222;color:#fff;font-size:14px;padding:10px 16px;border-radius:999px;z-index:99;pointer-events:none;max-width:90vw;text-align:center}
 .prow{display:grid;grid-template-columns:64px minmax(0,1fr);gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:10px;margin-bottom:10px}
 .prow img{width:64px;height:64px;object-fit:contain;background:#fff;border-radius:10px}
@@ -441,6 +426,80 @@ label[hidden],.fl[hidden]{display:none!important}.sw-big>div{min-width:0;flex:1}
 .cat-t span{display:block;font-size:11.5px;line-height:1.4;padding:5px 6px 7px}
 .cat-t.sel{border:2px solid var(--accent)}
 .cat-h{font-size:13px;font-weight:900;margin:10px 0 6px}
+
+/* ===== カードUI（シンプル・1画面の情報を少なく） ===== */
+:root{--r:20px;--sh:0 1px 2px rgba(20,22,30,.04),0 6px 18px rgba(20,22,30,.06)}
+.pad{padding:16px 16px 28px}
+.appbar{border-bottom:none;padding:14px 16px 8px;background:var(--bg)}
+.appbar .ttl{font-size:17px}
+.tabs{border-top:none;box-shadow:0 -4px 16px rgba(20,22,30,.06)}
+.fs,.panel,.card,.fig,.fiber,.tip,.memo div,.mitate,.kpi,.types li,.s-sec,.prow,.cf{border:none!important;box-shadow:var(--sh);border-radius:var(--r)}
+.card.main{box-shadow:0 0 0 2px var(--accent),var(--sh)}
+/* home */
+.hero{background:var(--surface);border-radius:24px;box-shadow:var(--sh);padding:22px 18px 18px;margin-bottom:14px}
+.hero h1{font-weight:900;font-size:26px;line-height:1.3;margin:6px 0 8px}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.hero p{color:var(--muted);font-size:14px;margin:0 0 16px}
+.brand{text-align:center;padding:14px 0 20px}
+.b-name{display:block;font-family:"Cormorant Garamond",Georgia,serif;font-weight:600;font-size:46px;line-height:1;letter-spacing:.02em;color:var(--ink)}
+.b-name i{font-style:italic;font-weight:500;color:var(--accent)}
+.b-sub{display:block;font-family:var(--f-latin);font-weight:500;font-size:11px;letter-spacing:.42em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.b-line{display:block;width:36px;height:2px;background:var(--accent);margin:14px auto 0;border-radius:2px}
+.menu{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.mcard{font:inherit;color:var(--ink);text-align:left;border:none;background:var(--surface);border-radius:var(--r);box-shadow:var(--sh);padding:16px 14px;cursor:pointer;display:flex;flex-direction:column;gap:8px;min-height:116px}
+.mcard svg{width:28px;height:28px;fill:none;stroke:var(--accent);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.mcard b{font-size:15px;line-height:1.35}
+.mcard span{font-size:12px;color:var(--muted);line-height:1.5}
+/* chat：1問ずつカードで */
+.log{flex:none;padding:16px 16px 4px;gap:0}
+.log .msg{display:none}
+.log .msg.cur{display:block;max-width:none;align-self:stretch;background:var(--surface);border:none;border-radius:24px;box-shadow:var(--sh);padding:22px 18px;font-size:19px;font-weight:900;line-height:1.5}
+.log .msg.cur .hint{font-size:13px;font-weight:500;margin-top:8px}
+.choices{flex:1;max-height:none;border-top:none;background:transparent;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-content:start;padding:12px 16px 20px}
+.choices .chip{border:none;background:var(--surface);box-shadow:var(--sh);border-radius:16px;padding:14px 12px;font-size:15px;font-weight:700;min-height:56px;text-align:center}
+.choices .chip[aria-pressed="true"]{box-shadow:0 0 0 2.5px var(--accent);background:var(--accent-soft)}
+.choices>.btn,.choices>.meas,.choices>.row{grid-column:1/-1}
+.choices>.btn{padding:14px;font-size:16px;border-radius:16px}
+.choices .row .btn{flex:1;padding:14px}
+.meas{background:var(--surface);border-radius:var(--r);box-shadow:var(--sh);padding:14px;gap:12px}
+/* ステップ（1画面に1テーマ） */
+.stp-nav{display:flex;gap:6px;overflow-x:auto;margin:0 -16px 14px;padding:2px 16px 4px;scrollbar-width:none}
+.stp-nav::-webkit-scrollbar{display:none}
+.stp-b{font:inherit;flex:none;border:none;background:var(--surface);color:var(--muted);box-shadow:var(--sh);border-radius:999px;padding:8px 14px 8px 8px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px}
+.stp-b i{font-style:normal;font-family:var(--f-latin);width:22px;height:22px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-size:12px}
+.stp-b.on{background:var(--ink);color:var(--bg)}.stp-b.on i{background:var(--accent);color:#fff}
+.stp.tabs-only .stp-b{padding:8px 14px}
+.rs{display:flex;flex-direction:column;gap:14px}
+.rs[hidden]{display:none}
+.rs>.gt{margin:6px 0 -4px}
+.stp-foot{display:flex;gap:10px;margin-top:6px}
+.stp-foot .btn{flex:1}
+/* 処方 */
+.res-card{background:var(--surface);border-radius:24px;box-shadow:var(--sh);padding:20px 18px}
+.res-card h2{font-size:22px;font-weight:900;line-height:1.35;margin:6px 0 8px}
+.res-card .res-sum{margin:0}
+.pitch{margin:0;border-radius:24px}
+.acc{background:var(--surface);border-radius:var(--r);box-shadow:var(--sh);padding:0 16px}
+.acc>summary{list-style:none;cursor:pointer;font-weight:700;font-size:14px;padding:14px 0;display:flex;justify-content:space-between}
+.acc>summary::-webkit-details-marker{display:none}
+.acc>summary::after{content:"＋";color:var(--muted)}.acc[open]>summary::after{content:"－"}
+.acc>div{padding:0 0 14px;font-size:13.5px}
+.acc ul{margin:0;padding-left:1.1em}
+.carousel{display:flex!important;flex-direction:row!important;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 -16px;padding:2px 16px 8px;scrollbar-width:none}
+.carousel::-webkit-scrollbar{display:none}
+.carousel>.fig{flex:0 0 88%;scroll-snap-align:center;margin:0}
+.swipe{font-size:12px;color:var(--muted);text-align:center;margin-top:-6px}
+.card-top{grid-template-columns:110px minmax(0,1fr);padding:14px}
+.card-top img{width:110px;height:110px;border:none;border-radius:14px;cursor:zoom-in}
+.you{margin:0 14px}
+.card details.more{padding:2px 14px 4px}
+.pick{margin:10px 14px 14px;border-radius:16px}
+.selbar{margin:24px -16px -28px;border-top:none;box-shadow:0 -4px 16px rgba(20,22,30,.06)}
+/* 記録 */
+.fs h3{font-size:16px;margin-bottom:12px}
+.it{border:none;background:var(--bg);border-radius:16px}
+/* 素材・商品 */
+.types{gap:12px}
 @media (prefers-reduced-motion:no-preference){.msg{animation:in .22s ease-out both}@keyframes in{from{transform:translateY(5px)}to{transform:none}}}
 /* === モバイル (<400px) で ビッタリ fit: 2-col grid を 1-col に、padding 削減 === */
 @media (max-width:399px){
@@ -463,25 +522,16 @@ input,select,textarea{font-size:16px}
   <div class="bar" id="barwrap" hidden><i id="bar"></i></div>
 
   <main class="view" id="v-home">
-    <div class="pad home">
-      <div class="hero-card">
-        <div class="eyebrow">GRANT E-ONE'S STYLIST NAVI</div>
-        <h1>その悩み、<em>どの1着</em>で整える？</h1>
-        <p>お客様と 答えていく と、 直したい ところ・効く しくみ・使われている 繊維 まで、 写真つき で 出ます</p>
-        <div class="trio">
-          <figure class="tap" data-ser="lala" role="button" tabindex="0"><img src="img/p03.jpg" alt=""><figcaption>LALA<span>骨格と姿勢</span></figcaption></figure>
-          <figure class="tap" data-ser="emma" role="button" tabindex="0"><img src="img/p14.jpg" alt=""><figcaption>Emm∀ Pump<span>迷ったら これ</span></figcaption></figure>
-          <figure class="tap" data-ser="taikan" role="button" tabindex="0"><img src="img/p12.jpg" alt=""><figcaption>TAI-KAN<span>重心を整える</span></figcaption></figure>
-        </div>
-        <div class="stack">
-          <button class="btn" id="start" type="button">カウンセリング を はじめる</button>
-          <button class="btn ghost" id="sample" type="button">サンプル 結果 を 見る (40代女性)</button>
-        </div>
+    <div class="pad">
+      <div class="hero">
+        <div class="brand"><span class="b-sub">Stylist Navi</span><span class="b-name">Grant <i>E</i>-One's</span><span class="b-line"></span></div>
+        <button class="btn" id="start" type="button">カウンセリングをはじめる</button>
       </div>
-      <div class="tips">
-        <div class="tip"><b>まず 着て もらう</b>サイズ や 商品 で 迷って 止まる より、 試着 が 先。 着れば 本人 が 違い に 気づきます</div>
-        <div class="tip"><b>整えるの は 2つ</b>姿勢 と 温かさ。 基本 セット は LALA ＋ ホルミー</div>
-        <div class="tip"><b>必ず 聞く 4つ</b>痛み・平熱・お通じ・生理。 質問 の 中 に 入って います</div>
+      <div class="menu">
+        <button class="mcard" type="button" data-go-v="result"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h5"/></svg><b>処方を見る</b><span>前回の結果と提案トーク</span></button>
+        <button class="mcard" type="button" data-go-v="data"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><b>記録・データ</b><span>記録とサイズの目安</span></button>
+        <button class="mcard" type="button" data-go-v="know"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v5M12 16h.01"/></svg><b>素材・商品</b><span>図・しくみ・シリーズ</span></button>
+        <button class="mcard" type="button" id="sample"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M9 9h6M9 13h6"/></svg><b>サンプルを見る</b><span>40代女性の処方例</span></button>
       </div>
     </div>
   </main>
@@ -496,17 +546,7 @@ input,select,textarea{font-size:16px}
   </main>
 
   <main class="view" id="v-know" hidden>
-    <div class="pad">
-      <h2 class="sec-t">お客様に見せる からだの図</h2>
-      <div class="figs" id="allfigs"></div>
-      <h2 class="sec-t" style="margin-top:22px">素材とカッティングのしくみ</h2>
-      <div class="figs" id="matfigs"></div>
-      <h2 class="sec-t" style="margin-top:22px">使われている素材は3つ</h2>
-      <div class="fibers" id="fibers"></div>
-      <h2 class="sec-t">6種類の早見</h2>
-      <ul class="types" id="types"></ul>
-      <p class="note">マグ（X-mag）以外は医療機器ではありません。「痩せる」「体温が上がる」「治る」とは言わず、「姿勢が整ってラインがすっきり見える」「着ていて温かい」と伝えます。</p>
-    </div>
+    <div class="pad" id="knowpane"></div>
   </main>
 
   <main class="view" id="v-rec" hidden>
@@ -705,8 +745,6 @@ const P={
   p28:{s:"LALA Gracy",n:"袖付きボディスーツ",fix:["二の腕","バストの位置"],f:["ko"],act:"ボディスーツに袖がついたタイプ。バストを上げながら二の腕までまとめて整える。",say:"二の腕まで一緒に整えるボディスーツです"},
   p29:{s:"LALA Drainage",n:"アームガードルⅡ",fix:["二の腕"],f:["ko"],act:"二の腕を包むアームカバー型。UVカット率99%。",say:"二の腕を包むアームガードルです"}
 };
-document.getElementById("fibers").innerHTML=Object.values(F).map(f=>`<div class="fiber"><b><span class="dot" style="background:${f.c}"></span>${f.n}</b><p>${f.d}</p></div>`).join("")+`<div class="fiber"><b><span class="dot" style="background:var(--ink)"></span>カッティング</b><p>同じ素材でも、どこを支えるかは型の切り方で決まる。LALAは型ごとに効かせる場所が違う。</p></div>`;
-document.getElementById("types").innerHTML=[["p03","LALA","骨格と姿勢。補整力No.1","lala"],["p23","マグ","磁石でこりをほぐす医療機器","mag"],["p08","BiBi","やわらかいのに支える","bibi"],["p14","Emm∀ Pump","最強のリカバリーウェア","emma"],["p16","ホルミー","めぐりと疲れ。LALAの相棒","hormee"],["p13","TAI-KAN","重心を整える。運動する人に","taikan"]].map(t=>`<li><button type="button" class="tbtn" data-ser="${t[3]}"><img src="img/${t[0]}.jpg" alt=""><div><b>${t[1]}</b><small>${t[2]}</small><em>くわしく見る ›</em></div></button></li>`).join("");
 
 /* ---------- 質問 ---------- */
 const W=a=>a.sex==="女性",has=(a,k,v)=>(a[k]||[]).includes(v);
@@ -736,13 +774,13 @@ const Q=[
 let A={},idx=0,asked=0;
 const $=id=>document.getElementById(id),log=$("log"),ch=$("choices");
 const live=()=>Q.filter(q=>!q.when||q.when(A));
-function say(t,who,h){const d=document.createElement("div");d.className="msg "+who;d.textContent=t;if(h){const s=document.createElement("span");s.className="hint";s.textContent=h;d.appendChild(s)}log.appendChild(d);log.scrollTop=log.scrollHeight}
+function say(t,who,h){const d=document.createElement("div");d.className="msg "+who;if(who==="bot"){log.querySelectorAll(".msg.cur").forEach(x=>x.classList.remove("cur"));d.classList.add("cur")}d.textContent=t;if(h){const s=document.createElement("span");s.className="hint";s.textContent=h;d.appendChild(s)}log.appendChild(d);log.scrollTop=log.scrollHeight}
 function next(){while(idx<Q.length&&Q[idx].when&&!Q[idx].when(A))idx++;
   const total=live().length;$("count").textContent=Math.min(asked+1,total)+" / "+total;$("bar").style.width=(asked/total*100)+"%";
   ch.innerHTML="";if(idx>=Q.length){$("bar").style.width="100%";$("count").textContent="完了";done();return}
   const q=Q[idx];say(q.q,"bot",q.hint);
   if(q.input){const F=[["h","身長","cm","160"],["wt","体重","kg","55"],["top","トップバスト","cm","85"],["under","アンダーバスト","cm","70"],["waist","ウエスト","cm","66"],["hip","ヒップ","cm","92"]];
-    ch.innerHTML=`<div class="meas">${F.map(([k,l,u,ph])=>`<label for="m-${k}">${l}<span><input id="m-${k}" type="number" inputmode="decimal" placeholder="${ph}">${u}</span></label>`).join("")}</div><button class="btn sm" id="go" type="button" style="width:100%;margin-top:8px">処方を見る</button>`;
+    ch.innerHTML=`<div class="meas">${F.map(([k,l,u,ph])=>`<label for="m-${k}">${l}<span><input id="m-${k}" type="number" inputmode="decimal" placeholder="${ph}">${u}</span></label>`).join("")}</div><button class="btn" id="go" type="button">処方を見る</button>`;
     $("go").onclick=()=>{F.forEach(([k])=>{A[k]=num($("m-"+k).value)||0});const t=F.filter(([k])=>A[k]).map(([k,l,u])=>`${l} ${A[k]}${u}`).join(" / ");say(t||"スキップ","me");idx++;asked++;next()};return}
   const list=typeof q.o==="function"?q.o(A):q.o,sel=new Set();
   list.forEach(o=>{const b=document.createElement("button");b.type="button";b.className="chip";b.textContent=o;b.setAttribute("aria-pressed","false");
@@ -751,7 +789,7 @@ function next(){while(idx<Q.length&&Q[idx].when&&!Q[idx].when(A))idx++;
       [...ch.querySelectorAll(".chip")].forEach(c=>{const cn=/^特になし/.test(c.textContent);if(none!==cn){c.setAttribute("aria-pressed","false");sel.delete(c.textContent)}});
       sel.has(o)?sel.delete(o):sel.add(o);b.setAttribute("aria-pressed",sel.has(o))};
     ch.appendChild(b)});
-  if(q.multi){const n=document.createElement("button");n.type="button";n.className="btn sm dark";n.textContent="次へ";n.onclick=()=>{A[q.k]=[...sel].filter(x=>!/^特になし/.test(x));say(sel.size?[...sel].join("、"):"特になし","me");idx++;asked++;next()};ch.appendChild(n)}
+  if(q.multi){const n=document.createElement("button");n.type="button";n.className="btn dark";n.textContent="次へ";n.onclick=()=>{A[q.k]=[...sel].filter(x=>!/^特になし/.test(x));say(sel.size?[...sel].join("、"):"特になし","me");idx++;asked++;next()};ch.appendChild(n)}
 }
 function start(){A={};idx=0;asked=0;if(typeof SEL!=="undefined")SEL.clear();log.innerHTML="";hasResult=false;emptyResult();say("こんにちは。お客様に合う1着を一緒に選びましょう。答えに合わせて、もう少し深く聞いていきます。","bot");next()}
 
@@ -896,17 +934,23 @@ function openCatalog(onPick){$("sheet-t").textContent="商品を写真から選�
   $("sheet-b").innerHTML=Object.entries(groups).map(([s,ids])=>`<div class="cat-h">${esc(s)}</div><div class="cat-g">${ids.map(id=>`<button type="button" class="cat-t${SEL.has(id)?" sel":""}" data-cat="${id}"><img src="img/${id}.jpg" alt="" loading="lazy"><span>${esc(P[id].n)}</span></button>`).join("")}</div>`).join("");
   $("sheet-b").querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{const id=b.dataset.cat;onPick(id);closeSheet();
     requestAnimationFrame(()=>{const inRec=!$("v-rec").hidden,els=document.querySelectorAll(`#r-items .it[data-id="${id}"]`);const t=inRec?els[els.length-1]:(document.querySelector(`#picked .pick[data-pid="${id}"]`)||document.querySelector(`.pick[data-pid="${id}"]`));
-      if(t){const box=t.closest(".prow,.card,.it")||t;box.scrollIntoView({block:"center",behavior:"smooth"});box.classList.add("flash");setTimeout(()=>box.classList.remove("flash"),1600)}
+      if(t){const box=t.closest(".prow,.card,.it")||t;revealIn(box);box.scrollIntoView({block:"center",behavior:"smooth"});box.classList.add("flash");setTimeout(()=>box.classList.remove("flash"),1600)}
       toast(`${P[id].n} を追加しました`)})});
   $("sheet").hidden=false;$("sheet").querySelector(".sheet").scrollTop=0}
 function card(id,why,isMain){const p=P[id];
-  return `<article class="card${isMain?" main":""}"><div class="card-top"><img src="img/${id}.jpg" alt="${p.n}" loading="lazy"><div>${serOf(p)?`<button type="button" class="tag tagbtn${p.med?" med":""}" data-ser="${serOf(p)}">${p.s}${p.med?"・医療機器":""} ›</button>`:`<span class="tag${p.med?" med":""}">${p.s}${p.med?"・医療機器":""}</span>`}<h3>${p.n}</h3><div class="fix">${p.fix.map(f=>`<span>${f}</span>`).join("")}</div></div></div>
-  <div class="you"><b>ご提案</b>${why.map(o=>`<p class="heard">お客様の言葉：${o.q}</p><p class="cause">${o.c}</p>`).join("")}<p class="eff"><span>この1着を着ると</span>${why[0].e}</p><p class="res"><span>だから</span>${why.map(o=>o.r).filter((v,i,ar)=>ar.indexOf(v)===i).join("")}</p></div>
-  <details class="more"${isMain?" open":""}><summary>素材としくみをくわしく</summary><dl class="detail"><div><dt>どう効くか</dt><dd>${p.act}</dd></div>
-  <div><dt>使われている素材</dt><dd>${p.f.map(k=>`<div class="mat"><span class="dot" style="background:${F[k].c}"></span><span><b>${F[k].n}</b>　${F[k].d}</span></div>`).join("")}</dd></div></dl></details>
-  <div class="pick${SEL.has(id)?" on":""}" data-pid="${id}">${pickHTML(id)}</div>
-  <div class="say"><b>お客様への伝え方</b>「${p.say}」</div></article>`}
+  return `<article class="card${isMain?" main":""}"><div class="card-top"><img src="img/${id}.jpg" alt="${p.n}" loading="lazy" data-zoom="${id}"><div>${serOf(p)?`<button type="button" class="tag tagbtn${p.med?" med":""}" data-ser="${serOf(p)}">${p.s}${p.med?"・医療機器":""} ›</button>`:`<span class="tag${p.med?" med":""}">${p.s}${p.med?"・医療機器":""}</span>`}<h3>${p.n}</h3><div class="fix">${p.fix.map(f=>`<span>${f}</span>`).join("")}</div></div></div>
+  <div class="you"><b>お客様の言葉</b><p class="heard">${why[0].q}</p><p class="eff"><span>この1着を着ると</span>${why[0].e}</p></div>
+  <details class="more"><summary>くわしく（原因・しくみ・伝え方）</summary><dl class="detail"><div><dt>原因</dt><dd>${why.map(o=>o.c).join("<br>")}</dd></div><div><dt>だから</dt><dd>${why.map(o=>o.r).filter((v,i,ar)=>ar.indexOf(v)===i).join("")}</dd></div><div><dt>どう効くか</dt><dd>${p.act}</dd></div>
+  <div><dt>使われている素材</dt><dd>${p.f.map(k=>`<div class="mat"><span class="dot" style="background:${F[k].c}"></span><span><b>${F[k].n}</b>　${F[k].d}</span></div>`).join("")}</dd></div><div><dt>お客様への伝え方</dt><dd>「${p.say}」</dd></div></dl></details>
+  <div class="pick${SEL.has(id)?" on":""}" data-pid="${id}">${pickHTML(id)}</div></article>`}
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+/* ---------- ステップ表示（1画面に1テーマ） ---------- */
+function stepsHTML(key,secs,o){o=o||{};const n=secs.length;
+  return `<div class="stp${o.tabs?" tabs-only":""}" data-stp="${key}"><div class="stp-nav" role="tablist">${secs.map((x,i)=>`<button type="button" role="tab" class="stp-b${i?"":" on"}" data-go="${i}">${o.tabs?"":`<i>${i+1}</i>`}${x[0]}</button>`).join("")}</div>${secs.map((x,i)=>`<section class="rs" data-step="${i}"${i?" hidden":""}>${x[1]}${o.nav===false?"":`<div class="stp-foot">${i?`<button type="button" class="btn ghost" data-go="${i-1}">戻る</button>`:""}${i<n-1?`<button type="button" class="btn dark" data-go="${i+1}">次へ：${secs[i+1][0]}</button>`:""}</div>`}</section>`).join("")}</div>`}
+function goStep(stp,n){if(!stp)return;stp.querySelectorAll(":scope>.rs").forEach(r=>r.hidden=+r.dataset.step!==n);stp.querySelectorAll(":scope>.stp-nav .stp-b").forEach(b=>b.classList.toggle("on",+b.dataset.go===n));
+  const on=stp.querySelector(`:scope>.stp-nav .stp-b[data-go="${n}"]`);if(on)on.scrollIntoView({inline:"center",block:"nearest"});const v=stp.closest(".view");if(v)v.scrollTop=0}
+function revealIn(el){const r=el&&el.closest(".rs");if(r&&r.hidden){revealIn(r.parentElement);goStep(r.closest(".stp"),+r.dataset.step)}}
+document.addEventListener("click",e=>{const g=e.target.closest("[data-go]");if(g){goStep(g.closest(".stp"),+g.dataset.go);return}const m=e.target.closest("[data-go-v]");if(m){const v=m.dataset.goV;if(v==="result"&&!hasResult)emptyResult();show(v)}});
 /* ---------- 図 ---------- */
 const FIGS={
   balance:["理想のバランス","あごからバストトップ、ウエスト、ヒップトップまでが顔1つ分ずつ。バストとヒップは1対1のS字。",()=>FIG.balance()],
@@ -925,7 +969,15 @@ const CUT_TABLE=`<div class="fig"><b>LALA 型ごとの違い</b><div class="tbl"
 <tr><td class="l"><b>Fairy</b></td><td class="l">バストとヒップを同時に引き上げて1対1に</td><td class="l">—</td><td class="l">お尻の下がり・メリハリ</td></tr>
 <tr><td class="l"><b>Drainage</b></td><td class="l">脚・腕にらせん状に沿って支える</td><td class="l">スパイラルテープ</td><td class="l">脚のむくみ・太もも・二の腕</td></tr></tbody></table></div><p>光電子の位置は商品の教科書で確認。</p></div>`;
 const figHTML=k=>`<div class="fig"><b>${FIGS[k][0]}</b>${FIGS[k][2]()}<p>${FIGS[k][1]}</p></div>`;
-$("allfigs").innerHTML=["balance","compare","sag","stack","arches"].map(figHTML).join("");$("matfigs").innerHTML=["kodenshi","hormesis","magnet","cutting"].map(figHTML).join("")+CUT_TABLE;
+$("knowpane").innerHTML=stepsHTML("know",[
+ ["シリーズ",'<ul class="types" id="types"></ul>'],
+ ["からだの図",'<div class="figs carousel">'+["balance","compare","sag","stack","arches"].map(figHTML).join("")+'</div><p class="swipe">左右にスワイプ</p>'],
+ ["素材のしくみ",'<div class="figs carousel">'+["kodenshi","hormesis","magnet","cutting"].map(figHTML).join("")+CUT_TABLE+'</div><p class="swipe">左右にスワイプ</p>'],
+ ["素材",'<div class="fibers" id="fibers"></div>'],
+ ["接客のコツ",'<div class="tips" style="margin:0"><div class="tip"><b>まず着てもらう</b>サイズや商品で迷って止まるより、試着が先。着れば本人が違いに気づきます。</div><div class="tip"><b>整えるのは2つ</b>姿勢と温かさ。基本セットは LALA ＋ ホルミー。</div><div class="tip"><b>必ず聞く4つ</b>痛み・平熱・お通じ・生理。質問の中に入っています。</div><div class="tip"><b>言わない言葉</b>マグ（X-mag）以外は医療機器ではありません。「痩せる」「体温が上がる」「治る」とは言わず、「姿勢が整ってラインがすっきり見える」「着ていて温かい」と伝えます。</div></div>']
+],{nav:false,tabs:true});
+document.getElementById("fibers").innerHTML=Object.values(F).map(f=>`<div class="fiber"><b><span class="dot" style="background:${f.c}"></span>${f.n}</b><p>${f.d}</p></div>`).join("")+`<div class="fiber"><b><span class="dot" style="background:var(--ink)"></span>カッティング</b><p>同じ素材でも、どこを支えるかは型の切り方で決まる。LALAは型ごとに効かせる場所が違う。</p></div>`;
+document.getElementById("types").innerHTML=[["p03","LALA","骨格と姿勢。補整力No.1","lala"],["p23","マグ","磁石でこりをほぐす医療機器","mag"],["p08","BiBi","やわらかいのに支える","bibi"],["p14","Emm∀ Pump","最強のリカバリーウェア","emma"],["p16","ホルミー","めぐりと疲れ。LALAの相棒","hormee"],["p13","TAI-KAN","重心を整える。運動する人に","taikan"]].map(t=>`<li><button type="button" class="tbtn" data-ser="${t[3]}"><img src="img/${t[0]}.jpg" alt=""><div><b>${t[1]}</b><small>${t[2]}</small><em>くわしく見る ›</em></div></button></li>`).join("");
 function figsFor(a){const k=["balance"],body=a.body||[];
   if(a.posture||body.includes("猫背・姿勢")||body.includes("お腹"))k.push("compare");
   if(body.includes("お尻")||body.includes("背中・わきのお肉")||body.includes("バストの位置")||a.work==="座り仕事")k.push("sag");
@@ -942,18 +994,20 @@ let hasResult=false,lastPlan=null;
 function emptyResult(){$("result").innerHTML='<div class="empty">カウンセリングに答えると、ここに処方が出ます。<button class="btn sm" type="button" id="e-start">カウンセリングをはじめる</button></div>';$("e-start").onclick=()=>{show("chat");start()}}
 function done(){
   const r=plan(A);lastPlan=r;say("ありがとうございます。処方が出ました。","bot");hasResult=true;
-  ch.innerHTML='<div class="row"><button class="btn sm" type="button" id="see">処方を見る</button><button class="btn sm ghost" type="button" id="again">最初からやり直す</button></div>';$("see").onclick=()=>show("result");$("again").onclick=start;scrollLog();
+  ch.innerHTML='<button class="btn" type="button" id="see">処方を見る</button><button class="btn ghost" type="button" id="again">最初からやり直す</button>';$("see").onclick=()=>show("result");$("again").onclick=start;scrollLog();
   const chain=["足","ひざ","骨盤","内臓","背骨","肩・首"].map(x=>`<span class="${r.hit.has(x)?"hit":""}">${x}</span>`).join("<i>→</i>");
   const ans=Q.filter(q=>A[q.k]!==undefined&&q.k!=="hw").map(q=>`<li>${q.q.replace(/[？。]$/,"")}：${Array.isArray(A[q.k])?(A[q.k].join("、")||"特になし"):A[q.k]}</li>`).join("");
-  $("result").innerHTML=`<div class="res-head"><div class="eyebrow">PRESCRIPTION</div><h2>${r.head}</h2></div><p class="res-sum">${r.sum}</p><div class="pitch"><b>ご提案トーク（そのまま読めます）</b><p>${r.pitch}</p><button class="btn sm ghost" type="button" id="copy">コピー</button></div><div class="stats">${r.stats}</div>
-  <div class="mitate"><h3>体の見立て（崩れは下から積み上がる）</h3><div class="chain">${chain}</div><ul>${r.notes.map(n=>`<li>${n}</li>`).join("")}</ul></div>
-  <div class="gt">お客様に見せる図</div><div class="figs">${figsFor(A).map(figHTML).join("")}</div>
-  <div class="gt">まず着てもらう</div><div class="cards">${r.main.map(i=>card(i,r.why[i],1)).join("")}</div>
-  ${r.plus.length?`<div class="gt">お悩みに合わせて足す</div><div class="cards">${r.plus.map(i=>card(i,r.why[i],0)).join("")}</div>`:""}
-  <div class="memo"><div><b>カウンセリングメモ</b><ul>${ans}</ul></div><div><b>サイズは</b>今の位置ではなく骨格を測る。迷ったら大きめでもいいので、まず着てもらう。「記録・データ」で似た体型の人のサイズを確認できます。</div><div><b>言わない言葉</b>痩せる・体温が上がる・治る・細胞が元気になる。マグは「こりをほぐし、血行を改善」まで。</div></div>
-  <div class="gt">ほかの商品も選ぶ</div><div id="picked"></div><button class="btn ghost" type="button" id="addmore">＋ 写真から商品を追加</button>
-  <div class="stack" style="margin-top:14px"><button class="btn ghost" type="button" id="again2">別のお客様でやり直す</button></div>
-  <div class="selbar"><button type="button" class="selbtn" id="selcount">選んだ商品 0着 ›</button><button class="btn" type="button" id="torec">記録して注文リストへ</button></div>`;
+  $("result").innerHTML=stepsHTML("res",[
+   ["見立て",`<div class="res-card"><div class="eyebrow">PRESCRIPTION</div><h2>${r.head}</h2><p class="res-sum">${r.sum}</p></div>
+    <div class="pitch"><b>ご提案トーク（そのまま読めます）</b><p>${r.pitch}</p><button class="btn sm ghost" type="button" id="copy">コピー</button></div>
+    <details class="acc"><summary>体の見立てをくわしく</summary><div><div class="stats" style="margin-bottom:10px">${r.stats}</div><div class="chain">${chain}</div><ul>${r.notes.map(n=>`<li>${n}</li>`).join("")}</ul></div></details>`],
+   ["図を見せる",`<div class="figs carousel">${figsFor(A).map(figHTML).join("")}</div><p class="swipe">左右にスワイプ</p>`],
+   ["着てもらう",`<div class="cards">${r.main.map(i=>card(i,r.why[i],1)).join("")}</div>${r.plus.length?`<div class="gt">お悩みに合わせて足す</div><div class="cards">${r.plus.map(i=>card(i,r.why[i],0)).join("")}</div>`:""}`],
+   ["ほかの商品",`<div id="picked"></div><button class="btn ghost" type="button" id="addmore">＋ 写真から商品を追加</button>
+    <details class="acc"><summary>カウンセリングメモ</summary><div><ul>${ans}</ul></div></details>
+    <details class="acc"><summary>サイズと言葉の注意</summary><div><p style="margin:0 0 8px"><b>サイズは</b>今の位置ではなく骨格を測る。迷ったら大きめでもいいので、まず着てもらう。</p><p style="margin:0"><b>言わない言葉</b>痩せる・体温が上がる・治る・細胞が元気になる。マグは「こりをほぐし、血行を改善」まで。</p></div></details>
+    <button class="btn ghost" type="button" id="again2">別のお客様でやり直す</button>`]
+  ])+`<div class="selbar"><button type="button" class="selbtn" id="selcount">選んだ商品 0着 ›</button><button class="btn" type="button" id="torec">記録して注文リストへ</button></div>`;
   renderPicked();updSel();$("addmore").onclick=()=>openCatalog(id=>{if(!SEL.has(id))SEL.set(id,[newV(id)]);renderPicked();refreshPicks();updSel()});
   $("copy").onclick=async()=>{try{await navigator.clipboard.writeText(r.pitch);$("copy").textContent="コピーしました"}catch(e){const sel=getSelection(),rg=document.createRange();rg.selectNodeContents(document.querySelector(".pitch p"));sel.removeAllRanges();sel.addRange(rg);$("copy").textContent="選択しました"}};
   $("again2").onclick=()=>{show("chat");start()};$("torec").onclick=()=>SEL.size?openConfirm():openRec();$("selcount").onclick=openConfirm;
@@ -1046,7 +1100,7 @@ function openConfirm(){$("sheet-t").textContent="選んだ商品の確認";const
   <button class="btn" type="button" id="cf-go" style="margin-top:10px">この内容で記録へ進む</button><button class="btn ghost" type="button" id="cf-back" style="margin-top:8px">戻って商品を追加する</button>`
   :`<p>まだ商品が選ばれていません。</p><button class="btn ghost" type="button" id="cf-back">戻る</button>`;
   $("sheet-b").querySelectorAll("[data-ngj]").forEach(b=>b.onclick=()=>{closeSheet();const el=document.querySelector(`.pick[data-pid="${b.dataset.ngj}"]`);if(el){const box=el.closest(".prow,.card")||el;box.classList.add("miss-p");setTimeout(()=>box.classList.remove("miss-p"),3000);jumpTo(box)}});
-  $("sheet-b").querySelectorAll("[data-cf-edit]").forEach(b=>b.onclick=()=>{closeSheet();const el=document.querySelector(`.pick[data-pid="${b.dataset.cfEdit}"]`);if(el)el.scrollIntoView({block:"center",behavior:"smooth"})});
+  $("sheet-b").querySelectorAll("[data-cf-edit]").forEach(b=>b.onclick=()=>{closeSheet();const el=document.querySelector(`.pick[data-pid="${b.dataset.cfEdit}"]`);if(el)revealIn(el);if(el)el.scrollIntoView({block:"center",behavior:"smooth"})});
   $("sheet-b").querySelectorAll("[data-cf-del]").forEach(b=>b.onclick=()=>{const vs=SEL.get(b.dataset.cfDel);if(vs){vs.splice(+b.dataset.vi,1);if(!vs.length)SEL.delete(b.dataset.cfDel)}refreshPicks();renderPicked();updSel();openConfirm()});
   if($("cf-go"))$("cf-go").onclick=()=>{closeSheet();openRec()};$("cf-back").onclick=closeSheet;
   $("sheet").hidden=false;$("sheet").querySelector(".sheet").scrollTop=0}
@@ -1057,26 +1111,27 @@ function openRec(){
   const a=hasResult?A:{},ids=hasResult&&lastPlan&&!SEL.size?[...lastPlan.main]:[];
   const today=new Date();const code="匿名-"+String(today.getFullYear()).slice(2)+String(today.getMonth()+1).padStart(2,"0")+String(today.getDate()).padStart(2,"0")+"-"+Math.random().toString(36).slice(2,5).toUpperCase();
   const worries=[...(a.body||[]),...(a.posture&&a.posture!=="わからない"?[a.posture]:[]),...(a.health||[]),...(a.painWhere||[]).map(x=>x+"の痛み")];
-  $("recform").innerHTML=`
-  ${dbState==="ok"?'<div class="msgline">保存先：つながっています</div>':dbState==="loading"?'<div class="msgline">保存先：確認中…</div>':CAN_LOCAL?'<div class="msgline err">保存先につながっていません。記録はこの端末に控えておき、つながったときに自動で送ります。</div>':noSaveBanner()}
-  <details class="fs"><summary>お客様（匿名でOK）</summary><div class="fs-body"><div class="grid2">
+  $("recform").innerHTML=stepsHTML("rec",[
+   ["お客様",`${dbState==="ok"?'<div class="msgline">保存先：つながっています</div>':dbState==="loading"?'<div class="msgline">保存先：確認中…</div>':CAN_LOCAL?'<div class="msgline err">保存先につながっていません。記録はこの端末に控えておき、つながったときに自動で送ります。</div>':noSaveBanner()}
+  <div class="fs"><h3>お客様（匿名でOK）</h3><div class="grid2">
    <label class="fl">お客様コード<input id="r-code" value="${code}" autocomplete="off"></label>
    <label class="fl">性別${sel("r-sex",["女性","男性"],a.sex)}</label>
    <label class="fl">年代${sel("r-age",["20代","30代","40代","50代","60代以上"],a.age)}</label>
    <label class="fl">体型${sel("r-type",["細め","標準","ぽっちゃり","がっしり"],"")}</label></div>
-   ${worries.length?`<p class="ev" style="margin-top:10px">お悩み：${esc(worries.join("、"))}</p>`:""}</div></details>
-  <details class="fs"><summary>採寸（わかる項目だけ）</summary><div class="fs-body"><div class="grid2">
+   ${worries.length?`<p class="ev" style="margin-top:10px">お悩み：${esc(worries.join("、"))}</p>`:""}</div>`],
+   ["採寸",`<div class="fs"><h3>採寸（わかる項目だけ）</h3><div class="grid2">
    <label class="fl">身長 <span class="unit">cm</span><input id="r-h" type="number" inputmode="decimal" value="${a.h||""}"></label>
    <label class="fl">体重 <span class="unit">kg</span><input id="r-wt" type="number" inputmode="decimal" value="${a.wt||""}"></label>
    <label class="fl">トップバスト <span class="unit">cm</span><input id="r-top" type="number" inputmode="decimal" value="${a.top||""}"></label>
    <label class="fl">アンダーバスト <span class="unit">cm</span><input id="r-under" type="number" inputmode="decimal" value="${a.under||""}"></label>
    <label class="fl">ウエスト <span class="unit">cm</span><input id="r-waist" type="number" inputmode="decimal" value="${a.waist||""}"></label>
-   <label class="fl">ヒップ <span class="unit">cm</span><input id="r-hip" type="number" inputmode="decimal" value="${a.hip||""}"></label></div></div></details>
-  <details class="fs" open><summary>処方したもの・サイズ</summary><div class="fs-body"><div class="items" id="r-items"></div>
-   <button class="btn ghost" type="button" id="r-cat" style="margin-top:10px">＋ 写真から商品を追加</button><div class="row" style="margin-top:10px"><select id="r-add" style="flex:1;font:inherit;font-size:15px;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)"><option value="">商品を追加…</option>${Object.entries(P).map(([k,p])=>`<option value="${k}">${p.s}｜${p.n}</option>`).join("")}</select></div></div></details>
-  <details class="fs"><summary>メモ（試着して気づいたこと）</summary><div class="fs-body"><label class="fl"><textarea id="r-memo"></textarea></label></div></details>
+   <label class="fl">ヒップ <span class="unit">cm</span><input id="r-hip" type="number" inputmode="decimal" value="${a.hip||""}"></label></div></div>`],
+   ["商品",`<div class="fs"><h3>処方したもの・サイズ</h3><div class="items" id="r-items"></div>
+   <button class="btn ghost" type="button" id="r-cat" style="margin-top:10px">＋ 写真から商品を追加</button><div class="row" style="margin-top:10px"><select id="r-add" style="flex:1;font:inherit;font-size:15px;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)"><option value="">商品を追加…</option>${Object.entries(P).map(([k,p])=>`<option value="${k}">${p.s}｜${p.n}</option>`).join("")}</select></div></div>`],
+   ["確認して記録",`<div class="fs"><h3>メモ（試着して気づいたこと）</h3><label class="fl"><textarea id="r-memo"></textarea></label></div>
   <div class="recsum" id="r-sum"></div><div id="r-msg"></div>
-  <button class="btn" type="submit" id="r-save">この内容で記録する</button>`;
+  <button class="btn" type="submit" id="r-save">この内容で記録する</button>`]
+  ]);
   if(SEL.size)[...SEL.entries()].forEach(([id,vs])=>vs.forEach(v=>addItem(id,true,v)));else ids.forEach(id=>addItem(id,true));
   $("r-cat").onclick=()=>openCatalog(id=>addItem(id,true));
   $("r-add").onchange=e=>{if(e.target.value){addItem(e.target.value,true);e.target.value=""}};
@@ -1109,7 +1164,7 @@ function markMissing(quiet){const rows=[...document.querySelectorAll("#r-items .
   const m=$("r-msg");if(!first){m.innerHTML="";return false}
   m.innerHTML=`<div class="msgline err">未選択があります（赤い枠のところ）：${names.map((x,i)=>`<button type="button" class="jump" data-jump="${i}">${esc(x.t)} ›</button>`).join(" ")}</div>`;
   m.querySelectorAll("[data-jump]").forEach(b=>b.onclick=()=>jumpTo(names[+b.dataset.jump].d));if(!quiet)jumpTo(first);return true}
-function jumpTo(d){d.scrollIntoView({block:"center",behavior:"smooth"});d.classList.remove("flash");void d.offsetWidth;d.classList.add("flash")}
+function jumpTo(d){revealIn(d);d.scrollIntoView({block:"center",behavior:"smooth"});d.classList.remove("flash");void d.offsetWidth;d.classList.add("flash")}
 async function saveRec(e){e.preventDefault();const m=$("r-msg");
   const items=[...document.querySelectorAll(".it")].filter(d=>d.querySelector("input[type=checkbox]").checked).map(d=>({id:d.dataset.id,gm:(GM[d.dataset.id]||{}).c||"",name:P[d.dataset.id].n,series:P[d.dataset.id].s,color:d.querySelector(".cl")?.value||"",size:d.querySelector(".sz").value.trim(),qty:+(d.querySelector(".qt")?.value||1),feel:d.querySelector(".fe").value}));
   if(markMissing())return;
@@ -1126,15 +1181,27 @@ async function saveRec(e){e.preventDefault();const m=$("r-msg");
 
 /* ---------- 記録・データ画面 ---------- */
 let dataProd="";
+function openRecDetail(r){const its=r.items||[];$("sheet-t").textContent=r.code;
+  const body=["h","wt","top","under","waist","hip"].filter(f=>r[f]).map(f=>`<span>${({h:"身長",wt:"体重",top:"トップ",under:"アンダー",waist:"ウエスト",hip:"ヒップ"}[f])} ${r[f]}</span>`).join("");
+  $("sheet-b").innerHTML=`<p class="meta2" style="margin:0 0 10px">${(r.createdAt||"").slice(0,10)}・${esc([r.sex,r.age,r.type].filter(Boolean).join("・"))}</p>
+  ${its.map(i=>`<div class="cf"><img class="pi" src="img/${i.id}.jpg" alt=""><div><b>${esc(i.name)}</b><div class="spec">${i.color?`<span>${colThumb(i.id,i.color)}${esc(i.color)}</span>`:""}${i.size?`<span>${esc(i.size)}</span>`:""}<span>×${i.qty||1}</span>${i.feel?`<span>${esc(i.feel)}</span>`:""}</div></div></div>`).join("")}
+  <button class="btn" type="button" id="rd-ord" style="margin-top:6px">G-MAX注文リストを開く</button>
+  ${body?`<details class="acc" style="margin-top:12px"><summary>採寸・お悩み</summary><div><div class="spec" style="display:flex;flex-wrap:wrap;gap:6px">${body}</div>${(r.body||[]).length||(r.health||[]).length?`<p style="margin:8px 0 0">お悩み：${esc([...(r.body||[]),...(r.health||[])].join("、"))}</p>`:""}</div></details>`:""}
+  <button class="btn ghost" type="button" id="rd-del" style="margin-top:12px;color:#c0284f">この記録を削除</button>`;
+  $("rd-ord").onclick=()=>openOrder(r);
+  $("rd-del").onclick=async e=>{const b=e.currentTarget;if(!b.dataset.armed){b.dataset.armed="1";b.textContent="もう一度押すと削除";return}
+    if(String(r.id).startsWith("local-")){const p=getPend();p.splice(+String(r.id).slice(6),1);setPend(p);mergeRecs();closeSheet();renderData();return}
+    try{await db.doc("records/"+r.id).delete();closeSheet()}catch(err){b.textContent="削除できませんでした"}};
+  $("sheet").hidden=false;$("sheet").querySelector(".sheet").scrollTop=0}
 function renderData(){const el=$("datapane");if(!el)return;
   const head=`<div class="row" style="justify-content:space-between;margin-bottom:12px"><h2 class="sec-t" style="margin:0">記録の一覧</h2><button class="btn sm" type="button" id="d-new">＋ 新しく記録</button></div>`;
   const pend=getPend().length;
-  const status=(dbState!=="ok"&&dbState!=="loading"&&!CAN_LOCAL)?noSaveBanner():dbState==="ok"?`<div class="msgline" style="margin-bottom:12px">保存先：つながっています${pend?`（この端末に未送信 ${pend}件）`:""}</div>`:dbState==="loading"?'<div class="msgline" style="margin-bottom:12px">保存先：確認中…</div>':`<div class="msgline err" style="margin-bottom:12px">保存先：つながっていません${dbErr?"（"+esc(dbErr)+"）":""}。記録はこの端末に保存されます${pend?`（未送信 ${pend}件）`:""}。Claudeのアプリ（claude.ai）の中でこのページを開くと、自動で送られます。</div>`;
+  const status=(dbState!=="ok"&&dbState!=="loading"&&!CAN_LOCAL)?noSaveBanner():dbState==="ok"?(pend?`<div class="msgline" style="margin-bottom:12px">この端末に未送信 ${pend}件</div>`:""):dbState==="loading"?'<div class="msgline" style="margin-bottom:12px">保存先：確認中…</div>':`<div class="msgline err" style="margin-bottom:12px">保存先：つながっていません${dbErr?"（"+esc(dbErr)+"）":""}。記録はこの端末に保存されます${pend?`（未送信 ${pend}件）`:""}。Claudeのアプリ（claude.ai）の中でこのページを開くと、自動で送られます。</div>`;
   const n=RECS.length,items=RECS.flatMap(r=>r.items||[]),tried=items.filter(i=>i.feel&&i.feel!=="未試着"),ok=tried.filter(i=>i.feel==="ぴったり").length;
   const prods=[...new Set(items.map(i=>i.id))].filter(id=>P[id]).sort((x,y)=>items.filter(i=>i.id===y).length-items.filter(i=>i.id===x).length);
   if(!dataProd||!prods.includes(dataProd))dataProd=prods[0]||"";
   const exp=pend?`<div class="panel"><h3>未送信の記録（${pend}件）</h3><p>保存先につながったら自動で送ります。すぐ反映したいときは、コピーしてClaudeのチャットに貼り付けてください。</p><button class="btn sm ghost" type="button" id="d-exp">未送信の記録をコピー</button></div>`:"";
-  const recHTML=`<div class="panel"><h3>最近の記録（${n}件）</h3>${RECS.slice(0,30).map(r=>`<div class="rec"><button class="del" type="button" data-del="${esc(r.id)}">削除</button><b>${esc(r.code)}</b>${r._local?' <span class="tag">未送信</span>':""} <span class="meta2">${esc(r.sex||"")} ${esc(r.age||"")} ${esc(r.type||"")}・${(r.createdAt||"").slice(0,10)}</span><div class="meta2">${["h","wt","top","under","waist","hip"].filter(f=>r[f]).map(f=>({h:"身長",wt:"体重",top:"トップ",under:"アンダー",waist:"ウエスト",hip:"ヒップ"}[f])+" "+r[f]).join(" / ")}</div><div>${(r.items||[]).map(i=>`${esc(i.name)} <b>${esc([i.color,i.size].filter(Boolean).join(" ")||"—")}</b>${i.qty>1?"×"+i.qty:""}${i.feel?"（"+esc(i.feel)+"）":""}`).join("、")}</div><button class="btn sm ghost" type="button" data-ord="${esc(r.id)}" style="margin-top:6px">G-MAX注文リスト</button>${(r.body||[]).length||(r.health||[]).length?`<div class="meta2">お悩み：${esc([...(r.body||[]),...(r.health||[])].join("、"))}</div>`:""}</div>`).join("")}</div>`;
+  const recHTML=`<div class="panel"><h3>最近の記録（${n}件）</h3>${RECS.slice(0,30).map(r=>{const its=r.items||[],q=its.reduce((t,i)=>t+(i.qty||1),0),im=its[0]&&P[its[0].id]?`<img src="img/${its[0].id}.jpg" alt="">`:"<i></i>";return `<button type="button" class="rec2" data-rec="${esc(r.id)}">${im}<span><b>${esc(r.code.replace(/^匿名-/,""))}</b><small>${(r.createdAt||"").slice(5,10).replace("-","/")}・${its.length?esc(its[0].name)+(its.length>1?` ほか${its.length-1}点`:""):"商品なし"}${r._local?"・未送信":""}</small></span><em>${q}着 ›</em></button>`}).join("")}</div>`;
   let html=head+status+exp+(n?recHTML:'<div class="empty" style="margin-bottom:14px">まだ記録がありません。「＋ 新しく記録」から入れてください。</div>')+`<div class="kpis"><div class="kpi"><b>${n}</b><span>記録した人数</span></div><div class="kpi"><b>${items.length}</b><span>処方アイテム</span></div><div class="kpi"><b>${tried.length?Math.round(ok/tried.length*100)+"%":"—"}</b><span>サイズ的中率</span></div></div>`;
   html+=`<details class="panel"><summary>サイズ検索</summary><div class="panel-body"><p style="margin:0 0 10px;font-size:12.5px;color:var(--muted)">お客様の採寸を入れると、似た体型の人がどのサイズを選んだかが出ます（身長±8cm・体重±6kg 程度を「似た体型」としています）。</p>
    <div class="grid2"><label class="fl" style="grid-column:1/-1">商品<select id="s-p">${Object.entries(P).map(([k,p])=>`<option value="${k}"${k===dataProd?" selected":""}>${p.s}｜${p.n}</option>`).join("")}</select></label>
@@ -1146,7 +1213,14 @@ function renderData(){const el=$("datapane");if(!el)return;
     const W={};RECS.forEach(r=>{const ws=[...(r.body||[]),...(r.health||[])];(r.items||[]).forEach(it=>ws.forEach(w=>{W[w]=W[w]||{};W[w][it.id]=(W[w][it.id]||0)+1}))});
     html+=`<details class="panel"><summary>お悩み別 よく処方された商品</summary><div class="panel-body"><div class="wh">${Object.entries(W).sort((x,y)=>Object.values(y[1]).reduce((a,b)=>a+b,0)-Object.values(x[1]).reduce((a,b)=>a+b,0)).map(([w,o])=>`<div><b>${esc(w)}</b>${Object.entries(o).sort((x,y)=>y[1]-x[1]).slice(0,3).map(([id,c])=>`${esc(P[id]?.n||id)}（${c}）`).join("・")}</div>`).join("")||'<div>まだありません</div>'}</div></div></details>`;
   }
-  el.innerHTML=html;$("d-new").onclick=()=>openRec();
+  {const tmp=document.createElement("div");tmp.innerHTML=html.replaceAll('<details class="panel">','<details class="panel" open>');const kids=[...tmp.children];
+   const pick=f=>kids.filter(f).map(k=>k.outerHTML).join("");
+   const isP=(k,t)=>k.classList.contains("panel")&&(k.querySelector("h3,summary")||{}).textContent?.trim().startsWith(t);
+   const secs=[["記録",pick(k=>!k.classList.contains("panel")&&!k.classList.contains("kpis")||isP(k,"未送信")||isP(k,"最近の記録"))],["数字",pick(k=>k.classList.contains("kpis"))],["サイズ検索",pick(k=>isP(k,"サイズ検索"))]];
+   if(n){secs.push(["体型表",pick(k=>isP(k,"商品×サイズ"))]);secs.push(["お悩み別",pick(k=>isP(k,"お悩み別"))])}
+   const cur=el.querySelector(':scope>.stp>.stp-nav .stp-b.on');const keep=cur?+cur.dataset.go:0;
+   el.innerHTML=stepsHTML("data",secs.filter(x=>x[1]),{nav:false,tabs:true});if(keep)goStep(el.querySelector(".stp"),Math.min(keep,secs.length-1))}
+  $("d-new").onclick=()=>openRec();
   if($("d-exp"))$("d-exp").onclick=async()=>{const t="GRANT_NAVI_RECORDS\n"+JSON.stringify(getPend());try{await navigator.clipboard.writeText(t);$("d-exp").textContent="コピーしました"}catch(e){$("d-exp").insertAdjacentHTML("afterend",`<textarea style="width:100%;height:120px;margin-top:8px">${esc(t)}</textarea>`);$("d-exp").textContent="下の文字を全部選んでコピーしてください"}};
   const sf=()=>{const b={};[["h","s-h"],["wt","s-wt"],["top","s-top"],["under","s-under"],["waist","s-waist"],["hip","s-hip"]].forEach(([f,id])=>b[f]=num($(id).value));const filled=Object.values(b).filter(Boolean).length;
     $("s-out").innerHTML=filled<2?'<p class="ev">2項目以上入れてください。</p>':distHTML(similar($("s-p").value,b,15))};
@@ -1155,6 +1229,7 @@ function renderData(){const el=$("datapane");if(!el)return;
     const st=(arr,f)=>{const v=arr.map(x=>x.r[f]).filter(x=>typeof x==="number");if(!v.length)return"—";const av=v.reduce((a,b)=>a+b,0)/v.length;return `${av.toFixed(1)}<br><small style="color:var(--muted)">${Math.min(...v)}〜${Math.max(...v)}</small>`};
     $("t-out").innerHTML=`<table><thead><tr><th>サイズ</th><th>人数</th><th>身長</th><th>体重</th><th>トップ</th><th>アンダー</th><th>ウエスト</th><th>ヒップ</th><th>ぴったり</th></tr></thead><tbody>${Object.entries(by).sort((x,y)=>y[1].length-x[1].length).map(([s,arr])=>{const t=arr.filter(x=>x.feel&&x.feel!=="未試着");return `<tr><td class="l"><b>${esc(s)}</b></td><td>${arr.length}</td><td>${st(arr,"h")}</td><td>${st(arr,"wt")}</td><td>${st(arr,"top")}</td><td>${st(arr,"under")}</td><td>${st(arr,"waist")}</td><td>${st(arr,"hip")}</td><td>${t.length?Math.round(t.filter(x=>x.feel==="ぴったり").length/t.length*100)+"%":"—"}</td></tr>`}).join("")}</tbody></table>`};
     $("t-p").onchange=tf;tf()}
+  el.querySelectorAll("[data-rec]").forEach(b=>b.onclick=()=>{const r=RECS.find(x=>x.id===b.dataset.rec);if(r)openRecDetail(r)});
   el.querySelectorAll("[data-ord]").forEach(b=>b.onclick=()=>{const r=RECS.find(x=>x.id===b.dataset.ord);if(r)openOrder(r)});
   el.querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{if(b.dataset.armed){if(b.dataset.del.startsWith("local-")){const p=getPend();p.splice(+b.dataset.del.slice(6),1);setPend(p);mergeRecs();renderData();return}try{await db.doc("records/"+b.dataset.del).delete()}catch(e){b.textContent="削除できませんでした"}}else{b.dataset.armed="1";b.textContent="もう一度押すと削除"}});
 }
