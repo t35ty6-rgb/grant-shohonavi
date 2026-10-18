@@ -120,6 +120,7 @@ body{background:var(--desk);color:var(--ink);font-family:var(--f-body);font-size
 .tabs button:disabled{opacity:.35;cursor:default}
 /* home */
 .eyebrow{font-family:var(--f-latin);font-weight:700;font-size:11px;letter-spacing:.18em;color:var(--accent)}
+.hero-card{background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:22px 20px 20px;margin:4px 0 20px;box-shadow:var(--sh-md)}
 .home h1{font-weight:900;font-size:32px;line-height:1.26;margin:12px 0 14px;text-wrap:balance;letter-spacing:-.015em}
 .home h1 em{font-style:normal;background:linear-gradient(transparent 58%,var(--accent-soft) 58%,var(--accent-soft) 94%,transparent 94%);padding:0 4px;color:var(--accent-pressed);font-weight:900}
 .home p{color:var(--ink-2);margin:0 0 20px;font-size:14.5px;line-height:1.7}
@@ -463,23 +464,24 @@ input,select,textarea{font-size:16px}
 
   <main class="view" id="v-home">
     <div class="pad home">
-      <div class="eyebrow">GRANT E-ONE'S STYLIST NAVI</div>
-      <h1>その悩み、<em>どの1着</em>で整える？</h1>
-      <p>お客様と一緒に答えていくと、直したいところ・効くしくみ・使われている繊維まで、写真つきで出ます。</p>
-      <div class="trio">
-        <figure class="tap" data-ser="lala" role="button" tabindex="0"><img src="img/p03.jpg" alt=""><figcaption>LALA<span>骨格と姿勢</span></figcaption></figure>
-        <figure class="tap" data-ser="emma" role="button" tabindex="0"><img src="img/p14.jpg" alt=""><figcaption>Emm∀ Pump<span>迷ったらこれ</span></figcaption></figure>
-        <figure class="tap" data-ser="taikan" role="button" tabindex="0"><img src="img/p12.jpg" alt=""><figcaption>TAI-KAN<span>重心を整える</span></figcaption></figure>
-      </div>
-      <p class="hint2">写真を押すと特徴が見られます</p>
-      <div class="stack">
-        <button class="btn" id="start" type="button">カウンセリングをはじめる</button>
-        <button class="btn ghost" id="sample" type="button">サンプル結果を見る（40代女性）</button>
+      <div class="hero-card">
+        <div class="eyebrow">GRANT E-ONE'S STYLIST NAVI</div>
+        <h1>その悩み、<em>どの1着</em>で整える？</h1>
+        <p>お客様と 答えていく と、 直したい ところ・効く しくみ・使われている 繊維 まで、 写真つき で 出ます</p>
+        <div class="trio">
+          <figure class="tap" data-ser="lala" role="button" tabindex="0"><img src="img/p03.jpg" alt=""><figcaption>LALA<span>骨格と姿勢</span></figcaption></figure>
+          <figure class="tap" data-ser="emma" role="button" tabindex="0"><img src="img/p14.jpg" alt=""><figcaption>Emm∀ Pump<span>迷ったら これ</span></figcaption></figure>
+          <figure class="tap" data-ser="taikan" role="button" tabindex="0"><img src="img/p12.jpg" alt=""><figcaption>TAI-KAN<span>重心を整える</span></figcaption></figure>
+        </div>
+        <div class="stack">
+          <button class="btn" id="start" type="button">カウンセリング を はじめる</button>
+          <button class="btn ghost" id="sample" type="button">サンプル 結果 を 見る (40代女性)</button>
+        </div>
       </div>
       <div class="tips">
-        <div class="tip"><b>まず着てもらう</b>サイズや商品で迷って止まるより、試着が先。着れば本人が違いに気づきます。</div>
-        <div class="tip"><b>整えるのは2つ</b>姿勢と温かさ。基本セットは LALA ＋ ホルミー。</div>
-        <div class="tip"><b>必ず聞く4つ</b>痛み・平熱・お通じ・生理。質問の中に入っています。</div>
+        <div class="tip"><b>まず 着て もらう</b>サイズ や 商品 で 迷って 止まる より、 試着 が 先。 着れば 本人 が 違い に 気づきます</div>
+        <div class="tip"><b>整えるの は 2つ</b>姿勢 と 温かさ。 基本 セット は LALA ＋ ホルミー</div>
+        <div class="tip"><b>必ず 聞く 4つ</b>痛み・平熱・お通じ・生理。 質問 の 中 に 入って います</div>
       </div>
     </div>
   </main>
@@ -2029,14 +2031,20 @@ function openOrder(r){$("sheet-t").textContent="G-MAX 注文リスト";
    // 濁点 ﾞ / 半濁点 ﾟ を 直前 の 文字 と 結合 (BUG-1 fix)
    const dakuMap={'カ':'ガ','キ':'ギ','ク':'グ','ケ':'ゲ','コ':'ゴ','サ':'ザ','シ':'ジ','ス':'ズ','セ':'ゼ','ソ':'ゾ','タ':'ダ','チ':'ヂ','ツ':'ヅ','テ':'デ','ト':'ド','ハ':'バ','ヒ':'ビ','フ':'ブ','ヘ':'ベ','ホ':'ボ','ウ':'ヴ'};
    const handakuMap={'ハ':'パ','ヒ':'ピ','フ':'プ','ヘ':'ペ','ホ':'ポ'};
-   v=v.replace(/(.)[ﾞ゛]/g,(_,c)=>dakuMap[c]||c).replace(/(.)[ﾟ゜]/g,(_,c)=>handakuMap[c]||c);
+   v=v.replace(/(.)[゛ﾞ゙]/g,(_,c)=>dakuMap[c]||c).replace(/(.)[゜ﾟ゚]/g,(_,c)=>handakuMap[c]||c);
    if(v!==el.value){const pos=el.selectionStart;el.value=v;try{el.setSelectionRange(pos,pos);}catch{}}
    // 全角カタカナ + 長音 + 中点 + スペース のみ 許可
    const bad=v.replace(/[゠-ヿ ・　ー]/g,'');
    if(bad){help.textContent='使用できない文字: '+bad+' (全角カタカナ のみ)';help.style.color='#dc2626';el.style.borderColor='#dc2626';return false;}
    help.textContent=v?'':'';el.style.borderColor='';return true;
  }
- ['c-sei-kana','c-mei-kana'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',()=>kanaValidate(id));el.addEventListener('blur',()=>kanaValidate(id));}});
+ /* IME 入力中 (compositionstart〜compositionend) は 検証 skip、 完了後 のみ 検証 (iOS カナ 入力 の バグ 修正) */
+ ['c-sei-kana','c-mei-kana'].forEach(id=>{const el=$(id);if(!el)return;let composing=false;
+   el.addEventListener('compositionstart',()=>{composing=true;const h=$(id+'-help');if(h){h.textContent='';el.style.borderColor='';}});
+   el.addEventListener('compositionend',()=>{composing=false;kanaValidate(id);});
+   el.addEventListener('input',()=>{if(!composing)kanaValidate(id);});
+   el.addEventListener('blur',()=>kanaValidate(id));
+ });
  /* ---- 下書き autosave: 毎回 デモで 打ち直し を 無くす ---- */
  const DRAFT_KEY='grantCustomerDraft';
  const DRAFT_FIELDS=['c-mail','c-pass','c-sei','c-mei','c-sei-kana','c-mei-kana','c-birth','c-sex','c-tel','c-zip','c-pref','c-city','c-addr','c-bldg','c-serial','c-usertype'];
