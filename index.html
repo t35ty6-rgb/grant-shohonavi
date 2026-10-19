@@ -511,6 +511,80 @@ label[hidden],.fl[hidden]{display:none!important}.sw-big>div{min-width:0;flex:1}
 }
 /* iOS Safari の 入力欄 auto-zoom 回避: 全 input/select は 16px 以上 */
 input,select,textarea{font-size:16px}
+/* ===== ショップ ===== */
+.hdr-cart{margin-left:auto;position:relative;border:none;background:none;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;cursor:pointer;color:var(--ink)}
+.hdr-cart svg,.cart-ic svg,.added-ok svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.hdr-cart i{position:absolute;top:2px;right:0;min-width:18px;height:18px;border-radius:9px;background:var(--accent);color:#fff;font:700 11px/18px var(--f-latin);font-style:normal;padding:0 5px;display:none}
+.hdr-cart.has i{display:block}
+.appbar .meta{margin-left:0}
+.shop-strip{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.ss-price b{font-family:var(--f-latin);font-size:20px}.ss-price small{font-size:11px;color:var(--muted);margin-left:4px}
+.ss-in{flex:1 1 100%;display:flex;flex-wrap:wrap;gap:6px}.ss-in span{font-size:12px;background:#fff;border-radius:999px;padding:2px 10px;border:1px solid var(--line)}
+.cart-add{flex:1 1 100%;padding:12px;border-radius:14px}
+.pick{border:none!important;background:var(--bg)!important;border-radius:16px}
+.pick.on{background:var(--accent-soft)!important}
+.selbtn{display:flex;align-items:center;gap:10px;text-decoration:none!important}
+.selbtn small{display:block;font-size:11px;color:var(--muted);font-weight:500}
+.selbtn b{font-family:var(--f-latin);font-size:18px}
+.cart-ic{position:relative;display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:var(--bg)}
+.cart-ic i{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;border-radius:9px;background:var(--accent);color:#fff;font:700 11px/18px var(--f-latin);font-style:normal;padding:0 5px;text-align:center}
+/* 商品ページ */
+.pd{padding-bottom:90px}
+.pd-img{width:100%;aspect-ratio:1/1;object-fit:contain;background:#fff;border-radius:18px;border:1px solid var(--line)}
+.pd-name{font-size:19px;margin:14px 0 2px;line-height:1.4}
+.pd-code{font-size:12px;color:var(--muted)}
+.pd-price{font-family:var(--f-latin);font-weight:700;font-size:26px;margin:6px 0 4px}.pd-price small{font-family:var(--f-body);font-size:12px;color:var(--muted);margin-left:6px;font-weight:500}
+.pd-l{font-size:13px;font-weight:700;margin:16px 0 8px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.pd-l b{font-weight:500;color:var(--muted)}.pd-l small{font-weight:500;color:var(--blue);font-size:12px}
+.pd-col{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.pd-c{flex:none;width:76px;border:2px solid var(--line);border-radius:12px;background:#fff;padding:0;overflow:hidden;cursor:pointer;font:inherit;font-size:11px;color:var(--ink)}
+.pd-c img,.pd-c i{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;background:var(--bg)}.pd-c span{display:block;padding:3px 2px;line-height:1.3}
+.pd-c.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.pd-sz{display:flex;flex-wrap:wrap;gap:8px}
+.pd-s{font:inherit;min-width:56px;padding:9px 12px;border-radius:12px;border:1.5px solid var(--line);background:#fff;color:var(--ink);font-weight:700;font-size:14px;cursor:pointer}
+.pd-s.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.qty{display:inline-flex;align-items:center;border:1.5px solid var(--line);border-radius:999px;overflow:hidden;background:#fff}
+.qty button{font:inherit;border:none;background:none;width:44px;height:40px;font-size:18px;cursor:pointer;color:var(--ink)}
+.qty b{min-width:32px;text-align:center;font-family:var(--f-latin);font-size:16px}
+.qty.sm button{width:32px;height:30px;font-size:15px}.qty.sm b{min-width:24px;font-size:14px}
+.pd-bar{position:sticky;bottom:0;margin:0 -16px;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));background:#fff;border-top:1px solid var(--line);display:flex;gap:12px;align-items:center}
+.pd-bar small{display:block;font-size:11px;color:var(--muted)}.pd-bar b{font-family:var(--f-latin);font-size:20px}.pd-bar .btn{flex:1}
+.added{text-align:center;padding:24px 4px}.added-ok{width:56px;height:56px;border-radius:50%;background:var(--green-soft);color:var(--green);display:grid;place-items:center;font-size:28px;font-weight:900;margin:0 auto 10px}
+.added b{font-size:17px}.added p{color:var(--muted);font-size:13px;margin:6px 0 12px}.added-tot{margin:0 0 16px;font-size:14px}.added-tot b{font-family:var(--f-latin);font-size:18px}
+/* 一覧 */
+.shop-top{position:sticky;top:52px;background:#fff;z-index:2;padding-bottom:8px}
+.shop-top input{width:100%;font:inherit;font-size:16px;padding:10px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg)}
+.shop-cats{display:flex;gap:6px;overflow-x:auto;margin-top:8px;scrollbar-width:none}.shop-cats::-webkit-scrollbar{display:none}
+.shop-cats button{flex:none;font:inherit;font-size:13px;font-weight:700;border:1.5px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:6px 12px;cursor:pointer}
+.shop-cats button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.shop-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:4px}
+.shop-t{font:inherit;text-align:left;border:none;background:none;padding:0;cursor:pointer;color:var(--ink)}
+.st-img{display:block;position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#fff}
+.st-img img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover}
+.st-img em{position:absolute;top:6px;right:6px;background:var(--accent);color:#fff;font:700 12px/22px var(--f-latin);font-style:normal;min-width:22px;height:22px;border-radius:11px;text-align:center;padding:0 6px}
+.st-n{display:block;font-size:13px;line-height:1.4;margin-top:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.st-p{display:block;font-family:var(--f-latin);font-weight:700;font-size:15px;margin-top:2px}
+.shop-foot{position:sticky;bottom:0;background:#fff;padding:12px 0 calc(8px + env(safe-area-inset-bottom,0px));margin-top:12px}
+/* カート明細 */
+.cart{display:flex;flex-direction:column}
+.cl-row{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:12px;padding:12px 0;border-top:1px solid var(--line);align-items:start}
+.cl-row:first-child{border-top:none}
+.cl-row>img{width:64px;height:64px;object-fit:cover;border-radius:12px;border:1px solid var(--line);background:#fff}
+.cl-row.ng>img{outline:2px solid #e0234e;outline-offset:1px}
+.cl-mid b{font-size:14px;line-height:1.4;display:block}
+.cl-opt{font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:2px}.cl-opt img{width:20px;height:20px;border-radius:5px;object-fit:cover}
+.cl-fix{font:inherit;font-size:12px;font-weight:700;border:none;background:#fde8ec;color:#c0284f;border-radius:8px;padding:2px 8px;cursor:pointer}
+.cl-unit{font-size:12.5px;color:var(--muted);margin-top:4px}
+.cl-ctl{display:flex;align-items:center;gap:12px;margin-top:8px}
+.cl-del{font:inherit;font-size:12px;border:none;background:none;color:var(--muted);text-decoration:underline;cursor:pointer}
+.cl-sum{font-family:var(--f-latin);font-weight:700;font-size:15px;white-space:nowrap}
+.bill{border-top:2px solid var(--ink);margin-top:6px;padding-top:10px;font-size:14px}
+.bill>div{display:flex;justify-content:space-between;padding:3px 0}
+.bill-tot b{font-family:var(--f-latin);font-size:24px}
+.bill-tot span{font-weight:700;align-self:center}
+.cl-mid .spec{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;font-size:12.5px;align-items:center}
+.cl-mid .spec span{background:var(--bg);border-radius:8px;padding:2px 8px}
+.cl-mid .spec img{width:20px;height:20px;object-fit:cover;border-radius:5px;vertical-align:middle;margin-right:4px}
+.cl-mid .spec .ng{background:#fde8ec;color:#c0284f;font-weight:700}
 </style>
 
 <div class="app">
@@ -2191,4 +2265,109 @@ $("sheet-x").onclick=closeSheet;$("sheet").addEventListener("click",e=>{if(e.tar
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("sheet").hidden)closeSheet();if((e.key==="Enter"||e.key===" ")&&e.target.dataset?.ser&&e.target.tagName==="FIGURE"){e.preventDefault();openSeries(e.target.dataset.ser)}});
 document.addEventListener("click",e=>{const t=e.target.closest("[data-ser]");if(t){e.preventDefault();openSeries(t.dataset.ser)}});
 emptyResult();
+
+/* ===== ショップ（カート・明細）レイヤー ===== */
+const PRICE={"103":64900,"104":64900,"114":13200,"116":37400,"117":39600,"118":42900,"119":37400,"120":42900,"121":39600,"122":39600,"124":12100,"127":31900,"128":33000,"129":33000,"161":32450,"162":42900,"163":42900,"181":41800,"182":25300,"183":56100,"184":41800,"185":23100,"202":41800,"208":13200,"214":12100,"215":8580,"216":8800,"220":12100,"225":41800,"244":35200,"245":35200,"246":12100,"248":28600,"249":17600,"253":28600,"254":39600,"255":17600,"256":28600,"257":12100,"258":13750,"259":22000,"260":30800,"261":13200,"262":23100,"263":31900,"264":12100,"281":23100,"282":12100,"305":28080,"317":12960,"331":19440,"332":12960,"333":6600,"334":12960,"341":19440,"355":27500,"356":184800,"357":6600,"358":7480,"361":52800,"362":9900,"364":343200,"365":27500,"366":19800,"367":369600,"401":5500,"404":9680,"405":9680,"422":7480,"450":19800,"453":8800,"460":11000,"461":33000,"507":16500,"512":33000,"513":24200,"516":27500,"517":33000,"518":52800,"519":19800,"520":28600,"521":27500,"523":15400,"524":34100,"529":8250,"530":16500,"531":27500,"532":4950,"533":1100,"534":4950,"535":2750,"536":8800,"538":41800,"539":12100,"540":19800,"605":4950,"606":220000,"607":148500,"651":236500,"714":8800,"715":11000,"716":8800,"717":11000,"721":16500,"722":13200,"727":11000,"728":13200,"731":5500,"732":5500,"733":8800,"739":8800,"9116":37400,"9119":37400,"9208":13200,"9406":18700,"9531":31900,"9532":8800,"9553":30800,"9720":5500,"Y204":880,"Y205":880,"101":{"65A":58300,"65B":58300,"65C":58300,"65D":58300,"65E":58300,"65F":58300,"70A":58300,"70B":58300,"70C":58300,"70D":58300,"70E":58300,"70F":58300,"70G":58300,"75A":58300,"75B":58300,"75C":58300,"75D":58300,"75E":58300,"75F":58300,"75G":58300,"80A":58300,"80B":58300,"80C":58300,"80D":58300,"80E":58300,"80F":58300,"80G":58300,"85C":58300,"85D":58300,"85E":58300,"85F":58300,"85G":58300,"90B":58300,"90C":58300,"90D":58300,"90E":58300,"90F":58300,"90G":58300,"95B":58300,"95C":58300,"95D":68200,"95E":68200,"95F":68200,"100E":68200,"105D":68200},"102":{"65A":63800,"65B":63800,"65C":63800,"65D":63800,"65F":63800,"70A":63800,"70B":63800,"70C":63800,"70D":63800,"70E":63800,"70F":63800,"75A":63800,"75B":63800,"75C":63800,"75D":63800,"75E":63800,"75F":63800,"80A":63800,"80C":63800,"80D":63800,"80E":63800,"80F":63800,"85B":63800,"85C":63800,"85D":63800,"85E":63800,"85F":63800,"100F":74800,"105D":74800,"105E":74800},"109":{"65B":28600,"65C":28600,"65D":28600,"65E":28600,"65F":35200,"70B":28600,"70C":28600,"70D":28600,"70E":28600,"70F":35200,"70G":35200,"75B":28600,"75C":28600,"75D":28600,"75E":28600,"75F":35200,"75G":35200,"80A":28600,"80B":28600,"80C":28600,"80D":28600,"80E":35200,"80F":35200,"80G":35200,"85B":28600,"85C":28600,"85D":35200,"85E":35200,"85F":35200,"85G":35200,"90B":28600,"90C":28600,"90D":35200,"90E":35200,"90F":35200,"90G":35200,"95B":28600,"95C":28600,"95D":35200,"95E":35200,"95F":35200,"95G":35200},"201":{"58":47300,"64":47300,"70":47300,"76":47300,"82":47300,"90":47300,"98":47300,"106":52800},"363":{"1個":6600,"3個セット":16500},"452":{"30ml":5500,"200ml":27500,"500ml":49500},"462":{"1":550,"12":5500}};/* G-MAX 定価（税込）2026-10-19 取得 */
+const yen=n=>"¥"+Math.round(n).toLocaleString("ja-JP");
+function priceOf(id,size){const g=GM[id];if(!g)return null;const p=PRICE[g.c];if(p==null)return null;if(typeof p==="number")return p;return size&&p[size]!=null?p[size]:null}
+function priceLabel(id){const g=GM[id];const p=g&&PRICE[g.c];if(p==null)return "価格未登録";if(typeof p==="number")return yen(p);const v=Object.values(p);const lo=Math.min(...v),hi=Math.max(...v);return lo===hi?yen(lo):yen(lo)+"〜"}
+const cartRows=()=>{const r=[];SEL.forEach((vs,id)=>vs.forEach((v,i)=>r.push({id,v,i})));return r};
+const cartTotal=()=>cartRows().reduce((t,r)=>{const p=priceOf(r.id,r.v.size);return t+(p||0)*(r.v.qty||1)},0);
+const cartUnpriced=()=>cartRows().some(r=>priceOf(r.id,r.v.size)==null);
+const needOpt=(id,v)=>{const g=GM[id]||{col:[],sz:[]};return (g.col.length&&!v.color)||(g.sz.length&&!v.size)};
+function pickHTML(id){const vs=SEL.get(id)||[];
+  return `<div class="shop-strip"><div class="ss-price"><b>${priceLabel(id)}</b><small>税込</small></div>
+  ${vs.length?`<div class="ss-in">${vs.map(v=>`<span>${esc([v.color,v.size].filter(Boolean).join(" / ")||"選択中")} ×${v.qty}</span>`).join("")}</div>`:""}
+  <button type="button" class="btn cart-add" data-shop="${id}">${vs.length?"もう1点カートに入れる":"カートに入れる"}</button></div>`}
+function refreshPicks(){document.querySelectorAll(".pick[data-pid]").forEach(el=>{const id=el.dataset.pid;el.classList.toggle("on",SEL.has(id));el.innerHTML=pickHTML(id)})}
+function updSel(){const n=selCount(),t=cartTotal();
+  if($("selcount"))$("selcount").innerHTML=`<span class="cart-ic">${CART_SVG}<i>${n}</i></span><span><b>${yen(t)}</b><small>${n}点${cartUnpriced()?"・価格未登録あり":""}</small></span>`;
+  if($("torec"))$("torec").textContent="明細を見る";
+  const hb=$("hdr-cart");if(hb){hb.querySelector("i").textContent=n;hb.classList.toggle("has",n>0)}}
+const CART_SVG='<svg viewBox="0 0 24 24"><path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L20 8H6"/><circle cx="9.5" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/></svg>';
+/* 商品ページ（シート） */
+function openProduct(id,opt){opt=opt||{};const p=P[id],g=GM[id]||{col:[],sz:[]},ci=(typeof COLIMG!=="undefined"&&COLIMG[g.c])||{};
+  const edit=opt.edit!=null?(SEL.get(id)||[])[opt.edit]:null;
+  const st={color:edit?edit.color:(g.col.length===1?g.col[0]:""),size:edit?edit.size:(suggestSize(id)||(g.sz.length===1?g.sz[0]:"")),qty:edit?edit.qty:1};
+  const ev=similar(id,bodyA(),10);
+  $("sheet-t").textContent=p.s;
+  const draw=()=>{const img=st.color&&ci[st.color]?ci[st.color]:id+".jpg",pr=priceOf(id,st.size);
+    $("sheet-b").innerHTML=`<div class="pd">
+    <img class="pd-img zoomable" src="img/${img}" alt="" data-zoom="${id}" data-col="${esc(st.color)}">
+    <h3 class="pd-name">${esc(p.n)}</h3><div class="pd-code">商品コード ${esc(g.c||"")}</div>
+    <div class="pd-price">${pr!=null?yen(pr):priceLabel(id)}<small>税込</small></div>
+    ${g.col.length?`<div class="pd-l">カラー<b>${esc(st.color||"選んでください")}</b></div><div class="pd-col">${g.col.map(c=>`<button type="button" class="pd-c${st.color===c?" on":""}" data-pc="${esc(c)}">${ci[c]?`<img src="img/${ci[c]}" alt="">`:`<i></i>`}<span>${esc(c)}</span></button>`).join("")}</div>`:""}
+    ${g.sz.length?`<div class="pd-l">サイズ<b>${esc(st.size||"選んでください")}</b>${ev.n?`<small>似た体型は ${esc(ev.list[0].size)} が最多</small>`:""}</div><div class="pd-sz">${g.sz.map(s=>`<button type="button" class="pd-s${st.size===s?" on":""}" data-ps="${esc(s)}">${esc(s)}</button>`).join("")}</div>`:""}
+    <div class="pd-l">数量</div><div class="qty"><button type="button" data-q="-1">－</button><b>${st.qty}</b><button type="button" data-q="1">＋</button></div>
+    <div id="pd-msg"></div></div>
+    <div class="pd-bar"><div><small>小計</small><b>${pr!=null?yen(pr*st.qty):"—"}</b></div><button type="button" class="btn" id="pd-add">${edit?"変更する":(opt.label||"カートに入れる")}</button></div>`;
+    const B=$("sheet-b");
+    B.querySelectorAll("[data-pc]").forEach(b=>b.onclick=()=>{st.color=b.dataset.pc;draw()});
+    B.querySelectorAll("[data-ps]").forEach(b=>b.onclick=()=>{st.size=b.dataset.ps;draw()});
+    B.querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>{st.qty=Math.max(1,Math.min(20,st.qty+ +b.dataset.q));draw()});
+    $("pd-add").onclick=()=>{const miss=[g.col.length&&!st.color?"カラー":"",g.sz.length&&!st.size?"サイズ":""].filter(Boolean);
+      if(miss.length){$("pd-msg").innerHTML=`<div class="msgline err">${miss.join("と")}を選んでください</div>`;return}
+      const v={color:st.color,size:st.size,qty:st.qty};
+      if(opt.onAdd){opt.onAdd(v);closeSheet();return}
+      const vs=SEL.get(id)||[];
+      if(edit){vs[opt.edit]=v}else{const same=vs.find(x=>x.color===v.color&&x.size===v.size);if(same)same.qty+=v.qty;else vs.push(v)}
+      SEL.set(id,vs);refreshPicks();renderPicked();updSel();
+      if(opt.back){opt.back();return}
+      $("sheet-b").innerHTML=`<div class="added"><div class="added-ok">✓</div><b>カートに入れました</b><p>${esc(p.n)}${v.color?" / "+esc(v.color):""}${v.size?" / "+esc(v.size):""} ×${v.qty}</p>
+        <div class="added-tot">カート ${selCount()}点　<b>${yen(cartTotal())}</b></div>
+        <button class="btn" type="button" id="ad-cart">カートを見る</button><button class="btn ghost" type="button" id="ad-more" style="margin-top:8px">買い物を続ける</button></div>`;
+      $("ad-cart").onclick=openConfirm;$("ad-more").onclick=()=>openCatalog()};
+  };
+  draw();$("sheet").hidden=false;$("sheet").querySelector(".sheet").scrollTop=0}
+/* 商品一覧（ショップ） */
+let shopCat="おすすめ",shopQ="";
+function openCatalog(onPick){const rec=typeof onPick==="function";$("sheet-t").textContent="商品をえらぶ";
+  const groups={};Object.entries(P).forEach(([id,p])=>{(groups[p.s]=groups[p.s]||[]).push(id)});
+  const rec0=(lastPlan?[...lastPlan.main,...(lastPlan.plus||[])]:[]).filter(id=>P[id]);
+  const cats=[...(rec0.length?["おすすめ"]:[]),"すべて",...Object.keys(groups)];if(!cats.includes(shopCat))shopCat=cats[0];
+  const list=()=>{let ids=shopCat==="おすすめ"?rec0:shopCat==="すべて"?Object.keys(P):groups[shopCat]||[];
+    if(shopQ)ids=Object.keys(P).filter(id=>(P[id].n+P[id].s+(GM[id]?.c||"")).toLowerCase().includes(shopQ.toLowerCase()));return ids};
+  const draw=()=>{const ids=list();
+    $("sheet-b").innerHTML=`<div class="shop-top"><input id="shop-q" type="search" placeholder="商品名・商品コードで探す" value="${esc(shopQ)}">
+    <div class="shop-cats">${cats.map(c=>`<button type="button" class="${c===shopCat&&!shopQ?"on":""}" data-sc="${esc(c)}">${esc(c)}</button>`).join("")}</div></div>
+    <div class="shop-grid">${ids.map(id=>{const n=(SEL.get(id)||[]).reduce((t,v)=>t+v.qty,0);return `<button type="button" class="shop-t" data-cat="${id}"><span class="st-img"><img src="img/${id}.jpg" alt="" loading="lazy">${n&&!rec?`<em>${n}</em>`:""}</span><span class="st-n">${esc(P[id].n)}</span><span class="st-p">${priceLabel(id)}</span></button>`}).join("")||'<p class="meta2">見つかりませんでした</p>'}</div>
+    ${rec?"":`<div class="shop-foot"><button type="button" class="btn" id="shop-cart">カートを見る（${selCount()}点 ${yen(cartTotal())}）</button></div>`}`;
+    const q=$("shop-q");q.oninput=()=>{shopQ=q.value.trim();const pos=q.selectionStart;draw();const q2=$("shop-q");q2.focus();q2.setSelectionRange(pos,pos)};
+    $("sheet-b").querySelectorAll("[data-sc]").forEach(b=>b.onclick=()=>{shopCat=b.dataset.sc;shopQ="";draw();$("sheet").querySelector(".sheet").scrollTop=0});
+    $("sheet-b").querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{const id=b.dataset.cat;
+      if(rec)openProduct(id,{label:"記録に追加",onAdd:v=>{addItem(id,true,v,true);toast(`${P[id].n} を追加しました`)}});else openProduct(id)});
+    if($("shop-cart"))$("shop-cart").onclick=openConfirm};
+  draw();$("sheet").hidden=false;$("sheet").querySelector(".sheet").scrollTop=0}
+/* カート（明細） */
+function openConfirm(){$("sheet-t").textContent="カート";const rows=cartRows();
+  if(!rows.length){$("sheet-b").innerHTML=`<div class="added"><div class="added-ok" style="background:var(--line);color:var(--muted)">${CART_SVG}</div><b>カートは空です</b><button class="btn" type="button" id="cf-shop" style="margin-top:14px">商品をえらぶ</button></div>`;$("cf-shop").onclick=()=>openCatalog();$("sheet").hidden=false;return}
+  const ng=rows.filter(r=>needOpt(r.id,r.v)).length,tot=cartTotal();
+  $("sheet-b").innerHTML=`<div class="cart">${rows.map(r=>{const pr=priceOf(r.id,r.v.size),miss=needOpt(r.id,r.v);return `<div class="cl-row${miss?" ng":""}">
+    <img src="img/${r.id}.jpg" alt="" class="zoomable" data-zoom="${r.id}" data-col="${esc(r.v.color)}">
+    <div class="cl-mid"><b>${esc(P[r.id].n)}</b><div class="cl-opt">${colThumb(r.id,r.v.color)}${esc([r.v.color,r.v.size].filter(Boolean).join(" / "))}${miss?`<button type="button" class="cl-fix" data-cf-edit="${r.id}" data-vi="${r.i}">${GM[r.id].col.length&&!r.v.color?"カラー":"サイズ"}を選ぶ ›</button>`:""}</div>
+      <div class="cl-unit">${pr!=null?yen(pr):"価格未登録"}</div>
+      <div class="cl-ctl"><div class="qty sm"><button type="button" data-cq="-1" data-id="${r.id}" data-vi="${r.i}">－</button><b>${r.v.qty}</b><button type="button" data-cq="1" data-id="${r.id}" data-vi="${r.i}">＋</button></div><button type="button" class="cl-del" data-cf-del="${r.id}" data-vi="${r.i}">削除</button></div></div>
+    <div class="cl-sum">${pr!=null?yen(pr*r.v.qty):"—"}</div></div>`}).join("")}</div>
+  <div class="bill"><div><span>商品点数</span><span>${selCount()}点</span></div><div class="bill-tot"><span>合計（税込）</span><b>${yen(tot)}</b></div>${cartUnpriced()?'<p class="meta2" style="margin:6px 0 0">価格未登録の商品は合計に入っていません</p>':""}</div>
+  ${ng?`<div class="msgline err" style="margin-top:10px">カラー・サイズが未選択の商品が ${ng}点 あります</div>`:""}
+  <button class="btn" type="button" id="cf-go" style="margin-top:12px">この内容で記録して注文リストへ</button><button class="btn ghost" type="button" id="cf-back" style="margin-top:8px">買い物を続ける</button>`;
+  const B=$("sheet-b");
+  B.querySelectorAll("[data-cq]").forEach(b=>b.onclick=()=>{const v=(SEL.get(b.dataset.id)||[])[+b.dataset.vi];if(!v)return;v.qty=Math.max(1,Math.min(20,v.qty+ +b.dataset.cq));refreshPicks();updSel();openConfirm()});
+  B.querySelectorAll("[data-cf-del]").forEach(b=>b.onclick=()=>{const vs=SEL.get(b.dataset.cfDel);if(vs){vs.splice(+b.dataset.vi,1);if(!vs.length)SEL.delete(b.dataset.cfDel)}refreshPicks();renderPicked();updSel();openConfirm()});
+  B.querySelectorAll("[data-cf-edit]").forEach(b=>b.onclick=()=>openProduct(b.dataset.cfEdit,{edit:+b.dataset.vi,back:openConfirm}));
+  $("cf-go").onclick=()=>{if(ng){const b=B.querySelector(".cl-row.ng .cl-fix");if(b)b.click();return}closeSheet();openRec()};
+  $("cf-back").onclick=()=>openCatalog();
+  $("sheet").hidden=false;$("sheet").querySelector(".sheet").scrollTop=0}
+function renderPicked(){const el=$("picked");if(!el)return;const shown=new Set([...document.querySelectorAll(".card .pick[data-pid]")].map(e=>e.dataset.pid));
+  const extra=[...SEL.keys()].filter(id=>!shown.has(id));
+  el.innerHTML=extra.map(id=>`<div class="prow"><img src="img/${id}.jpg" alt=""><div><b style="font-size:14px">${esc(P[id].n)}</b><div class="meta2">${esc(P[id].s)}</div><div class="pick on" data-pid="${id}">${pickHTML(id)}</div></div></div>`).join("")}
+document.addEventListener("click",e=>{const s=e.target.closest("[data-shop]");if(s){e.stopPropagation();openProduct(s.dataset.shop)}},true);
+/* 記録の確認・注文リストに金額 */
+function renderRecSum(){const el=$("r-sum");if(!el)return;const its=recItemsNow(),tot=its.reduce((t,x)=>t+x.v.qty,0),sum=its.reduce((t,x)=>t+(priceOf(x.id,x.v.size)||0)*x.v.qty,0);
+  el.innerHTML=`<h3>明細（${its.length}点・${tot}着）</h3>${its.length?`<div class="cart">${its.map(x=>{const pr=priceOf(x.id,x.v.size);return `<div class="cl-row"><img src="img/${x.id}.jpg" alt=""><div class="cl-mid"><b>${esc(P[x.id].n)}</b>${specHTML(x.id,x.v)}<div class="cl-unit">${pr!=null?yen(pr)+" × "+x.v.qty:"価格未登録"}${x.feel?`・着てみて：${esc(x.feel)}`:""}</div></div><div class="cl-sum">${pr!=null?yen(pr*x.v.qty):"—"}</div></div>`}).join("")}</div><div class="bill"><div class="bill-tot"><span>合計（税込）</span><b>${yen(sum)}</b></div></div>`:'<p class="meta2">チェックの入った商品がありません</p>'}`}
+const _orderText=orderText;
+orderText=function(r){const base=_orderText(r);const sum=(r.items||[]).reduce((t,i)=>t+(priceOf(i.id,i.size)||0)*(i.qty||1),0);return sum?base+"\n合計（税込） "+yen(sum):base};
+/* ヘッダーのカート */
+(function(){const h=document.querySelector(".appbar");if(!h||$("hdr-cart"))return;const b=document.createElement("button");b.type="button";b.id="hdr-cart";b.className="hdr-cart";b.setAttribute("aria-label","カート");b.innerHTML=CART_SVG+"<i>0</i>";b.onclick=openConfirm;h.appendChild(b);updSel()})();
+
 </script>
