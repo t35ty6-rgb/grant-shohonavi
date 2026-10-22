@@ -585,6 +585,23 @@ input,select,textarea{font-size:16px}
 .cl-mid .spec span{background:var(--bg);border-radius:8px;padding:2px 8px}
 .cl-mid .spec img{width:20px;height:20px;object-fit:cover;border-radius:5px;vertical-align:middle;margin-right:4px}
 .cl-mid .spec .ng{background:#fde8ec;color:#c0284f;font-weight:700}
+.it.it2{display:grid;grid-template-columns:52px minmax(0,1fr);gap:10px;align-items:start;padding:10px;border-radius:14px;background:#fff;border:1px solid var(--line)}
+.it2>img{width:52px;height:52px;object-fit:cover;border-radius:10px}
+.it-n{display:block;font-size:14px;line-height:1.35}
+.it-opt{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;font-size:12.5px;color:var(--muted);margin-top:3px}
+.it-opt img{width:18px;height:18px;border-radius:4px;object-fit:cover}
+.it-opt em{font-style:normal;font-weight:700;color:#c0284f;background:#fde8ec;border-radius:6px;padding:0 6px}
+.it-act{display:flex;gap:8px;align-items:center;margin-top:6px}
+.it-act select{font:inherit;font-size:13px;padding:4px 6px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);width:auto!important;min-width:0}
+.it-act button{font:inherit;font-size:12.5px;font-weight:700;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:8px;padding:4px 10px;cursor:pointer}
+.it-act .it-del{border:none;color:var(--muted);text-decoration:underline;font-weight:500;padding:4px 2px}
+.it2 .ev{font-size:11.5px;margin-top:4px}
+.it-pr{font-family:var(--f-latin);font-weight:700;font-size:14px;white-space:nowrap}
+.items{gap:8px!important}
+.rec-bar{position:sticky;bottom:0;z-index:6;margin:16px -16px -28px;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:#fff;border-top:1px solid var(--line);box-shadow:0 -4px 16px rgba(20,22,30,.06);display:flex;align-items:center;gap:10px}
+.rec-bar .rb-t{flex:1;display:flex;flex-direction:column;line-height:1.2}.rec-bar small{font-size:11px;color:var(--muted)}.rec-bar b{font-family:var(--f-latin);font-size:20px}
+.rec-bar .btn{width:auto}
+.it-top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}.it-act button{white-space:nowrap}
 </style>
 
 <div class="app">
@@ -2266,6 +2283,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("sheet").hidden)
 document.addEventListener("click",e=>{const t=e.target.closest("[data-ser]");if(t){e.preventDefault();openSeries(t.dataset.ser)}});
 emptyResult();
 
+
 /* ===== ショップ（カート・明細）レイヤー ===== */
 const PRICE={"103":64900,"104":64900,"114":13200,"116":37400,"117":39600,"118":42900,"119":37400,"120":42900,"121":39600,"122":39600,"124":12100,"127":31900,"128":33000,"129":33000,"161":32450,"162":42900,"163":42900,"181":41800,"182":25300,"183":56100,"184":41800,"185":23100,"202":41800,"208":13200,"214":12100,"215":8580,"216":8800,"220":12100,"225":41800,"244":35200,"245":35200,"246":12100,"248":28600,"249":17600,"253":28600,"254":39600,"255":17600,"256":28600,"257":12100,"258":13750,"259":22000,"260":30800,"261":13200,"262":23100,"263":31900,"264":12100,"281":23100,"282":12100,"305":28080,"317":12960,"331":19440,"332":12960,"333":6600,"334":12960,"341":19440,"355":27500,"356":184800,"357":6600,"358":7480,"361":52800,"362":9900,"364":343200,"365":27500,"366":19800,"367":369600,"401":5500,"404":9680,"405":9680,"422":7480,"450":19800,"453":8800,"460":11000,"461":33000,"507":16500,"512":33000,"513":24200,"516":27500,"517":33000,"518":52800,"519":19800,"520":28600,"521":27500,"523":15400,"524":34100,"529":8250,"530":16500,"531":27500,"532":4950,"533":1100,"534":4950,"535":2750,"536":8800,"538":41800,"539":12100,"540":19800,"605":4950,"606":220000,"607":148500,"651":236500,"714":8800,"715":11000,"716":8800,"717":11000,"721":16500,"722":13200,"727":11000,"728":13200,"731":5500,"732":5500,"733":8800,"739":8800,"9116":37400,"9119":37400,"9208":13200,"9406":18700,"9531":31900,"9532":8800,"9553":30800,"9720":5500,"Y204":880,"Y205":880,"101":{"65A":58300,"65B":58300,"65C":58300,"65D":58300,"65E":58300,"65F":58300,"70A":58300,"70B":58300,"70C":58300,"70D":58300,"70E":58300,"70F":58300,"70G":58300,"75A":58300,"75B":58300,"75C":58300,"75D":58300,"75E":58300,"75F":58300,"75G":58300,"80A":58300,"80B":58300,"80C":58300,"80D":58300,"80E":58300,"80F":58300,"80G":58300,"85C":58300,"85D":58300,"85E":58300,"85F":58300,"85G":58300,"90B":58300,"90C":58300,"90D":58300,"90E":58300,"90F":58300,"90G":58300,"95B":58300,"95C":58300,"95D":68200,"95E":68200,"95F":68200,"100E":68200,"105D":68200},"102":{"65A":63800,"65B":63800,"65C":63800,"65D":63800,"65F":63800,"70A":63800,"70B":63800,"70C":63800,"70D":63800,"70E":63800,"70F":63800,"75A":63800,"75B":63800,"75C":63800,"75D":63800,"75E":63800,"75F":63800,"80A":63800,"80C":63800,"80D":63800,"80E":63800,"80F":63800,"85B":63800,"85C":63800,"85D":63800,"85E":63800,"85F":63800,"100F":74800,"105D":74800,"105E":74800},"109":{"65B":28600,"65C":28600,"65D":28600,"65E":28600,"65F":35200,"70B":28600,"70C":28600,"70D":28600,"70E":28600,"70F":35200,"70G":35200,"75B":28600,"75C":28600,"75D":28600,"75E":28600,"75F":35200,"75G":35200,"80A":28600,"80B":28600,"80C":28600,"80D":28600,"80E":35200,"80F":35200,"80G":35200,"85B":28600,"85C":28600,"85D":35200,"85E":35200,"85F":35200,"85G":35200,"90B":28600,"90C":28600,"90D":35200,"90E":35200,"90F":35200,"90G":35200,"95B":28600,"95C":28600,"95D":35200,"95E":35200,"95F":35200,"95G":35200},"201":{"58":47300,"64":47300,"70":47300,"76":47300,"82":47300,"90":47300,"98":47300,"106":52800},"363":{"1個":6600,"3個セット":16500},"452":{"30ml":5500,"200ml":27500,"500ml":49500},"462":{"1":550,"12":5500}};/* G-MAX 定価（税込）2026-10-19 取得 */
 const yen=n=>"¥"+Math.round(n).toLocaleString("ja-JP");
@@ -2369,5 +2387,36 @@ const _orderText=orderText;
 orderText=function(r){const base=_orderText(r);const sum=(r.items||[]).reduce((t,i)=>t+(priceOf(i.id,i.size)||0)*(i.qty||1),0);return sum?base+"\n合計（税込） "+yen(sum):base};
 /* ヘッダーのカート */
 (function(){const h=document.querySelector(".appbar");if(!h||$("hdr-cart"))return;const b=document.createElement("button");b.type="button";b.id="hdr-cart";b.className="hdr-cart";b.setAttribute("aria-label","カート");b.innerHTML=CART_SVG+"<i>0</i>";b.onclick=openConfirm;h.appendChild(b);updSel()})();
+/* ===== 記録：商品はコンパクトな1行リスト＋合計を常に表示 ===== */
+function itVals(d){return {color:d.querySelector(".cl")?.value||"",size:d.querySelector(".sz")?.value||"",qty:+(d.querySelector(".qt")?.value||1)}}
+function itDraw(d){const id=d.dataset.id,g=GM[id]||{col:[],sz:[]},v=itVals(d),pr=priceOf(id,v.size);
+  const lack=[g.col.length&&!v.color?"カラー":"",g.sz.length&&!v.size?"サイズ":""].filter(Boolean);
+  d.querySelector(".it-opt").innerHTML=(v.color?`${colThumb(id,v.color)}<span>${esc(v.color)}</span>`:"")+(v.size?`<span>${esc(v.size)}</span>`:"")+`<span>×${v.qty}</span>`+(lack.length?`<em>${lack.join("・")}未選択</em>`:"");
+  d.querySelector(".it-pr").textContent=pr!=null?yen(pr*v.qty):"";const ev=d.querySelector(".ev");if(ev)ev.hidden=!/最多/.test(ev.textContent)}
+function addItem(id,on,pre,force){if(!pre&&!force&&document.querySelector(`.it[data-id="${id}"]`))return;const p=P[id],g=GM[id]||{c:"",col:[],sz:[]},d=document.createElement("div");d.className="it it2"+(on?"":" off");d.dataset.id=id;
+  const opt=(arr)=>`<option value=""></option>`+arr.map(x=>`<option>${esc(x)}</option>`).join("");
+  d.innerHTML=`<img src="img/${id}.jpg" alt="" class="zoomable" data-zoom="${id}"><div class="it-body"><input type="checkbox" checked hidden><div class="it-top"><b class="it-n">${esc(p.n)}</b><span class="it-pr"></span></div><div class="meta2" hidden>商品コード ${g.c}</div>
+   <div class="it-opt"></div>
+   <div class="it-act"><select class="fe" aria-label="着てみて"><option value="">着てみて…</option>${["ぴったり","きつめ","ゆるめ","未試着"].map(o=>`<option>${o}</option>`).join("")}</select><button type="button" class="it-edit">変更</button><button type="button" class="it-del">削除</button></div>
+   <div class="ev"></div>
+   <div hidden>${g.col.length?`<select class="cl">${opt(g.col)}</select>`:""}${g.sz.length?`<select class="sz">${opt(g.sz)}</select>`:`<input class="sz" type="hidden" value="">`}<select class="qt">${Array.from({length:20},(_,i)=>`<option>${i+1}</option>`).join("")}</select></div></div>
+`;
+  if(pre){if(pre.color&&d.querySelector(".cl"))d.querySelector(".cl").value=pre.color;if(pre.size&&d.querySelector("select.sz"))d.querySelector("select.sz").value=pre.size;if(pre.qty)d.querySelector(".qt").value=String(Math.min(20,pre.qty))}
+  d.querySelector(".it-edit").onclick=()=>openProduct(id,{init:itVals(d),label:"変更する",onAdd:v=>{if(d.querySelector(".cl"))d.querySelector(".cl").value=v.color;const sz=d.querySelector("select.sz");if(sz)sz.value=v.size;d.querySelector(".qt").value=String(Math.min(20,v.qty));itDraw(d);renderRecSum();if(document.querySelector("#r-items .miss"))markMissing(true)}});
+  d.querySelector(".it-del").onclick=()=>{d.remove();renderRecSum();if(document.querySelector("#r-items .miss"))markMissing(true)};
+  d.querySelector(".fe").onchange=()=>renderRecSum();
+  if(force){const rows=[...document.querySelectorAll(`.it[data-id="${id}"]`)];const last=rows[rows.length-1];last?last.after(d):$("r-items").appendChild(d)}else $("r-items").appendChild(d);
+  itDraw(d);refreshEvidence();renderRecSum()}
+const _renderRecSum=renderRecSum;
+renderRecSum=function(){_renderRecSum();document.querySelectorAll("#r-items .it2").forEach(itDraw);
+  const its=recItemsNow(),n=its.reduce((t,x)=>t+x.v.qty,0),sum=its.reduce((t,x)=>t+(priceOf(x.id,x.v.size)||0)*x.v.qty,0);
+  let bar=$("rec-bar");const form=$("recform");if(!form)return;
+  if(!bar){bar=document.createElement("div");bar.id="rec-bar";bar.className="rec-bar";form.appendChild(bar)}
+  bar.innerHTML=`<span class="cart-ic">${CART_SVG}<i>${n}</i></span><span class="rb-t"><small>${its.length}点・${n}着</small><b>${yen(sum)}</b></span><button type="button" class="btn sm" id="rb-go">明細を見る</button>`;
+  $("rb-go").onclick=()=>{const s=form.querySelector(".stp");if(s)goStep(s,3);setTimeout(()=>{const r=$("r-sum");if(r)r.scrollIntoView({block:"start",behavior:"smooth"})},50)}};
+/* 商品ページ：init で開始値を渡せるように */
+const _openProduct=openProduct;
+openProduct=function(id,opt){opt=opt||{};if(!opt.init)return _openProduct(id,opt);
+  const vs=SEL.get(id);const tmp=[opt.init];SEL.set(id,tmp);try{_openProduct(id,Object.assign({},opt,{edit:0}))}finally{if(vs)SEL.set(id,vs);else SEL.delete(id)}};
 
 </script>
