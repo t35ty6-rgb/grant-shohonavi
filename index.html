@@ -1110,6 +1110,19 @@ const _say=say;say=function(t,w,h){_say(t,w,h);scrollLog()};
 const _next=next;next=function(){_next();scrollLog()};
 new ResizeObserver(()=>scrollLog()).observe(ch);
 
+/* ---------- 記録の保存先（Claudeの外＝LINE・ブラウザでは Googleスプレッドシート。スタッフの合言葉が要る） ---------- */
+const GAS_URL="https://script.google.com/macros/s/AKfycbzFlH56j8KALJtlLQ68Zf7mmMRy9yWYw0go_CPYrW6asQlRLD71OojOC0_kF68Qo7fPHg/exec",GKEY="grant_staff_key";
+const getGK=()=>{try{return localStorage.getItem(GKEY)||""}catch(e){return ""}};
+function askGK(msg){const k=prompt((msg?msg+"\n":"")+"スタッフの合言葉を入れてください");if(k){try{localStorage.setItem(GKEY,k.trim())}catch(e){}}return (k||"").trim()}
+function gasDB(){const subs=[];let timer=null;
+  const call=async(body)=>{let k=getGK()||askGK();if(!k)throw {code:"合言葉が未入力"};
+    const r=await fetch(GAS_URL,{method:"POST",body:JSON.stringify({...body,k})}).then(r=>r.json());
+    if(!r.ok&&r.err==="key"){try{localStorage.removeItem(GKEY)}catch(e){}const k2=askGK("合言葉がちがいます");if(!k2)throw {code:"合言葉がちがいます"};return call(body)}
+    if(!r.ok)throw {code:r.err||"error"};return r};
+  const load=async()=>{const r=await call({op:"list"});const docs=(r.recs||[]).map(x=>{const o={...x};delete o.id;return {id:x.id,data:()=>o}});subs.forEach(s=>s.ok({docs}))};
+  const col={add:async rec=>{const r=await call({op:"add",rec});load().catch(()=>{});return {id:r.id}},orderBy(){return col},limit(){return col},
+    onSnapshot(ok,ng){subs.push({ok,ng});load().catch(ng);if(!timer)timer=setInterval(()=>load().catch(()=>{}),60000);return ()=>{}}};
+  return {collection:()=>col,doc:p=>({delete:async()=>{await call({op:"del",id:String(p).split("/").pop()});load().catch(()=>{})}})}}
 /* ---------- データ（db） ---------- */
 let db=null,me=null,canWrite=null,RECS=[],DBRECS=[],dbState="loading",dbErr="";
 /* 端末内の一時保存（保存先につながらないときの控え） */
@@ -1123,9 +1136,9 @@ function mergeRecs(){RECS=[...getPend().map((r,i)=>({...r,id:"local-"+i,_local:t
 async function flushPend(){if(!db)return;const p=getPend();if(!p.length)return;const left=[];for(const r of p){try{await db.collection("records").add(r)}catch(e){left.push(r);dbErr=e.code||"error"}}setPend(left);mergeRecs();if(!$("v-data").hidden)renderData()}
 (async()=>{try{
   for(let i=0;i<30&&!window.claude?.use;i++)await new Promise(r=>setTimeout(r,100));
-  if(!window.claude?.use){dbState="none";mergeRecs();renderData();return}
+  if(!window.claude?.use){db=gasDB();canWrite=true}else{
   const [d,u]=await Promise.all([claude.use("db"),claude.use("user")]);db=d;
-  if(u){try{canWrite=await u.can("data.write")}catch(e){} }
+  if(u){try{canWrite=await u.can("data.write")}catch(e){} }}
   if(!db){dbState="none";mergeRecs();renderData();return}
   db.collection("records").orderBy("createdAt","desc").limit(1000).onSnapshot(s=>{DBRECS=s.docs.map(d=>({id:d.id,...d.data()}));dbState="ok";mergeRecs();if(!$("v-data").hidden)renderData();refreshEvidence()},e=>{dbState="err";dbErr=e.code||"";mergeRecs();renderData()});
   flushPend();setInterval(()=>{if(getPend().length)flushPend()},30000);
@@ -1287,7 +1300,7 @@ function openRecDetail(r){const its=r.items||[];$("sheet-t").textContent=r.code;
 function renderData(){const el=$("datapane");if(!el)return;
   const head=`<div class="row" style="justify-content:space-between;margin-bottom:12px"><h2 class="sec-t" style="margin:0">記録の一覧</h2><button class="btn sm" type="button" id="d-new">＋ 新しく記録</button></div>`;
   const pend=getPend().length;
-  const status=(dbState!=="ok"&&dbState!=="loading"&&!CAN_LOCAL)?noSaveBanner():dbState==="ok"?(pend?`<div class="msgline" style="margin-bottom:12px">この端末に未送信 ${pend}件</div>`:""):dbState==="loading"?'<div class="msgline" style="margin-bottom:12px">保存先：確認中…</div>':`<div class="msgline err" style="margin-bottom:12px">保存先：つながっていません${dbErr?"（"+esc(dbErr)+"）":""}。記録はこの端末に保存されます${pend?`（未送信 ${pend}件）`:""}。Claudeのアプリ（claude.ai）の中でこのページを開くと、自動で送られます。</div>`;
+  const status=(dbState!=="ok"&&dbState!=="loading"&&!CAN_LOCAL)?noSaveBanner():dbState==="ok"?(pend?`<div class="msgline" style="margin-bottom:12px">この端末に未送信 ${pend}件</div>`:""):dbState==="loading"?'<div class="msgline" style="margin-bottom:12px">保存先：確認中…</div>':`<div class="msgline err" style="margin-bottom:12px">保存先：つながっていません${dbErr?"（"+esc(dbErr)+"）":""}。記録はこの端末に控えてあります${pend?`（未送信 ${pend}件）`:""}。つながると自動で送ります。</div>`;
   const n=RECS.length,items=RECS.flatMap(r=>r.items||[]),tried=items.filter(i=>i.feel&&i.feel!=="未試着"),ok=tried.filter(i=>i.feel==="ぴったり").length;
   const prods=[...new Set(items.map(i=>i.id))].filter(id=>P[id]).sort((x,y)=>items.filter(i=>i.id===y).length-items.filter(i=>i.id===x).length);
   if(!dataProd||!prods.includes(dataProd))dataProd=prods[0]||"";
